@@ -1,7 +1,10 @@
 import { z } from "zod";
 
 const optionalValue = <T extends z.ZodType>(schema: T) =>
-  z.preprocess((value) => (value === "" ? undefined : value), schema.optional());
+  z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    schema.optional(),
+  );
 
 export const publicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: optionalValue(z.url()),

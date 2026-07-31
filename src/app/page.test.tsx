@@ -10,6 +10,8 @@ describe("Home", () => {
     expect(
       screen.getByRole("heading", { name: "Портал организаторов турниров" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("Application shell работает");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Application shell работает",
+    );
   });
 });
