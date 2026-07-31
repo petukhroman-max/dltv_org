@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import { publicEnvSchema } from "@/lib/env";
 
 describe("publicEnvSchema", () => {
-  it("allows the application shell to run without Supabase configuration", () => {
-    expect(publicEnvSchema.parse({})).toEqual({});
+  it("allows local development without Supabase configuration", () => {
+    expect(publicEnvSchema.parse({ NODE_ENV: "test" })).toEqual({
+      NODE_ENV: "test",
+    });
   });
 
   it("validates configured Supabase values", () => {
@@ -14,5 +16,9 @@ describe("publicEnvSchema", () => {
         NEXT_PUBLIC_SUPABASE_ANON_KEY: "example-key",
       }),
     ).toThrow();
+  });
+
+  it("requires public configuration in production", () => {
+    expect(() => publicEnvSchema.parse({ NODE_ENV: "production" })).toThrow();
   });
 });
