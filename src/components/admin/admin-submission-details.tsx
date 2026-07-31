@@ -14,6 +14,13 @@ export type AdminSubmissionDetailsData = {
   events: TableRow<"submission_events">[];
 };
 
+const moderationEventLabels: Record<string, string> = {
+  submission_approved: "Approved by admin",
+  submission_rejected: "Rejected by admin",
+  changes_requested: "Changes requested",
+  submission_published: "Published",
+};
+
 function Value({
   label,
   children,
@@ -142,45 +149,62 @@ export function AdminSubmissionDetails({
           <ol className="adminTimeline">
             {events.map((event) => {
               const metadata = sanitizeEventMetadata(event.metadata);
-              const consentMetadata =
+              const objectMetadata =
                 metadata &&
                 !Array.isArray(metadata) &&
                 typeof metadata === "object"
                   ? metadata
                   : null;
+              const moderationLabel = moderationEventLabels[event.event_type];
+              const reviewerNote =
+                objectMetadata &&
+                typeof objectMetadata.reviewer_note === "string"
+                  ? objectMetadata.reviewer_note
+                  : null;
               return (
                 <li key={event.id}>
                   <div className="adminEventHeading">
-                    <strong>{event.event_type}</strong>
+                    <strong>{moderationLabel ?? event.event_type}</strong>
                     <time dateTime={event.created_at}>
                       {formatAdminDateTime(event.created_at)}
                     </time>
                   </div>
                   <p>
                     {event.from_status ?? "none"} → {event.to_status ?? "none"}{" "}
-                    · {event.actor_type}
+                    ·{" "}
+                    {event.actor_type === "admin" ? "Admin" : event.actor_type}
                   </p>
-                  {consentMetadata &&
-                  "consent_to_publish" in consentMetadata ? (
+                  {moderationLabel && reviewerNote ? (
+                    <dl className="adminEventMetadata">
+                      <Value label="Reviewer note">{reviewerNote}</Value>
+                    </dl>
+                  ) : null}
+                  {objectMetadata && "consent_to_publish" in objectMetadata ? (
                     <dl className="adminEventMetadata">
                       <Value label={adminCopy.details.consentToPublish}>
-                        {consentMetadata.consent_to_publish === true
+                        {objectMetadata.consent_to_publish === true
                           ? "Yes"
                           : "No"}
                       </Value>
-                      {"consent_version" in consentMetadata ? (
+                      {"consent_version" in objectMetadata ? (
                         <Value label={adminCopy.details.consentVersion}>
-                          {String(consentMetadata.consent_version)}
+                          {String(objectMetadata.consent_version)}
                         </Value>
                       ) : null}
                     </dl>
                   ) : null}
-                  {metadata &&
+                  {!moderationLabel &&
+                  metadata &&
                   typeof metadata === "object" &&
                   Object.keys(metadata).length > 0 ? (
-                    <pre className="adminMetadata">
-                      <code>{JSON.stringify(metadata, null, 2)}</code>
-                    </pre>
+                    <div>
+                      <p className="adminMetadataLabel">
+                        {adminCopy.details.unknownMetadata}
+                      </p>
+                      <pre className="adminMetadata">
+                        <code>{JSON.stringify(metadata, null, 2)}</code>
+                      </pre>
+                    </div>
                   ) : null}
                 </li>
               );

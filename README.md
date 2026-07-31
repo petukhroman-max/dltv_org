@@ -74,6 +74,12 @@ The list supports status, region, and start-date filters with server-side
 pagination. Details include organizer data, safe HTTP(S) links, and sanitized
 audit metadata. Admin pages are dynamic, `no-store`, and `noindex`.
 
+The details page also provides explicit moderation actions for supported
+status transitions. Each action validates the authenticated administrator,
+uses optimistic status concurrency, and atomically updates the submission and
+appends an audit event through one service-role-only PostgreSQL RPC. Organizer
+notifications are not sent in this stage.
+
 Supabase dashboard configuration and first-admin bootstrap instructions are in
 [docs/admin-auth.md](docs/admin-auth.md).
 
@@ -139,3 +145,5 @@ npm audit --omit=dev
 See [docs/database.md](docs/database.md) for the schema and migration details,
 [docs/public-submission.md](docs/public-submission.md) for the public flow, and
 [docs/admin-auth.md](docs/admin-auth.md) for admin authentication.
+[docs/moderation-workflow.md](docs/moderation-workflow.md) documents moderation
+transitions, timestamps, audit events, and deployment of its new migration.

@@ -144,6 +144,16 @@ export type Database = {
         };
         Returns: Json;
       };
+      moderate_tournament_submission: {
+        Args: {
+          p_submission_id: string;
+          p_expected_status: string;
+          p_target_status: string;
+          p_reviewer_id: string;
+          p_reviewer_note: string | null;
+        };
+        Returns: Json;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
