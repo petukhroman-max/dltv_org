@@ -46,7 +46,7 @@ export async function listTournamentSubmissions(filters: unknown = {}) {
   const supabase = createSupabaseAdminClient();
   let query = supabase
     .from("tournament_submissions")
-    .select()
+    .select("*,organizer:organizers(organization_name)")
     .order("created_at", { ascending: false })
     .range(parsed.offset, parsed.offset + parsed.limit - 1);
 
@@ -55,6 +55,9 @@ export async function listTournamentSubmissions(filters: unknown = {}) {
   }
   if (parsed.organizer_id) {
     query = query.eq("organizer_id", parsed.organizer_id);
+  }
+  if (parsed.region) {
+    query = query.ilike("region", `%${parsed.region}%`);
   }
   if (parsed.start_date_from) {
     query = query.gte("start_date", parsed.start_date_from);

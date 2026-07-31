@@ -108,7 +108,15 @@ export type Database = {
         Update: Partial<
           Omit<TournamentSubmissionRow, "id" | "created_at" | "updated_at">
         >;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "tournament_submissions_organizer_id_fkey";
+            columns: ["organizer_id"];
+            isOneToOne: false;
+            referencedRelation: "organizers";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       submission_events: {
         Row: SubmissionEventRow;

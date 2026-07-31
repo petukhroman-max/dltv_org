@@ -3,8 +3,9 @@
 Standalone Next.js portal for receiving tournament organizer submissions.
 Supabase provides the PostgreSQL database layer.
 
-The public form is available at `/submit-tournament`. This stage does not
-include organizer authentication, editing, an admin UI, or a public API.
+The public form is available at `/submit-tournament`. A separate read-only
+moderation area is available under `/admin`; it does not expose update,
+approval, publication, or deletion actions.
 
 ## Requirements
 
@@ -20,18 +21,19 @@ Install the CLI by following the
 
 Copy `.env.example` to `.env.local` and configure:
 
-| Variable                        | Exposure    | Purpose                             |
-| ------------------------------- | ----------- | ----------------------------------- |
-| `NEXT_PUBLIC_APP_URL`           | Public      | Canonical application URL           |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Public      | Supabase project API URL            |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public      | RLS-constrained browser key         |
-| `SUPABASE_SERVICE_ROLE_KEY`     | Server only | Backend repository access           |
-| `ADMIN_EMAILS`                  | Server only | Comma-separated MVP admin allowlist |
+| Variable                        | Exposure    | Purpose                          |
+| ------------------------------- | ----------- | -------------------------------- |
+| `NEXT_PUBLIC_APP_URL`           | Public      | Canonical application URL        |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Public      | Supabase project API URL         |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public      | RLS-constrained browser key      |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Server only | Backend repository access        |
+| `ADMIN_EMAILS`                  | Server only | Optional bootstrap/config helper |
 
-`ADMIN_EMAILS` is trimmed and normalized to lowercase. All values are required
-in production, and the admin list must not be empty. Development and unit tests
-may run without Supabase credentials. Never commit `.env.local`, access tokens,
-project references, database passwords, or Docker secrets.
+`ADMIN_EMAILS` is never a runtime authorization source. Runtime admin access
+always requires a validated Supabase session and a matching `user_id` plus
+lowercase email in `public.admin_users`. Development and unit tests may run
+without Supabase credentials. Never commit `.env.local`, access tokens, project
+references, database passwords, or Docker secrets.
 
 ## Application development
 
@@ -58,6 +60,22 @@ Public form submissions are created directly with `status = submitted` and
 `submitted_at = now()`. The browser never writes to Supabase directly: a
 Server Action validates the request and invokes the service-role-only atomic
 RPC.
+
+## Read-only admin moderation
+
+The admin flow uses Supabase email magic links:
+
+1. Open `/admin/login` and request a link.
+2. Supabase returns to `/auth/callback` and creates the cookie-backed session.
+3. The server validates the current Auth user against `public.admin_users`.
+4. Authorized users can view `/admin/submissions` and its detail pages.
+
+The list supports status, region, and start-date filters with server-side
+pagination. Details include organizer data, safe HTTP(S) links, and sanitized
+audit metadata. Admin pages are dynamic, `no-store`, and `noindex`.
+
+Supabase dashboard configuration and first-admin bootstrap instructions are in
+[docs/admin-auth.md](docs/admin-auth.md).
 
 ## Supabase local development
 
@@ -119,4 +137,5 @@ npm audit --omit=dev
 ```
 
 See [docs/database.md](docs/database.md) for the schema and migration details,
-and [docs/public-submission.md](docs/public-submission.md) for the public flow.
+[docs/public-submission.md](docs/public-submission.md) for the public flow, and
+[docs/admin-auth.md](docs/admin-auth.md) for admin authentication.

@@ -36,14 +36,6 @@ export const serverEnvSchema = publicEnvSchema
         path: ["SUPABASE_SERVICE_ROLE_KEY"],
       });
     }
-
-    if (value.ADMIN_EMAILS.length === 0) {
-      context.addIssue({
-        code: "custom",
-        message: "ADMIN_EMAILS must not be empty in production",
-        path: ["ADMIN_EMAILS"],
-      });
-    }
   });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
