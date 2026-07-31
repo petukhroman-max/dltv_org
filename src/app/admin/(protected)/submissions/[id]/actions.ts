@@ -12,16 +12,7 @@ import {
   ModerationValidationError,
   moderateTournamentSubmission,
 } from "@/lib/moderation/moderation.service";
-
-export type ModerationActionState = {
-  status: "idle" | "success" | "error" | "conflict";
-  message?: string;
-  fieldErrors?: Record<string, string>;
-};
-
-export const initialModerationActionState: ModerationActionState = {
-  status: "idle",
-};
+import type { ModerationActionState } from "@/lib/moderation/moderation-state";
 
 const messages = {
   confirmationRequired: "Confirm this moderation action to continue.",

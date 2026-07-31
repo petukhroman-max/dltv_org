@@ -6,7 +6,6 @@ vi.mock("@/app/admin/(protected)/submissions/[id]/actions", () => ({
   rejectSubmissionAction: vi.fn(),
   requestChangesAction: vi.fn(),
   publishSubmissionAction: vi.fn(),
-  initialModerationActionState: { status: "idle" },
 }));
 
 import {

@@ -5,14 +5,16 @@ import { useFormStatus } from "react-dom";
 
 import {
   approveSubmissionAction,
-  initialModerationActionState,
   publishSubmissionAction,
   rejectSubmissionAction,
   requestChangesAction,
-  type ModerationActionState,
 } from "@/app/admin/(protected)/submissions/[id]/actions";
 import { adminCopy } from "@/lib/admin/copy";
 import type { SubmissionStatus } from "@/lib/domain/submission";
+import {
+  initialModerationActionState,
+  type ModerationActionState,
+} from "@/lib/moderation/moderation-state";
 
 type ModerationAction = (
   state: ModerationActionState,
