@@ -9,6 +9,8 @@ const moderationActionNames = [
   "rejectSubmissionAction",
   "requestChangesAction",
   "publishSubmissionAction",
+  "createSubmissionEditLinkAction",
+  "revokeSubmissionEditLinksAction",
 ] as const;
 
 function parseSource(path: string) {
@@ -79,7 +81,7 @@ describe('"use server" module exports', () => {
     },
   );
 
-  it("keeps all four moderation actions callable exports", () => {
+  it("keeps moderation and edit-link actions callable exports", () => {
     const exportedNames = exportedStatements(
       "src/app/admin/(protected)/submissions/[id]/actions.ts",
     )

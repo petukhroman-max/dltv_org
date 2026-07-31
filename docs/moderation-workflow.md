@@ -15,9 +15,9 @@ organizer fields.
 | Reject          | `submitted`    | `rejected`      | Required      |
 | Publish         | `approved`     | `published`     | Optional      |
 
-`draft`, `needs_changes`, and `rejected` have no active moderation controls.
-There is no rollback dropdown. Returning a `needs_changes` submission to
-`submitted` belongs to a future authenticated organizer flow.
+`draft` and `rejected` have no active moderation controls. There is no rollback
+dropdown. A `needs_changes` submission offers only organizer edit-link controls;
+the capability-link flow returning it to `submitted` is documented separately.
 
 ## Reviewer notes
 
@@ -153,7 +153,7 @@ The second command is the explicit deployment step after review.
 ## Known limitations
 
 - Organizer notifications are not implemented.
-- Organizers cannot authenticate, edit, or resubmit changes yet.
+- Organizer editing uses a short-lived capability link rather than an account.
 - There is no public tournament page or DLTV export.
 - There is one administrator role and no generic RBAC.
 - Moderation is available only on a submission details page; there are no bulk
@@ -163,6 +163,5 @@ The second command is the explicit deployment step after review.
 
 ## Deferred work
 
-A later PR should add organizer authentication and a controlled edit/resubmit
-flow from `needs_changes` to `submitted`, followed separately by notification
-delivery and public publication/export behavior.
+A later PR may add organizer accounts and notification delivery, followed
+separately by public publication/export behavior.

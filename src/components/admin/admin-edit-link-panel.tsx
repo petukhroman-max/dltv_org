@@ -1,0 +1,117 @@
+"use client";
+
+import { useActionState, useState } from "react";
+import { useFormStatus } from "react-dom";
+
+import {
+  createSubmissionEditLinkAction,
+  revokeSubmissionEditLinksAction,
+} from "@/app/admin/(protected)/submissions/[id]/actions";
+import {
+  initialEditLinkActionState,
+  type EditTokenStatus,
+} from "@/lib/organizer-edit/organizer-edit.types";
+
+function SubmitButton({ children }: { children: React.ReactNode }) {
+  const { pending } = useFormStatus();
+  return (
+    <button className="secondaryButton" type="submit" disabled={pending}>
+      {pending ? "Working…" : children}
+    </button>
+  );
+}
+
+export function AdminEditLinkPanel({
+  submissionId,
+  tokenStatus,
+}: {
+  submissionId: string;
+  tokenStatus: EditTokenStatus | null;
+}) {
+  const [createState, createAction] = useActionState(
+    createSubmissionEditLinkAction,
+    initialEditLinkActionState,
+  );
+  const [revokeState, revokeAction] = useActionState(
+    revokeSubmissionEditLinksAction,
+    initialEditLinkActionState,
+  );
+  const [copied, setCopied] = useState(false);
+
+  const statusLabel = !tokenStatus
+    ? "No active edit link"
+    : tokenStatus.state === "active"
+      ? `Active edit link expires at ${new Date(tokenStatus.expiresAt).toLocaleString()}`
+      : tokenStatus.state === "used"
+        ? "Edit link used"
+        : tokenStatus.state === "revoked"
+          ? "Edit link revoked"
+          : "Edit link expired";
+
+  async function copyLink() {
+    if (!createState.editUrl) return;
+    await navigator.clipboard.writeText(createState.editUrl);
+    setCopied(true);
+  }
+
+  return (
+    <section className="adminPanel" aria-labelledby="edit-link-heading">
+      <h2 id="edit-link-heading">Organizer edit link</h2>
+      <p className="supportingText">
+        Current link status: <strong>{statusLabel}</strong>
+      </p>
+      <p className="adminWarning">
+        Send this secure link to the organizer manually. Email notifications are
+        not enabled.
+      </p>
+      {tokenStatus?.state === "active" && !createState.editUrl ? (
+        <p className="supportingText">
+          An active link exists, but its secret value is not stored. Generate a
+          new link to copy it again.
+        </p>
+      ) : null}
+      <p className="supportingText">
+        The plaintext link is shown only after creation and is unavailable after
+        refresh. Creating another link revokes the previous one.
+      </p>
+      <div className="formActions">
+        <form action={createAction}>
+          <input type="hidden" name="submission_id" value={submissionId} />
+          <SubmitButton>Create new link</SubmitButton>
+        </form>
+        <form action={revokeAction}>
+          <input type="hidden" name="submission_id" value={submissionId} />
+          <SubmitButton>Revoke edit link</SubmitButton>
+        </form>
+      </div>
+      {createState.message ? (
+        <p
+          className={
+            createState.status === "success" ? "adminNotice" : "formError"
+          }
+          role={createState.status === "success" ? "status" : "alert"}
+        >
+          {createState.message}
+        </p>
+      ) : null}
+      {createState.editUrl ? (
+        <div className="editLinkResult">
+          <code>{createState.editUrl}</code>
+          <button className="primaryButton" type="button" onClick={copyLink}>
+            {copied ? "Copied" : "Copy link"}
+          </button>
+        </div>
+      ) : null}
+      {revokeState.message ? (
+        <p
+          className={
+            revokeState.status === "success" ? "adminNotice" : "formError"
+          }
+          role={revokeState.status === "success" ? "status" : "alert"}
+        >
+          {revokeState.message}
+        </p>
+      ) : null}
+    </section>
+  );
+}

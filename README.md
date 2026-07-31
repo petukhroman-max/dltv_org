@@ -3,9 +3,9 @@
 Standalone Next.js portal for receiving tournament organizer submissions.
 Supabase provides the PostgreSQL database layer.
 
-The public form is available at `/submit-tournament`. A separate read-only
-moderation area is available under `/admin`; it does not expose update,
-approval, publication, or deletion actions.
+The public form is available at `/submit-tournament`. The protected `/admin`
+area supports explicit moderation actions and can issue capability links for
+organizers to edit submissions in `needs_changes`.
 
 ## Requirements
 
@@ -80,6 +80,13 @@ uses optimistic status concurrency, and atomically updates the submission and
 appends an audit event through one service-role-only PostgreSQL RPC. Organizer
 notifications are not sent in this stage.
 
+For a `needs_changes` submission, an admin can create a seven-day organizer
+edit link or revoke the active link. The raw 256-bit token is returned once;
+only its SHA-256 hash is stored. The organizer route exposes only allowlisted
+tournament fields and atomically consumes the token when returning the
+submission to `submitted`. See
+[docs/organizer-edit-flow.md](docs/organizer-edit-flow.md).
+
 Supabase dashboard configuration and first-admin bootstrap instructions are in
 [docs/admin-auth.md](docs/admin-auth.md).
 
@@ -116,7 +123,7 @@ reference.
 
 ## Security model
 
-RLS is enabled on all four tables. There are intentionally no permissive
+RLS is enabled on all application tables. There are intentionally no permissive
 policies: `anon` and `authenticated` have no direct table access. Public
 submission handling calls backend code, and organizer-level policies will be
 designed only after authentication and ownership are defined.
@@ -146,4 +153,6 @@ See [docs/database.md](docs/database.md) for the schema and migration details,
 [docs/public-submission.md](docs/public-submission.md) for the public flow, and
 [docs/admin-auth.md](docs/admin-auth.md) for admin authentication.
 [docs/moderation-workflow.md](docs/moderation-workflow.md) documents moderation
-transitions, timestamps, audit events, and deployment of its new migration.
+transitions, timestamps, audit events, and deployment of its migration.
+[docs/organizer-edit-flow.md](docs/organizer-edit-flow.md) documents secure
+edit-link issuance, resubmission, expiry, revocation, and deployment.

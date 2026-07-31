@@ -11,6 +11,8 @@
   deleted.
 - `admin_users` is the MVP admin registry. It has no `auth.users` foreign key
   until the authentication design is established.
+- `submission_edit_tokens` stores SHA-256 capability-token hashes, expiry and
+  consumption/revocation state. It never stores the raw organizer URL token.
 
 No teams, matches, brackets, participants, rosters, or authentication ownership
 columns are part of this foundation.
@@ -87,6 +89,8 @@ The migration creates only these indexes:
 - `tournament_submissions(organizer_id)`
 - `submission_events(submission_id, created_at)`
 - `organizers(contact_email)`
+- `submission_edit_tokens(submission_id, created_at desc)`
+- one unresolved token per submission (partial unique index)
 
 ## Migration workflow
 

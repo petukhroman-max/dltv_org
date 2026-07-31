@@ -13,6 +13,12 @@ import {
   moderateTournamentSubmission,
 } from "@/lib/moderation/moderation.service";
 import type { ModerationActionState } from "@/lib/moderation/moderation-state";
+import {
+  createSubmissionEditLink,
+  OrganizerEditError,
+  revokeSubmissionEditLinks,
+} from "@/lib/organizer-edit/organizer-edit.service";
+import type { EditLinkActionState } from "@/lib/organizer-edit/organizer-edit.types";
 
 const messages = {
   confirmationRequired: "Confirm this moderation action to continue.",
@@ -91,4 +97,53 @@ export async function publishSubmissionAction(
   formData: FormData,
 ) {
   return runModerationAction("published", true, formData);
+}
+
+export async function createSubmissionEditLinkAction(
+  _previousState: EditLinkActionState,
+  formData: FormData,
+): Promise<EditLinkActionState> {
+  const admin = await requireAdmin();
+  const submissionId = formData.get("submission_id");
+  if (typeof submissionId !== "string") {
+    return { status: "error", message: "Could not create an edit link." };
+  }
+  try {
+    const result = await createSubmissionEditLink(submissionId, admin);
+    revalidatePath(`/admin/submissions/${submissionId}`);
+    return {
+      status: "success",
+      message: "A new organizer edit link was created.",
+      editUrl: result.editUrl,
+    };
+  } catch (error) {
+    if (error instanceof OrganizerEditError) {
+      return { status: "error", message: "Could not create an edit link." };
+    }
+    return { status: "error", message: "Could not create an edit link." };
+  }
+}
+
+export async function revokeSubmissionEditLinksAction(
+  _previousState: EditLinkActionState,
+  formData: FormData,
+): Promise<EditLinkActionState> {
+  const admin = await requireAdmin();
+  const submissionId = formData.get("submission_id");
+  if (typeof submissionId !== "string") {
+    return { status: "error", message: "Could not revoke the edit link." };
+  }
+  try {
+    const result = await revokeSubmissionEditLinks(submissionId, admin);
+    revalidatePath(`/admin/submissions/${submissionId}`);
+    return {
+      status: "success",
+      message:
+        result.revoked_count > 0
+          ? "The organizer edit link was revoked."
+          : "There was no active edit link to revoke.",
+    };
+  } catch {
+    return { status: "error", message: "Could not revoke the edit link." };
+  }
 }
