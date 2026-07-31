@@ -13,5 +13,8 @@ describe("Home", () => {
     expect(
       screen.getByRole("link", { name: "Submit a tournament" }),
     ).toHaveAttribute("href", "/submit-tournament");
+    expect(
+      screen.getByRole("link", { name: "Browse tournaments" }),
+    ).toHaveAttribute("href", "/tournaments");
   });
 });

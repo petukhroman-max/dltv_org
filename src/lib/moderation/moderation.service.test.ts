@@ -65,6 +65,28 @@ describe("moderateTournamentSubmission", () => {
     expect(executeRpc.mock.calls[0][0]).not.toHaveProperty("event_type");
   });
 
+  it("accepts the public projection identity returned by publish", async () => {
+    const publishResult = {
+      ...rpcResult,
+      previous_status: "approved",
+      status: "published",
+      published_at: "2026-07-31T10:02:00Z",
+      public_tournament_id: "538b29db-1b84-47e4-8464-0d22f53f185b",
+      slug: "dltv-cup",
+    };
+    await expect(
+      service.moderateTournamentSubmission(
+        {
+          ...validInput,
+          expected_status: "approved",
+          target_status: "published",
+        },
+        admin,
+        vi.fn().mockResolvedValue(publishResult),
+      ),
+    ).resolves.toEqual(publishResult);
+  });
+
   it("maps a database serialization conflict to a safe conflict error", async () => {
     const executeRpc = vi.fn().mockRejectedValue({
       code: "40001",

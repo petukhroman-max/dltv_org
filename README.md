@@ -7,6 +7,9 @@ The public form is available at `/submit-tournament`. The protected `/admin`
 area supports explicit moderation actions and can issue capability links for
 organizers to edit submissions in `needs_changes`.
 
+Published tournaments are available through the indexable public catalog at
+`/tournaments` and stable detail URLs at `/tournaments/[slug]`.
+
 ## Requirements
 
 - Node.js 24.x
@@ -156,3 +159,5 @@ See [docs/database.md](docs/database.md) for the schema and migration details,
 transitions, timestamps, audit events, and deployment of its migration.
 [docs/organizer-edit-flow.md](docs/organizer-edit-flow.md) documents secure
 edit-link issuance, resubmission, expiry, revocation, and deployment.
+[docs/public-tournament-catalog.md](docs/public-tournament-catalog.md)
+documents the public read model, projection lifecycle, RLS, routes, and SEO.
