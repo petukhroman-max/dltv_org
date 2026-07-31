@@ -4,14 +4,14 @@ import { describe, expect, it } from "vitest";
 import Home from "@/app/page";
 
 describe("Home", () => {
-  it("renders the application shell", () => {
+  it("links to the public tournament submission flow", () => {
     render(<Home />);
 
-    expect(
-      screen.getByRole("heading", { name: "Портал организаторов турниров" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "Application shell работает",
+    expect(screen.getByRole("heading")).toHaveTextContent(
+      "Bring your tournament to the Deadlock community.",
     );
+    expect(
+      screen.getByRole("link", { name: "Submit a tournament" }),
+    ).toHaveAttribute("href", "/submit-tournament");
   });
 });

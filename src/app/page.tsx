@@ -1,17 +1,17 @@
+import Link from "next/link";
+
+import { publicSubmissionCopy } from "@/lib/submissions/public-submission.copy";
+
 export default function Home() {
   return (
     <main className="shell">
       <section className="hero" aria-labelledby="page-title">
-        <p className="eyebrow">DLTV Organizer Portal</p>
-        <h1 id="page-title">Портал организаторов турниров</h1>
-        <p className="description">
-          Техническая основа готова. Инструменты подачи и управления турнирами
-          появятся на следующих этапах.
-        </p>
-        <div className="status" role="status">
-          <span className="statusDot" aria-hidden="true" />
-          Application shell работает
-        </div>
+        <p className="eyebrow">{publicSubmissionCopy.home.eyebrow}</p>
+        <h1 id="page-title">{publicSubmissionCopy.home.title}</h1>
+        <p className="description">{publicSubmissionCopy.home.description}</p>
+        <Link className="primaryButton heroAction" href="/submit-tournament">
+          {publicSubmissionCopy.home.action}
+        </Link>
       </section>
     </main>
   );

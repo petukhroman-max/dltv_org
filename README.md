@@ -1,10 +1,10 @@
 # DLTV Organizer Portal
 
-Standalone Next.js portal foundation for receiving and reviewing tournament
-organizer submissions. Supabase provides the PostgreSQL database layer.
+Standalone Next.js portal for receiving tournament organizer submissions.
+Supabase provides the PostgreSQL database layer.
 
-This stage contains no public submission API, form, organizer dashboard, or
-admin UI.
+The public form is available at `/submit-tournament`. This stage does not
+include organizer authentication, editing, an admin UI, or a public API.
 
 ## Requirements
 
@@ -43,6 +43,22 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+To test a submission locally:
+
+1. Start Supabase and reset the database so all migrations are applied.
+2. Configure the local Supabase URL, anon key, and service-role key in
+   `.env.local`.
+3. Start the app and open
+   [http://localhost:3000/submit-tournament](http://localhost:3000/submit-tournament).
+4. Spend at least three seconds completing the required fields, confirm the
+   publication consent, and submit.
+5. Verify the success page and the new database rows.
+
+Public form submissions are created directly with `status = submitted` and
+`submitted_at = now()`. The browser never writes to Supabase directly: a
+Server Action validates the request and invokes the service-role-only atomic
+RPC.
+
 ## Supabase local development
 
 The committed migration is the source of truth; do not create production
@@ -77,14 +93,19 @@ reference.
 ## Security model
 
 RLS is enabled on all four tables. There are intentionally no permissive
-policies: `anon` and `authenticated` have no direct table access. Future public
-submission handling will call backend code, and organizer-level policies will
-be designed only after authentication and ownership are defined.
+policies: `anon` and `authenticated` have no direct table access. Public
+submission handling calls backend code, and organizer-level policies will be
+designed only after authentication and ownership are defined.
 
 The service-role key bypasses RLS and therefore exists only in a `server-only`
 module. Server repositories use that client and return safe `RepositoryError`
 instances instead of leaking database details. The atomic creation RPC is
 explicitly executable only by `service_role`.
+
+The public form adds a hidden honeypot, a three-second minimum fill time,
+server-side validation, a 32 KiB payload limit, and disabled pending state.
+These are low-cost spam signals, not full rate limiting. No CAPTCHA or shared
+rate-limit infrastructure is included yet.
 
 ## Checks
 
@@ -97,5 +118,5 @@ npm run format:check
 npm audit --omit=dev
 ```
 
-See [docs/database.md](docs/database.md) for the schema, lifecycle, repository
-API, and migration details.
+See [docs/database.md](docs/database.md) for the schema and migration details,
+and [docs/public-submission.md](docs/public-submission.md) for the public flow.
