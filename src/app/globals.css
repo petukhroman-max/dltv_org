@@ -19,7 +19,11 @@ body {
 body {
   margin: 0;
   background:
-    radial-gradient(circle at 50% 0%, rgba(114, 241, 184, 0.12), transparent 34rem),
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(114, 241, 184, 0.12),
+      transparent 34rem
+    ),
     var(--background);
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
