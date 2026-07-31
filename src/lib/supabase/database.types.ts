@@ -78,6 +78,35 @@ type SubmissionEditTokenRow = {
   created_at: string;
 };
 
+type PublishedTournamentRow = {
+  id: string;
+  submission_id: string;
+  slug: string;
+  tournament_name: string;
+  description: string | null;
+  organizer_name: string;
+  region: string;
+  language: string | null;
+  start_date: string;
+  end_date: string;
+  timezone: string;
+  format: string | null;
+  prize_pool_text: string | null;
+  registration_url: string | null;
+  bracket_url: string | null;
+  discord_url: string | null;
+  stream_url: string | null;
+  rules_url: string | null;
+  is_online: boolean;
+  max_teams: number | null;
+  registration_deadline: string | null;
+  visibility_status: string;
+  source_updated_at: string;
+  published_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -157,6 +186,19 @@ export type Database = {
           revoked_at?: string | null;
         };
         Update: Partial<Omit<SubmissionEditTokenRow, "id" | "created_at">>;
+        Relationships: [];
+      };
+      published_tournaments: {
+        Row: PublishedTournamentRow;
+        Insert: Omit<
+          PublishedTournamentRow,
+          "id" | "created_at" | "updated_at"
+        > & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<PublishedTournamentRow, "id" | "created_at">>;
         Relationships: [];
       };
     };

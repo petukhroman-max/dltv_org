@@ -120,8 +120,15 @@ h1 {
   opacity: 0.65;
 }
 
-.heroAction {
+.heroAction,
+.heroActions {
   margin-top: 2rem;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .formShell {
@@ -751,6 +758,187 @@ h1 {
   border: 0;
 }
 
+.catalogShell {
+  width: min(100%, 78rem);
+  margin: 0 auto;
+  padding: clamp(1.25rem, 4vw, 3rem);
+}
+
+.catalogHeader {
+  padding: 2rem 0;
+}
+
+.catalogHeader h1,
+.publicTournamentDetails h1 {
+  max-width: 18ch;
+}
+
+.lifecycleFilters,
+.regionFilter,
+.publicLinkGrid,
+.tournamentCardHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.lifecycleFilters {
+  margin-bottom: 1rem;
+}
+
+.lifecycleFilters a {
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-weight: 800;
+  text-decoration: none;
+  text-transform: capitalize;
+}
+
+.lifecycleFilters a[aria-current="page"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.regionFilter {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  background: var(--surface);
+}
+
+.regionFilter label {
+  font-weight: 800;
+}
+
+.regionFilter input {
+  min-height: 2.7rem;
+  flex: 1 1 14rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: #0b1018;
+  color: var(--text);
+}
+
+.tournamentGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.tournamentCard {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: rgba(17, 23, 34, 0.92);
+}
+
+.tournamentCard h2,
+.tournamentCard p {
+  margin: 0;
+}
+
+.tournamentCardHeading {
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.lifecycleBadge {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid rgba(114, 241, 184, 0.3);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.lifecycleBadge[data-lifecycle="completed"] {
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+.lifecycleBadge[data-lifecycle="ongoing"] {
+  background: rgba(114, 241, 184, 0.08);
+}
+
+.tournamentFacts,
+.tournamentDetailGrid {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0;
+}
+
+.tournamentFacts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tournamentFacts div,
+.tournamentDetailGrid div {
+  min-width: 0;
+}
+
+.tournamentFacts dt,
+.tournamentDetailGrid dt {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tournamentFacts dd,
+.tournamentDetailGrid dd {
+  margin: 0.3rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.tournamentDetailGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.publicTournamentDetails {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.publicTournamentDetails .formSection,
+.publicTournamentDetails .pageHeader {
+  margin: 0;
+}
+
+.tournamentDescription {
+  margin-top: 2rem;
+}
+
+.tournamentDescription p,
+.provenance {
+  color: var(--muted);
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.provenance {
+  padding: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.provenance p {
+  margin: 0.25rem 0;
+}
+
 @media (max-width: 42rem) {
   .shell {
     padding: 1rem;
@@ -763,6 +951,18 @@ h1 {
   }
 
   .fieldGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .heroActions,
+  .regionFilter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tournamentGrid,
+  .tournamentFacts,
+  .tournamentDetailGrid {
     grid-template-columns: 1fr;
   }
 

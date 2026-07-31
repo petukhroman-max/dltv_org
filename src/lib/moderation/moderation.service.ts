@@ -26,6 +26,8 @@ const moderationResultSchema = z.object({
   updated_at: z.string(),
   reviewed_at: z.string().nullable(),
   published_at: z.string().nullable(),
+  public_tournament_id: z.uuid().nullable().optional(),
+  slug: z.string().nullable().optional(),
 });
 
 export type ModerationResult = z.infer<typeof moderationResultSchema>;

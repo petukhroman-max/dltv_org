@@ -13,6 +13,9 @@
   until the authentication design is established.
 - `submission_edit_tokens` stores SHA-256 capability-token hashes, expiry and
   consumption/revocation state. It never stores the raw organizer URL token.
+- `published_tournaments` is a public-safe denormalized read model. It contains
+  no organizer contact, moderation notes, internal organizer notes, audit
+  metadata, or edit-token data.
 
 No teams, matches, brackets, participants, rosters, or authentication ownership
 columns are part of this foundation.
