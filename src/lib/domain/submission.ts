@@ -143,6 +143,11 @@ export const listFiltersSchema = z
   .object({
     status: submissionStatusSchema.optional(),
     organizer_id: z.uuid().optional(),
+    region: z.preprocess(
+      (value) =>
+        typeof value === "string" && value.trim() === "" ? undefined : value,
+      z.string().trim().min(1).max(100).optional(),
+    ),
     start_date_from: dateOnlySchema.optional(),
     start_date_to: dateOnlySchema.optional(),
     limit: z.number().int().min(1).max(100).default(50),
