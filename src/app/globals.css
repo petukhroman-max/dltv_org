@@ -1,10 +1,15 @@
 :root {
   color-scheme: dark;
-  --background: #090b10;
-  --surface: #121620;
-  --text: #f7f8fa;
-  --muted: #a6adbb;
+  --background: #080b10;
+  --surface: #111722;
+  --surface-raised: #171f2d;
+  --text: #f5f7fa;
+  --muted: #a9b2c2;
+  --border: rgba(255, 255, 255, 0.12);
   --accent: #72f1b8;
+  --accent-strong: #42d99a;
+  --danger: #ff8b8b;
+  --focus: #9af8cf;
 }
 
 * {
@@ -29,6 +34,16 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
 .shell {
   display: grid;
   min-height: 100vh;
@@ -36,12 +51,13 @@ body {
   padding: 2rem;
 }
 
-.hero {
-  width: min(100%, 46rem);
+.hero,
+.successCard {
+  width: min(100%, 50rem);
   padding: clamp(2rem, 6vw, 4rem);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 1.5rem;
-  background: rgba(18, 22, 32, 0.88);
+  background: rgba(17, 23, 34, 0.92);
   box-shadow: 0 2rem 6rem rgba(0, 0, 0, 0.35);
 }
 
@@ -55,7 +71,7 @@ body {
 }
 
 h1 {
-  max-width: 12ch;
+  max-width: 14ch;
   margin: 0;
   font-size: clamp(2.25rem, 7vw, 4.5rem);
   line-height: 0.98;
@@ -63,39 +79,284 @@ h1 {
 }
 
 .description {
-  max-width: 36rem;
-  margin: 1.75rem 0 0;
+  max-width: 40rem;
+  margin: 1.5rem 0 0;
   color: var(--muted);
   font-size: 1.05rem;
   line-height: 1.65;
 }
 
-.status {
+.primaryButton {
   display: inline-flex;
+  min-height: 3rem;
   align-items: center;
-  gap: 0.65rem;
+  justify-content: center;
+  padding: 0.8rem 1.2rem;
+  border: 1px solid transparent;
+  border-radius: 0.7rem;
+  background: var(--accent);
+  color: #06110c;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: var(--accent-strong);
+  transform: translateY(-1px);
+}
+
+.primaryButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.heroAction {
   margin-top: 2rem;
-  padding: 0.65rem 0.85rem;
-  border: 1px solid rgba(114, 241, 184, 0.2);
+}
+
+.formShell {
+  width: min(100%, 56rem);
+  margin: 0 auto;
+  padding: clamp(1rem, 4vw, 3rem);
+}
+
+.pageHeader {
+  padding: 2rem 0 2.5rem;
+}
+
+.submissionForm {
+  display: grid;
+  gap: 1.25rem;
+  padding-bottom: 4rem;
+}
+
+.formSection {
+  min-width: 0;
+  margin: 0;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: rgba(17, 23, 34, 0.92);
+}
+
+.formSection legend {
+  padding: 0 0.5rem;
+  color: var(--text);
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.sectionDescription {
+  margin: 0 0 1.5rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.field {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+}
+
+.fieldWide {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  outline: none;
+  background: #0b1018;
+  color: var(--text);
+}
+
+.field input {
+  min-height: 2.9rem;
+  padding: 0.7rem 0.8rem;
+}
+
+.field textarea {
+  min-height: 8rem;
+  resize: vertical;
+  padding: 0.8rem;
+  line-height: 1.5;
+}
+
+.field input:focus,
+.field textarea:focus,
+.checkboxLabel input:focus-visible,
+.primaryButton:focus-visible,
+.textLink:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.field input[aria-invalid="true"],
+.field textarea[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.fieldHelper,
+.fieldError {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.fieldHelper {
+  color: var(--muted);
+}
+
+.fieldError {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: var(--text);
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.checkboxLabel input {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: 0 0 auto;
+  margin: 0.18rem 0 0;
+  accent-color: var(--accent);
+}
+
+.consentBlock {
+  padding: 1.25rem;
+  border: 1px solid rgba(114, 241, 184, 0.3);
+  border-radius: 1rem;
+  background: rgba(114, 241, 184, 0.06);
+}
+
+.consentBlock .fieldError {
+  margin: 0.65rem 0 0 1.9rem;
+}
+
+.formError {
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid rgba(255, 139, 139, 0.45);
+  border-radius: 0.7rem;
+  background: rgba(255, 139, 139, 0.08);
+  color: #ffd0d0;
+  line-height: 1.5;
+}
+
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.textLink {
+  padding: 0.7rem;
+  color: var(--muted);
+  font-weight: 700;
+  text-underline-offset: 0.25rem;
+}
+
+.textLink:hover {
+  color: var(--text);
+}
+
+.honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.statusRow,
+.referenceBlock {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 1.5rem;
+}
+
+.statusRow span,
+.referenceBlock span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.statusRow strong {
+  width: fit-content;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid rgba(114, 241, 184, 0.25);
   border-radius: 999px;
   color: var(--accent);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
-.statusDot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: currentColor;
-  box-shadow: 0 0 0.8rem currentColor;
+.referenceBlock code {
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: clamp(0.8rem, 2vw, 1rem);
 }
 
-@media (max-width: 36rem) {
+.supportingText {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+@media (max-width: 42rem) {
   .shell {
     padding: 1rem;
   }
 
-  .hero {
+  .hero,
+  .successCard {
     border-radius: 1rem;
+  }
+
+  .fieldGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .fieldWide {
+    grid-column: auto;
+  }
+
+  .formActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .primaryButton,
+  .textLink {
+    width: 100%;
+    text-align: center;
   }
 }

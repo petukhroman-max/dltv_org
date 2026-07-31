@@ -29,6 +29,10 @@ function isAtomicCreationResult(value: Json): value is AtomicCreationResult {
 export async function createTournamentSubmissionWithOrganizer(input: {
   organizer: unknown;
   submission: unknown;
+  consent: {
+    consent_to_publish: true;
+    consent_version: "v1";
+  };
 }): Promise<AtomicCreationResult> {
   const organizer = organizerInputSchema.parse(input.organizer);
   const submission = tournamentSubmissionInputSchema.parse(input.submission);
@@ -37,7 +41,10 @@ export async function createTournamentSubmissionWithOrganizer(input: {
     "create_tournament_submission_with_organizer",
     {
       p_organizer: organizer,
-      p_submission: submission,
+      p_submission: {
+        ...submission,
+        ...input.consent,
+      },
     },
   );
 

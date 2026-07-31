@@ -63,14 +63,17 @@ They sort by `created_at` descending, default to 50 rows, and cap the limit at 1
 ## Atomic creation RPC
 
 `create_tournament_submission_with_organizer(p_organizer, p_submission)`
-creates the organizer, a draft submission, and a `submission_created` event in
-one PostgreSQL transaction. Any failure rolls back all three writes. The
-`SECURITY DEFINER` function has a pinned search path and execution is revoked
-from `public`, `anon`, and `authenticated`; only `service_role` can invoke it.
+creates the organizer, a submitted submission with `submitted_at = now()`, and
+a `submission_submitted` event in one PostgreSQL transaction. The event records
+the organizer actor and consent metadata. Any failure rolls back all three
+writes. The `SECURITY DEFINER` function has a pinned search path and execution
+is revoked from `public`, `anon`, and `authenticated`; only `service_role` can
+invoke it.
 
 `createTournamentSubmissionWithOrganizer` validates both payloads before making
-the single RPC call. No public HTTP endpoint exposes this service in this
-stage.
+the single RPC call. It adds the fixed consent version after the public Server
+Action has validated the checkbox. No public HTTP endpoint exposes this
+service.
 
 ## Functions, triggers, and indexes
 
@@ -87,10 +90,11 @@ The migration creates only these indexes:
 
 ## Migration workflow
 
-The migration source is:
+The migration sources are:
 
 ```text
 supabase/migrations/20260731_create_organizer_portal_schema.sql
+supabase/migrations/20260731_update_public_submission_rpc.sql
 ```
 
 Local workflow:
@@ -124,6 +128,6 @@ Review the generated diff against migrations before committing it.
 
 ## Deliberately out of scope
 
-This schema does not implement a public submission endpoint or form, admin UI,
-organizer dashboard, email or Discord integration, authentication, ingestion
-export, AI extraction, teams, rosters, matches, brackets, or live scoring.
+This schema does not implement an admin UI, organizer dashboard, email or
+Discord integration, authentication, ingestion export, AI extraction, teams,
+rosters, matches, brackets, or live scoring.

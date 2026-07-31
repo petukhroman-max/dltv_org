@@ -25,6 +25,16 @@ const optionalText = z.preprocess(
         : value,
   z.string().min(1).nullable().optional().default(null),
 );
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const protocol = new URL(value).protocol;
+    return protocol === "http:" || protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 const optionalHttpUrl = z.preprocess(
   (value) =>
     typeof value === "string" && value.trim() === ""
@@ -33,11 +43,9 @@ const optionalHttpUrl = z.preprocess(
         ? value.trim()
         : value,
   z
+    .string()
     .url()
-    .refine((value) => {
-      const protocol = new URL(value).protocol;
-      return protocol === "http:" || protocol === "https:";
-    }, "URL must use http or https")
+    .refine(isHttpUrl, "URL must use http or https")
     .nullable()
     .optional()
     .default(null),

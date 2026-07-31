@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ZodError } from "zod";
 
 import {
   assertSubmissionStatusTransition,
@@ -39,6 +40,14 @@ const validSubmission = {
   organizer_notes: "",
 };
 
+const tournamentUrlFields = [
+  "registration_url",
+  "bracket_url",
+  "discord_url",
+  "stream_url",
+  "rules_url",
+] as const;
+
 describe("organizerInputSchema", () => {
   it("accepts and normalizes a valid organizer", () => {
     expect(organizerInputSchema.parse(validOrganizer)).toEqual({
@@ -50,22 +59,59 @@ describe("organizerInputSchema", () => {
     });
   });
 
-  it("rejects an invalid URL", () => {
-    expect(() =>
+  it("normalizes an empty optional URL to null", () => {
+    expect(
       organizerInputSchema.parse({
         ...validOrganizer,
-        website_url: "not a url",
-      }),
-    ).toThrow();
+        website_url: "  ",
+      }).website_url,
+    ).toBeNull();
   });
 
-  it("rejects non-http URL protocols", () => {
-    expect(() =>
+  it.each(["http://[", "abc"])(
+    "returns a validation error for malformed URL %s",
+    (websiteUrl) => {
+      expect(
+        organizerInputSchema.safeParse({
+          ...validOrganizer,
+          website_url: websiteUrl,
+        }).success,
+      ).toBe(false);
+    },
+  );
+
+  it.each(["javascript:alert(1)", "data:text/plain,test", "ftp://example.com"])(
+    "rejects the non-http protocol in %s",
+    (websiteUrl) => {
+      expect(
+        organizerInputSchema.safeParse({
+          ...validOrganizer,
+          website_url: websiteUrl,
+        }).success,
+      ).toBe(false);
+    },
+  );
+
+  it("accepts a valid https URL", () => {
+    expect(
       organizerInputSchema.parse({
         ...validOrganizer,
-        website_url: "javascript:alert(1)",
-      }),
-    ).toThrow();
+        website_url: "https://example.com/events",
+      }).website_url,
+    ).toBe("https://example.com/events");
+  });
+
+  it("never exposes a raw TypeError for an invalid URL", () => {
+    try {
+      organizerInputSchema.parse({
+        ...validOrganizer,
+        website_url: "http://[",
+      });
+      throw new Error("Expected URL validation to fail");
+    } catch (error) {
+      expect(error).toBeInstanceOf(ZodError);
+      expect(error).not.toBeInstanceOf(TypeError);
+    }
   });
 });
 
@@ -120,6 +166,37 @@ describe("tournamentSubmissionInputSchema", () => {
     expect(parsed.description).toBeNull();
     expect(parsed.rules_url).toBeNull();
     expect(parsed.organizer_notes).toBeNull();
+  });
+
+  it.each(tournamentUrlFields)("normalizes an empty %s to null", (field) => {
+    const parsed = tournamentSubmissionInputSchema.parse({
+      ...validSubmission,
+      [field]: " ",
+    });
+    expect(parsed[field]).toBeNull();
+  });
+
+  it.each(tournamentUrlFields)(
+    "returns a Zod validation error for malformed %s",
+    (field) => {
+      const result = tournamentSubmissionInputSchema.safeParse({
+        ...validSubmission,
+        [field]: "http://[",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toBeInstanceOf(ZodError);
+      }
+    },
+  );
+
+  it.each(tournamentUrlFields)("accepts a valid https %s", (field) => {
+    const url = `https://example.com/${field}`;
+    const parsed = tournamentSubmissionInputSchema.parse({
+      ...validSubmission,
+      [field]: url,
+    });
+    expect(parsed[field]).toBe(url);
   });
 
   it("rejects registration deadlines without an offset", () => {
