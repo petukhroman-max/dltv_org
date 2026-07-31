@@ -64,6 +64,7 @@ export const adminCopy = {
     consentToPublish: "Consent to publish",
     consentVersion: "Consent version",
     unknownMetadata: "Additional metadata",
+    moderation: "Moderation",
   },
   error: {
     title: "Admin area unavailable",

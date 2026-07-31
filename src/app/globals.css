@@ -649,6 +649,54 @@ h1 {
   font-size: 0.8rem;
 }
 
+.adminMetadataLabel {
+  margin: 1rem 0 0.35rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.moderationGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.moderationForm {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.moderationForm h3,
+.moderationForm p {
+  margin: 0;
+}
+
+.moderationForm textarea {
+  min-height: 7rem;
+}
+
+.moderationForm .primaryButton {
+  width: fit-content;
+}
+
+.adminWarning {
+  margin: 0 0 1.25rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(255, 210, 120, 0.3);
+  border-radius: 0.7rem;
+  background: rgba(255, 210, 120, 0.06);
+  color: #ffe1a3;
+  line-height: 1.5;
+}
+
 .adminStandaloneAction {
   margin-top: 1.5rem;
 }
@@ -727,7 +775,8 @@ h1 {
   }
 
   .adminFilterGrid,
-  .adminDefinitionGrid {
+  .adminDefinitionGrid,
+  .moderationGrid {
     grid-template-columns: 1fr;
   }
 
