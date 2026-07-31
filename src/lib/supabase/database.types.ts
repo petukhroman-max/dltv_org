@@ -67,6 +67,17 @@ type AdminUserRow = {
   created_at: string;
 };
 
+type SubmissionEditTokenRow = {
+  id: string;
+  submission_id: string;
+  token_hash: string;
+  expires_at: string;
+  used_at: string | null;
+  revoked_at: string | null;
+  created_by: string;
+  created_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -134,6 +145,20 @@ export type Database = {
         Update: Partial<Omit<AdminUserRow, "user_id" | "created_at">>;
         Relationships: [];
       };
+      submission_edit_tokens: {
+        Row: SubmissionEditTokenRow;
+        Insert: Omit<
+          SubmissionEditTokenRow,
+          "id" | "created_at" | "used_at" | "revoked_at"
+        > & {
+          id?: string;
+          created_at?: string;
+          used_at?: string | null;
+          revoked_at?: string | null;
+        };
+        Update: Partial<Omit<SubmissionEditTokenRow, "id" | "created_at">>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -152,6 +177,23 @@ export type Database = {
           p_reviewer_id: string;
           p_reviewer_note: string | null;
         };
+        Returns: Json;
+      };
+      create_submission_edit_token: {
+        Args: {
+          p_submission_id: string;
+          p_token_hash: string;
+          p_expires_at: string;
+          p_created_by: string;
+        };
+        Returns: Json;
+      };
+      revoke_submission_edit_tokens: {
+        Args: { p_submission_id: string; p_reviewer_id: string };
+        Returns: Json;
+      };
+      resubmit_tournament_submission: {
+        Args: { p_token_hash: string; p_submission: Json };
         Returns: Json;
       };
     };

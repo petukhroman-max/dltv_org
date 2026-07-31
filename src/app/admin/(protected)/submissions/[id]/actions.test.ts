@@ -10,15 +10,26 @@ vi.mock("@/lib/moderation/moderation.service", async (importOriginal) => {
     >();
   return { ...actual, moderateTournamentSubmission: vi.fn() };
 });
+vi.mock("@/lib/organizer-edit/organizer-edit.service", () => ({
+  OrganizerEditError: class OrganizerEditError extends Error {},
+  createSubmissionEditLink: vi.fn(),
+  revokeSubmissionEditLinks: vi.fn(),
+}));
 
 import {
   approveSubmissionAction,
+  createSubmissionEditLinkAction,
   publishSubmissionAction,
   rejectSubmissionAction,
   requestChangesAction,
+  revokeSubmissionEditLinksAction,
 } from "@/app/admin/(protected)/submissions/[id]/actions";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { moderateTournamentSubmission } from "@/lib/moderation/moderation.service";
+import {
+  createSubmissionEditLink,
+  revokeSubmissionEditLinks,
+} from "@/lib/organizer-edit/organizer-edit.service";
 import { submissionId } from "@/test/admin-fixtures";
 
 const admin = {
@@ -88,5 +99,46 @@ describe("moderation server actions", () => {
         confirmed: "Confirm this moderation action to continue.",
       },
     });
+  });
+});
+
+describe("organizer edit-link server actions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(requireAdmin).mockResolvedValue(admin);
+    vi.mocked(createSubmissionEditLink).mockResolvedValue({
+      id: "8a961b0b-aea5-4642-8167-7ce4967ae2d7",
+      submission_id: submissionId,
+      expires_at: "2026-08-07T10:00:00.000Z",
+      created_at: "2026-07-31T10:00:00.000Z",
+      editUrl: `https://portal.example.com/edit-submission/${"A".repeat(43)}`,
+    });
+    vi.mocked(revokeSubmissionEditLinks).mockResolvedValue({
+      submission_id: submissionId,
+      revoked_count: 1,
+    });
+  });
+
+  it("requires admin and returns a newly issued plaintext URL once", async () => {
+    const state = await createSubmissionEditLinkAction(
+      { status: "idle" },
+      actionForm("needs_changes"),
+    );
+    expect(requireAdmin).toHaveBeenCalledOnce();
+    expect(createSubmissionEditLink).toHaveBeenCalledWith(submissionId, admin);
+    expect(state).toMatchObject({
+      status: "success",
+      editUrl: expect.stringContaining("/edit-submission/"),
+    });
+  });
+
+  it("requires admin and revokes by server-derived identity", async () => {
+    const state = await revokeSubmissionEditLinksAction(
+      { status: "idle" },
+      actionForm("needs_changes"),
+    );
+    expect(requireAdmin).toHaveBeenCalledOnce();
+    expect(revokeSubmissionEditLinks).toHaveBeenCalledWith(submissionId, admin);
+    expect(state).toMatchObject({ status: "success" });
   });
 });

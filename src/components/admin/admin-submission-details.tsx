@@ -19,6 +19,9 @@ const moderationEventLabels: Record<string, string> = {
   submission_rejected: "Rejected by admin",
   changes_requested: "Changes requested",
   submission_published: "Published",
+  edit_link_created: "Organizer edit link created",
+  edit_link_revoked: "Organizer edit link revoked",
+  submission_resubmitted: "Resubmitted by organizer",
 };
 
 function Value({

@@ -4,10 +4,12 @@ import { notFound } from "next/navigation";
 
 import { AdminSubmissionDetails } from "@/components/admin/admin-submission-details";
 import { AdminModerationPanel } from "@/components/admin/admin-moderation-panel";
+import { AdminEditLinkPanel } from "@/components/admin/admin-edit-link-panel";
 import { adminCopy } from "@/lib/admin/copy";
 import { loadAdminSubmissionDetails } from "@/lib/admin/details";
 import { getTournamentSubmissionDetails } from "@/lib/repositories/submission-details";
 import { submissionStatusSchema } from "@/lib/domain/submission";
+import { getSubmissionEditTokenStatus } from "@/lib/organizer-edit/organizer-edit.service";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -25,6 +27,10 @@ export default async function AdminSubmissionDetailsPage({
     notFound,
   );
   const status = submissionStatusSchema.safeParse(details.submission.status);
+  const editTokenStatus =
+    status.success && status.data === "needs_changes"
+      ? await getSubmissionEditTokenStatus(details.submission.id)
+      : null;
 
   return (
     <main className="adminMain">
@@ -43,6 +49,12 @@ export default async function AdminSubmissionDetailsPage({
           <AdminModerationPanel
             submissionId={details.submission.id}
             status={status.data}
+          />
+        ) : null}
+        {status.success && status.data === "needs_changes" ? (
+          <AdminEditLinkPanel
+            submissionId={details.submission.id}
+            tokenStatus={editTokenStatus}
           />
         ) : null}
         <AdminSubmissionDetails details={details} />

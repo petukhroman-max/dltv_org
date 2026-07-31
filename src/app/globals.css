@@ -723,6 +723,23 @@ h1 {
   line-height: 1.5;
 }
 
+.editLinkResult {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(114, 241, 184, 0.3);
+  border-radius: 0.7rem;
+  background: rgba(114, 241, 184, 0.06);
+}
+
+.editLinkResult code {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
 .visuallyHidden {
   position: absolute;
   width: 1px;
@@ -762,6 +779,11 @@ h1 {
   .textLink {
     width: 100%;
     text-align: center;
+  }
+
+  .editLinkResult {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .adminHeader {
