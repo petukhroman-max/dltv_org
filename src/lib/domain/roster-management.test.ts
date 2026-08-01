@@ -37,6 +37,24 @@ describe("roster management schemas", () => {
     ).toBe(false);
   });
 
+  it("rejects an empty display name and never accepts real_name into the parsed model", () => {
+    expect(createPlayerSchema.safeParse({ display_name: "   " }).success).toBe(
+      false,
+    );
+    expect(
+      createPlayerSchema.parse({
+        display_name: "Ace",
+        real_name: "Private Name",
+      }),
+    ).not.toHaveProperty("real_name");
+  });
+
+  it("allows separate players to share a display name", () => {
+    const first = createPlayerSchema.parse({ display_name: "Ace" });
+    const second = createPlayerSchema.parse({ display_name: "Ace" });
+    expect(first.display_name).toBe(second.display_name);
+  });
+
   it("allows all roster roles but only player captains", () => {
     expect(
       createPlayerAndAddToRosterSchema.safeParse({
@@ -48,12 +66,26 @@ describe("roster management schemas", () => {
     ).toBe(true);
     expect(
       updateRosterMembershipSchema.safeParse({
+        tournament_team_id: teamAId,
         membership_id: "d72ca353-10d5-468a-aabb-81a239fbe78f",
         expected_updated_at: "2026-08-01T10:00:00Z",
         role: "coach",
         is_captain: true,
-        is_active: true,
       }).success,
     ).toBe(false);
   });
+
+  it.each(["player", "substitute", "coach", "manager"] as const)(
+    "accepts %s membership",
+    (role) => {
+      expect(
+        createPlayerAndAddToRosterSchema.safeParse({
+          tournament_team_id: teamAId,
+          role,
+          is_captain: false,
+          new_player: { display_name: "Ace" },
+        }).success,
+      ).toBe(true);
+    },
+  );
 });

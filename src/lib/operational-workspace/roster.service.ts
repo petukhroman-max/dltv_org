@@ -104,14 +104,19 @@ function mapError(error: unknown): never {
   if (code(error) === "40001") throw new RosterConflictError();
   if (code(error) === "42501" || detail.includes("access_denied"))
     throw new RosterAuthorizationError();
-  if (code(error) === "23505" || detail.includes("platform_id_conflict"))
+  if (detail.includes("platform_id_conflict"))
     throw new RosterDuplicateIdentityError("platform_id");
+  if (detail.includes("membership_conflict"))
+    throw new RosterValidationError({
+      player_id: "This player already has this role on the selected team.",
+    });
   if (detail.includes("same_name_confirmation_required"))
     throw new RosterDuplicateIdentityError("display_name");
   if (detail.includes("captain_role_invalid"))
     throw new RosterValidationError({
       is_captain: "Only a player can be assigned as captain.",
     });
+  if (code(error) === "23505") throw new RosterMutationError();
   throw new RosterMutationError();
 }
 function payload(value: unknown): Json {

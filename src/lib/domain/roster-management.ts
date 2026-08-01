@@ -79,11 +79,11 @@ export const createPlayerAndAddToRosterSchema = membershipFields.and(
 
 export const updateRosterMembershipSchema = z
   .object({
+    tournament_team_id: z.string().uuid(),
     membership_id: z.string().uuid(),
     expected_updated_at: z.string().datetime({ offset: true }),
     role: tournamentRosterRoleSchema,
     is_captain: z.boolean(),
-    is_active: z.boolean(),
   })
   .superRefine((value, context) => {
     if (value.is_captain && value.role !== "player") {
@@ -96,6 +96,7 @@ export const updateRosterMembershipSchema = z
   });
 
 const membershipVersionSchema = z.object({
+  tournament_team_id: z.string().uuid(),
   membership_id: z.string().uuid(),
   expected_updated_at: z.string().datetime({ offset: true }),
 });

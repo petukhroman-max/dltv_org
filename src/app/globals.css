@@ -50,6 +50,18 @@
   margin: 0.25rem 0 0;
 }
 
+.operationalCardHeader strong {
+  overflow-wrap: anywhere;
+}
+
+.rosterRoleGroup {
+  margin-top: 1rem;
+}
+
+.rosterRoleGroup h4 {
+  margin-bottom: 0.5rem;
+}
+
 .operationalFacts {
   display: grid;
   gap: 0.75rem;

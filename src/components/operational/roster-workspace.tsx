@@ -24,6 +24,12 @@ export type RosterActions = {
 };
 
 const roles = ["player", "substitute", "coach", "manager"] as const;
+const roleLabels = {
+  player: "Player",
+  substitute: "Substitute",
+  coach: "Coach",
+  manager: "Manager",
+} as const;
 
 function Submit({
   pending,
@@ -69,7 +75,7 @@ function RoleFields({
         <select name="role" defaultValue={defaultRole}>
           {roles.map((role) => (
             <option key={role} value={role}>
-              {role}
+              {roleLabels[role]}
             </option>
           ))}
         </select>
@@ -259,7 +265,8 @@ function ActiveMember({
             {member.is_captain ? " · Captain" : ""}
           </strong>
           <p>
-            {member.role} · {member.player.country_code ?? "No country"}
+            {roleLabels[member.role]} ·{" "}
+            {member.player.country_code ?? "No country"}
           </p>
         </div>
       </div>
@@ -297,6 +304,11 @@ function ActiveMember({
           <input type="hidden" name="membership_id" value={member.id} />
           <input
             type="hidden"
+            name="tournament_team_id"
+            value={member.tournament_team_id}
+          />
+          <input
+            type="hidden"
             name="expected_updated_at"
             value={member.updated_at}
           />
@@ -312,6 +324,11 @@ function ActiveMember({
         <p>The historical membership will be retained.</p>
         <form action={removeAction}>
           <input type="hidden" name="membership_id" value={member.id} />
+          <input
+            type="hidden"
+            name="tournament_team_id"
+            value={member.tournament_team_id}
+          />
           <input
             type="hidden"
             name="expected_updated_at"
@@ -336,9 +353,14 @@ function InactiveMember({
   return (
     <article className="operationalCard">
       <strong>{member.player.display_name}</strong>
-      <p>Previously {member.role}</p>
+      <p>Previously {roleLabels[member.role]}</p>
       <form action={formAction}>
         <input type="hidden" name="membership_id" value={member.id} />
+        <input
+          type="hidden"
+          name="tournament_team_id"
+          value={member.tournament_team_id}
+        />
         <input
           type="hidden"
           name="expected_updated_at"
@@ -348,7 +370,9 @@ function InactiveMember({
           Role
           <select name="role" defaultValue={member.role}>
             {roles.map((role) => (
-              <option key={role}>{role}</option>
+              <option key={role} value={role}>
+                {roleLabels[role]}
+              </option>
             ))}
           </select>
         </label>
@@ -420,15 +444,25 @@ export function RosterWorkspace({
                 />
               </div>
               {active.length ? (
-                <div className="operationalCards">
-                  {active.map((member) => (
-                    <ActiveMember
-                      key={member.id}
-                      member={member}
-                      actions={actions}
-                    />
-                  ))}
-                </div>
+                roles.map((role) => {
+                  const roleMembers = active.filter(
+                    (member) => member.role === role,
+                  );
+                  return roleMembers.length ? (
+                    <section key={role} className="rosterRoleGroup">
+                      <h4>{roleLabels[role]}</h4>
+                      <div className="operationalCards">
+                        {roleMembers.map((member) => (
+                          <ActiveMember
+                            key={member.id}
+                            member={member}
+                            actions={actions}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  ) : null;
+                })
               ) : (
                 <p className="adminEmpty">No active roster members.</p>
               )}

@@ -107,11 +107,11 @@ export async function runRosterMutation(
         {
           submissionId,
           values: {
+            tournament_team_id: text(formData, "tournament_team_id"),
             membership_id: text(formData, "membership_id"),
             expected_updated_at: text(formData, "expected_updated_at"),
             role: text(formData, "role"),
             is_captain: formData.get("is_captain") === "on",
-            is_active: true,
           },
         },
         context,
@@ -121,6 +121,7 @@ export async function runRosterMutation(
         {
           submissionId,
           values: {
+            tournament_team_id: text(formData, "tournament_team_id"),
             membership_id: text(formData, "membership_id"),
             expected_updated_at: text(formData, "expected_updated_at"),
           },
@@ -132,6 +133,7 @@ export async function runRosterMutation(
         {
           submissionId,
           values: {
+            tournament_team_id: text(formData, "tournament_team_id"),
             membership_id: text(formData, "membership_id"),
             expected_updated_at: text(formData, "expected_updated_at"),
             role: text(formData, "role"),

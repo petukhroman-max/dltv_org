@@ -17,6 +17,7 @@ describe("organizer workspace route and UI security", () => {
     "src/app/admin/(protected)/submissions/[id]/workspace-link-actions.ts",
   );
   const form = source("src/components/operational/stages-teams-workspace.tsx");
+  const rosterForm = source("src/components/operational/roster-workspace.tsx");
   const middleware = source("src/middleware.ts");
 
   it("uses a dynamic no-store, noindex workspace with generic invalid state", () => {
@@ -43,6 +44,8 @@ describe("organizer workspace route and UI security", () => {
     expect(form).not.toContain('name="token"');
     expect(page).not.toMatch(/<code>\s*\{token\}/);
     expect(page).not.toMatch(/>\s*\{token\}\s*</);
+    expect(rosterForm).not.toContain("rawToken");
+    expect(rosterForm).not.toContain('name="token"');
   });
 
   it("revalidates workspace access in actions and requires admin in admin actions", () => {
@@ -56,6 +59,11 @@ describe("organizer workspace route and UI security", () => {
     expect(form).not.toContain('name="event_type"');
     expect(form).not.toContain('name="slug"');
     expect(form).not.toContain('name="source"');
+    expect(rosterForm).not.toContain('name="submission_id"');
+    expect(rosterForm).not.toContain('name="actor_type"');
+    expect(rosterForm).not.toContain('name="actor_id"');
+    expect(rosterForm).not.toContain('name="event_type"');
+    expect(rosterForm).not.toContain('name="metadata"');
   });
 
   it("mounts the shared stage and team CRUD in admin", () => {
@@ -64,6 +72,7 @@ describe("organizer workspace route and UI security", () => {
     );
     expect(adminPage).toContain("<StagesTeamsWorkspace");
     expect(adminPage).toContain("<AdminWorkspaceLinkPanel");
+    expect(adminPage).toContain("<RosterWorkspace");
   });
 
   it("contains required empty, pending, conflict and dependency copy", () => {
@@ -93,5 +102,7 @@ describe("organizer workspace route and UI security", () => {
     expect(publicPages).not.toContain("tournament_stages");
     expect(publicPages).not.toContain("tournament_teams");
     expect(publicPages).not.toContain("organizer_workspace_tokens");
+    expect(publicPages).not.toContain("tournament_roster_members");
+    expect(publicPages).not.toContain("players");
   });
 });

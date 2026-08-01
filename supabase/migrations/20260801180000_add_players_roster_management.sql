@@ -152,7 +152,7 @@ begin
       jsonb_build_object('team_id',v_team.id,'previous_captain_player_id',v_previous_captain,'new_captain_player_id',v_player.id,'operational_version','v1') || public.operational_actor_metadata(p_actor_type));
   end if;
   return public.roster_safe_member(v_member.id);
-exception when unique_violation then raise exception using errcode = '23505', message = 'platform_or_membership_conflict';
+exception when unique_violation then raise exception using errcode = '23505', message = 'platform_id_conflict';
 end;
 $$;
 
@@ -214,35 +214,38 @@ create or replace function public.update_roster_membership(
 declare v_old public.tournament_roster_members; v_member public.tournament_roster_members; v_team public.tournament_teams; v_player public.players; v_previous uuid; v_changed jsonb;
 begin
   perform public.assert_operational_mutation_access(p_submission_id,p_actor_type,p_actor_id,p_workspace_token_id);
-  if jsonb_typeof(p_payload) is distinct from 'object' or p_payload-array['membership_id','expected_updated_at','role','is_captain','is_active']::text[]<>'{}'::jsonb
+  if jsonb_typeof(p_payload) is distinct from 'object' or p_payload-array['tournament_team_id','membership_id','expected_updated_at','role','is_captain']::text[]<>'{}'::jsonb
   then raise exception using errcode='22023',message='roster_input_invalid'; end if;
   select m.* into v_old from public.tournament_roster_members m join public.tournament_teams t on t.id=m.tournament_team_id
-    where m.id=(p_payload->>'membership_id')::uuid and m.updated_at=(p_payload->>'expected_updated_at')::timestamptz and t.submission_id=p_submission_id for update of m;
+    where m.id=(p_payload->>'membership_id')::uuid and m.tournament_team_id=(p_payload->>'tournament_team_id')::uuid and m.is_active
+      and m.updated_at=(p_payload->>'expected_updated_at')::timestamptz and t.submission_id=p_submission_id for update of m;
   if not found then raise exception using errcode='40001',message='operational_conflict'; end if;
-  if coalesce((p_payload->>'is_captain')::boolean,false) and (p_payload->>'role'<>'player' or not (p_payload->>'is_active')::boolean)
+  perform pg_advisory_xact_lock(hashtextextended(v_old.tournament_team_id::text, 22));
+  if coalesce((p_payload->>'is_captain')::boolean,false) and p_payload->>'role'<>'player'
   then raise exception using errcode='22023',message='captain_role_invalid'; end if;
   if coalesce((p_payload->>'is_captain')::boolean,false) then
     select player_id into v_previous from public.tournament_roster_members where tournament_team_id=v_old.tournament_team_id and id<>v_old.id and is_active and is_captain for update;
     update public.tournament_roster_members set is_captain=false where tournament_team_id=v_old.tournament_team_id and id<>v_old.id and is_active and is_captain;
   end if;
-  update public.tournament_roster_members set role=p_payload->>'role',is_captain=(p_payload->>'is_captain')::boolean,is_active=(p_payload->>'is_active')::boolean,
-    left_at=case when (p_payload->>'is_active')::boolean then null else coalesce(left_at,now()) end where id=v_old.id returning * into v_member;
+  update public.tournament_roster_members set role=p_payload->>'role',is_captain=(p_payload->>'is_captain')::boolean
+    where id=v_old.id returning * into v_member;
   select * into v_team from public.tournament_teams where id=v_member.tournament_team_id; select * into v_player from public.players where id=v_member.player_id;
-  select coalesce(jsonb_agg(x),'[]'::jsonb) into v_changed from unnest(array['role','is_captain','is_active']) x where to_jsonb(v_old)->x is distinct from to_jsonb(v_member)->x;
+  select coalesce(jsonb_agg(x),'[]'::jsonb) into v_changed from unnest(array['role','is_captain']) x where to_jsonb(v_old)->x is distinct from to_jsonb(v_member)->x;
   insert into public.submission_events(submission_id,event_type,actor_type,actor_id,metadata) values(p_submission_id,'roster_member_updated',case when p_actor_type='admin' then 'admin' else 'organizer' end,case when p_actor_type='admin' then p_actor_id else null end,
     jsonb_build_object('membership_id',v_member.id,'changed_fields',v_changed,'operational_version','v1')||public.operational_actor_metadata(p_actor_type));
   if v_member.is_captain and (not v_old.is_captain or v_previous is not null) then insert into public.submission_events(submission_id,event_type,actor_type,actor_id,metadata)
     values(p_submission_id,'roster_captain_changed',case when p_actor_type='admin' then 'admin' else 'organizer' end,case when p_actor_type='admin' then p_actor_id else null end,
     jsonb_build_object('team_id',v_team.id,'previous_captain_player_id',v_previous,'new_captain_player_id',v_player.id,'operational_version','v1')||public.operational_actor_metadata(p_actor_type)); end if;
-  return public.roster_safe_member(v_member.id); end; $$;
+  return public.roster_safe_member(v_member.id);
+exception when unique_violation then raise exception using errcode='23505',message='membership_conflict'; end; $$;
 
 create or replace function public.remove_roster_member(
   p_submission_id uuid,p_payload jsonb,p_actor_type text,p_actor_id uuid,p_workspace_token_id uuid
 ) returns jsonb language plpgsql security definer set search_path=pg_catalog,public as $$
 declare v_member public.tournament_roster_members; v_team public.tournament_teams; v_player public.players;
 begin perform public.assert_operational_mutation_access(p_submission_id,p_actor_type,p_actor_id,p_workspace_token_id);
-  if jsonb_typeof(p_payload) is distinct from 'object' or p_payload-array['membership_id','expected_updated_at']::text[]<>'{}'::jsonb then raise exception using errcode='22023',message='roster_input_invalid'; end if;
-  select m.* into v_member from public.tournament_roster_members m join public.tournament_teams t on t.id=m.tournament_team_id where m.id=(p_payload->>'membership_id')::uuid and m.updated_at=(p_payload->>'expected_updated_at')::timestamptz and t.submission_id=p_submission_id for update of m;
+  if jsonb_typeof(p_payload) is distinct from 'object' or p_payload-array['tournament_team_id','membership_id','expected_updated_at']::text[]<>'{}'::jsonb then raise exception using errcode='22023',message='roster_input_invalid'; end if;
+  select m.* into v_member from public.tournament_roster_members m join public.tournament_teams t on t.id=m.tournament_team_id where m.id=(p_payload->>'membership_id')::uuid and m.tournament_team_id=(p_payload->>'tournament_team_id')::uuid and m.is_active and m.updated_at=(p_payload->>'expected_updated_at')::timestamptz and t.submission_id=p_submission_id for update of m;
   if not found then raise exception using errcode='40001',message='operational_conflict'; end if;
   update public.tournament_roster_members set is_active=false,is_captain=false,left_at=now() where id=v_member.id returning * into v_member;
   select * into v_team from public.tournament_teams where id=v_member.tournament_team_id; select * into v_player from public.players where id=v_member.player_id;
@@ -254,13 +257,14 @@ create or replace function public.restore_roster_member(
 ) returns jsonb language plpgsql security definer set search_path=pg_catalog,public as $$
 declare v_member public.tournament_roster_members; v_team public.tournament_teams; v_player public.players;
 begin perform public.assert_operational_mutation_access(p_submission_id,p_actor_type,p_actor_id,p_workspace_token_id);
-  if jsonb_typeof(p_payload) is distinct from 'object' or p_payload-array['membership_id','expected_updated_at','role']::text[]<>'{}'::jsonb then raise exception using errcode='22023',message='roster_input_invalid'; end if;
-  select m.* into v_member from public.tournament_roster_members m join public.tournament_teams t on t.id=m.tournament_team_id where m.id=(p_payload->>'membership_id')::uuid and m.updated_at=(p_payload->>'expected_updated_at')::timestamptz and t.submission_id=p_submission_id for update of m;
+  if jsonb_typeof(p_payload) is distinct from 'object' or p_payload-array['tournament_team_id','membership_id','expected_updated_at','role']::text[]<>'{}'::jsonb then raise exception using errcode='22023',message='roster_input_invalid'; end if;
+  select m.* into v_member from public.tournament_roster_members m join public.tournament_teams t on t.id=m.tournament_team_id where m.id=(p_payload->>'membership_id')::uuid and m.tournament_team_id=(p_payload->>'tournament_team_id')::uuid and not m.is_active and m.updated_at=(p_payload->>'expected_updated_at')::timestamptz and t.submission_id=p_submission_id for update of m;
   if not found then raise exception using errcode='40001',message='operational_conflict'; end if;
   update public.tournament_roster_members set is_active=true,is_captain=false,left_at=null,role=p_payload->>'role' where id=v_member.id returning * into v_member;
   select * into v_team from public.tournament_teams where id=v_member.tournament_team_id; select * into v_player from public.players where id=v_member.player_id;
   insert into public.submission_events(submission_id,event_type,actor_type,actor_id,metadata) values(p_submission_id,'roster_member_restored',case when p_actor_type='admin' then 'admin' else 'organizer' end,case when p_actor_type='admin' then p_actor_id else null end,
-    jsonb_build_object('membership_id',v_member.id,'player_id',v_player.id,'team_id',v_team.id,'display_name',v_player.display_name,'operational_version','v1')||public.operational_actor_metadata(p_actor_type)); return public.roster_safe_member(v_member.id); end; $$;
+    jsonb_build_object('membership_id',v_member.id,'player_id',v_player.id,'team_id',v_team.id,'display_name',v_player.display_name,'operational_version','v1')||public.operational_actor_metadata(p_actor_type)); return public.roster_safe_member(v_member.id);
+exception when unique_violation then raise exception using errcode='23505',message='membership_conflict'; end; $$;
 
 revoke all on function public.roster_safe_member(uuid) from public,anon,authenticated;
 revoke all on function public.search_players_for_roster(uuid,text,text,uuid,uuid) from public,anon,authenticated;

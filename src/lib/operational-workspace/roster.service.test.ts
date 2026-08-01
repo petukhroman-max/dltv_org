@@ -16,6 +16,7 @@ const repository = vi.hoisted(() => ({
 vi.mock("@/lib/operational-workspace/roster.repository", () => repository);
 
 import {
+  addExistingPlayerToRoster,
   createPlayerAndAddToRoster,
   listTeamRoster,
   RosterConflictError,
@@ -55,6 +56,7 @@ describe("roster service", () => {
     vi.clearAllMocks();
     repository.executeCreatePlayerAndAddRpc.mockResolvedValue(member);
     repository.executeUpdateMembershipRpc.mockResolvedValue(member);
+    repository.executeAddExistingPlayerRpc.mockResolvedValue(member);
     repository.executePlayerSearchRpc.mockResolvedValue([member.player]);
     repository.executeListTeamRoster.mockResolvedValue([member]);
   });
@@ -97,6 +99,34 @@ describe("roster service", () => {
     expect(repository.executePlayerSearchRpc).not.toHaveBeenCalled();
   });
 
+  it("derives an admin actor identity and adds an existing player", async () => {
+    await addExistingPlayerToRoster(
+      {
+        submissionId,
+        values: {
+          tournament_team_id: teamAId,
+          player_id: playerId,
+          role: "substitute",
+          is_captain: false,
+        },
+      },
+      {
+        kind: "admin",
+        identity: {
+          userId: "1ada7551-3958-41c6-9da4-47ca541e9fca",
+          email: "admin@example.com",
+        },
+      },
+    );
+    expect(repository.executeAddExistingPlayerRpc).toHaveBeenCalledWith(
+      expect.objectContaining({
+        p_actor_type: "admin",
+        p_actor_id: "1ada7551-3958-41c6-9da4-47ca541e9fca",
+        p_workspace_token_id: null,
+      }),
+    );
+  });
+
   it("returns deterministic safe search and roster models without real_name", async () => {
     const [search, roster] = await Promise.all([
       searchPlayersForRoster("Ace", submissionId, context),
@@ -119,15 +149,41 @@ describe("roster service", () => {
         {
           submissionId,
           values: {
+            tournament_team_id: teamAId,
             membership_id: member.id,
             expected_updated_at: member.updated_at,
             role: "player",
             is_captain: false,
-            is_active: true,
           },
         },
         context,
       ),
     ).rejects.toBeInstanceOf(RosterConflictError);
+  });
+
+  it("maps duplicate membership separately from duplicate platform identity", async () => {
+    repository.executeUpdateMembershipRpc.mockRejectedValue({
+      code: "23505",
+      message: "membership_conflict",
+    });
+    await expect(
+      updateRosterMembership(
+        {
+          submissionId,
+          values: {
+            tournament_team_id: teamAId,
+            membership_id: member.id,
+            expected_updated_at: member.updated_at,
+            role: "player",
+            is_captain: false,
+          },
+        },
+        context,
+      ),
+    ).rejects.toMatchObject({
+      fieldErrors: {
+        player_id: "This player already has this role on the selected team.",
+      },
+    });
   });
 });
