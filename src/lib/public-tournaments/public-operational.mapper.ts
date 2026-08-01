@@ -16,6 +16,7 @@ import type {
   PublicTournamentOverview,
   PublicTournamentProjection,
   PublicProjectionWarningCode,
+  PublicStructureRows,
 } from "@/lib/public-tournaments/public-operational.types";
 
 type ProjectionWarning = (code: PublicProjectionWarningCode) => void;
@@ -34,6 +35,7 @@ export function toPublicStage(row: PublicStageRow): PublicStage {
     name: row.name,
     slug: row.slug,
     stage_type: row.stage_type,
+    bracket_type: row.bracket_type ?? null,
     sequence_number: row.sequence_number,
     start_at: row.start_at,
     end_at: row.end_at,
@@ -159,6 +161,9 @@ export function toPublicMatch(
     match_number: row.match_number,
     round_name: row.round_name,
     group_name: row.group_name,
+    bracket_section: row.bracket_section ?? null,
+    bracket_round: row.bracket_round ?? null,
+    bracket_position: row.bracket_position ?? null,
     scheduled_at: validScheduledAt ? row.scheduled_at : null,
     timezone: stage?.timezone ?? tournamentTimezone,
     best_of: row.best_of,
@@ -271,6 +276,7 @@ export function toPublicTournamentProjection(input: {
   teamRows: PublicTeamRow[];
   rosterRows: PublicRosterRow[];
   matchRows: PublicMatchRow[];
+  structureRows?: PublicStructureRows;
   onWarning?: ProjectionWarning;
 }): PublicTournamentProjection {
   const stages = input.stageRows
@@ -335,28 +341,133 @@ export function toPublicTournamentProjection(input: {
     }
     return true;
   });
-  const matches = groupPublicMatches(
-    visibleRows.map((row, ordinal) =>
-      toPublicMatch(
-        row,
-        input.stageRows.filter(
-          (stage) =>
-            stage.is_public &&
-            stage.submission_id === input.tournament.submission_id,
-        ),
-        publicTeamRows,
-        ordinal,
-        input.tournament.timezone,
-        input.onWarning,
+  const publicMatches = visibleRows.map((row, ordinal) =>
+    toPublicMatch(
+      row,
+      input.stageRows.filter(
+        (stage) =>
+          stage.is_public &&
+          stage.submission_id === input.tournament.submission_id,
       ),
+      publicTeamRows,
+      ordinal,
+      input.tournament.timezone,
+      input.onWarning,
     ),
   );
+  const matches = groupPublicMatches(publicMatches);
+  const structures = input.structureRows ?? {
+    bracketLinks: [],
+    standingsByStage: {},
+  };
+  const publicStages = input.stageRows.filter(
+    (stage) =>
+      stage.is_public && stage.submission_id === input.tournament.submission_id,
+  );
+  const brackets = publicStages.flatMap((stage) => {
+    const bracketType =
+      stage.bracket_type ??
+      (["single_elimination", "double_elimination"].includes(stage.stage_type)
+        ? stage.stage_type
+        : null);
+    if (!bracketType) return [];
+    const sectionOrder: Record<string, number> = {
+      main: 0,
+      winners: 0,
+      losers: 1,
+      third_place: 2,
+      grand_final: 3,
+    };
+    const rows = visibleRows
+      .filter(
+        (row) =>
+          row.stage_id === stage.id &&
+          row.bracket_section &&
+          row.bracket_round &&
+          row.bracket_position,
+      )
+      .sort(
+        (a, b) =>
+          (sectionOrder[a.bracket_section ?? ""] ?? 99) -
+            (sectionOrder[b.bracket_section ?? ""] ?? 99) ||
+          (a.bracket_round ?? 0) - (b.bracket_round ?? 0) ||
+          (a.bracket_position ?? 0) - (b.bracket_position ?? 0) ||
+          (a.match_number ?? 0) - (b.match_number ?? 0),
+      );
+    if (!rows.length) return [];
+    const projected = rows
+      .map((row) => publicMatches[visibleRows.indexOf(row)])
+      .filter(Boolean);
+    const publicId = new Map(
+      rows.map((row, index) => [row.id, projected[index]?.public_id]),
+    );
+    return [
+      {
+        stage: { name: stage.name, slug: stage.slug },
+        bracket_type: bracketType,
+        matches: projected,
+        links: structures.bracketLinks
+          .filter(
+            (link) =>
+              link.stage_id === stage.id &&
+              publicId.has(link.source_match_id) &&
+              publicId.has(link.target_match_id),
+          )
+          .map((link) => ({
+            source: publicId.get(link.source_match_id)!,
+            outcome: link.outcome,
+            target: publicId.get(link.target_match_id)!,
+            target_slot: link.target_slot,
+          })),
+      },
+    ];
+  });
+  const standings = publicStages.flatMap((stage) => {
+    if (
+      !["qualifier", "group_stage", "round_robin", "custom"].includes(
+        stage.stage_type,
+      )
+    )
+      return [];
+    const rows = (structures.standingsByStage[stage.id] ?? []).filter((row) =>
+      publicTeamRows.some((team) => team.id === row.team_id),
+    );
+    if (!rows.length) return [];
+    const groupNames = [...new Set(rows.map((row) => row.group_name))].sort();
+    return [
+      {
+        stage: { name: stage.name, slug: stage.slug },
+        groups: groupNames.map((name) => ({
+          name,
+          rows: rows
+            .filter((row) => row.group_name === name)
+            .map((row) => ({
+              team_name: row.team_name,
+              team_slug: row.team_slug,
+              seed: row.seed,
+              played: row.played,
+              wins: row.wins,
+              losses: row.losses,
+              score_for: row.score_for,
+              score_against: row.score_against,
+              score_diff: row.score_diff,
+              points: row.points,
+              rank: row.rank,
+              qualified: row.qualified,
+              public_note: row.public_note,
+            })),
+        })),
+      },
+    ];
+  });
   return {
     locale: input.locale,
     tournament: toPublicTournament(input.tournament, input.onWarning),
     stages,
     teams,
     matches,
+    brackets,
+    standings,
     summary: getPublicTournamentOperationalSummary(stages, teams, matches),
   };
 }

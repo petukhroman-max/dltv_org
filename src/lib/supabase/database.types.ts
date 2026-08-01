@@ -125,6 +125,7 @@ type TournamentStageRow = {
   name: string;
   slug: string;
   stage_type: string;
+  bracket_type?: string | null;
   sequence_number: number;
   start_at: string | null;
   end_at: string | null;
@@ -192,6 +193,9 @@ type TournamentMatchRow = {
   match_number: number | null;
   round_name: string | null;
   group_name: string | null;
+  bracket_section?: string | null;
+  bracket_round?: number | null;
+  bracket_position?: number | null;
   scheduled_at: string | null;
   best_of: number | null;
   team_a_id: string | null;
@@ -206,6 +210,57 @@ type TournamentMatchRow = {
   duration_seconds: number | null;
   source: string;
   is_public: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+type TournamentBracketLinkRow = {
+  id: string;
+  submission_id: string;
+  stage_id: string;
+  source_match_id: string;
+  outcome: string;
+  target_match_id: string;
+  target_slot: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type TournamentStandingsConfigRow = {
+  id: string;
+  stage_id: string;
+  submission_id: string;
+  enabled: boolean;
+  points_for_win: number;
+  points_for_loss: number;
+  points_for_walkover: number;
+  score_difference_enabled: boolean;
+  qualification_places: number | null;
+  calculation_mode: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type TournamentStageGroupTeamRow = {
+  id: string;
+  submission_id: string;
+  stage_id: string;
+  team_id: string;
+  group_name: string;
+  sequence_number: number;
+  created_at: string;
+  updated_at: string;
+};
+
+type TournamentStandingAdjustmentRow = {
+  id: string;
+  submission_id: string;
+  stage_id: string;
+  team_id: string;
+  points_adjustment: number;
+  rank_override: number | null;
+  qualified_override: boolean | null;
+  public_note: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -454,6 +509,80 @@ export type Database = {
           },
         ];
       };
+      tournament_bracket_links: {
+        Row: TournamentBracketLinkRow;
+        Insert: Omit<
+          TournamentBracketLinkRow,
+          "id" | "created_at" | "updated_at"
+        > &
+          Partial<
+            Pick<TournamentBracketLinkRow, "id" | "created_at" | "updated_at">
+          >;
+        Update: Partial<
+          Omit<TournamentBracketLinkRow, "id" | "submission_id" | "created_at">
+        >;
+        Relationships: [];
+      };
+      tournament_stage_standings_config: {
+        Row: TournamentStandingsConfigRow;
+        Insert: Pick<
+          TournamentStandingsConfigRow,
+          "stage_id" | "submission_id"
+        > &
+          Partial<
+            Omit<
+              TournamentStandingsConfigRow,
+              "id" | "stage_id" | "submission_id"
+            >
+          >;
+        Update: Partial<
+          Omit<
+            TournamentStandingsConfigRow,
+            "id" | "stage_id" | "submission_id" | "created_at"
+          >
+        >;
+        Relationships: [];
+      };
+      tournament_stage_group_teams: {
+        Row: TournamentStageGroupTeamRow;
+        Insert: Omit<
+          TournamentStageGroupTeamRow,
+          "id" | "created_at" | "updated_at"
+        > &
+          Partial<
+            Pick<
+              TournamentStageGroupTeamRow,
+              "id" | "created_at" | "updated_at"
+            >
+          >;
+        Update: Partial<
+          Omit<
+            TournamentStageGroupTeamRow,
+            "id" | "submission_id" | "created_at"
+          >
+        >;
+        Relationships: [];
+      };
+      tournament_standing_adjustments: {
+        Row: TournamentStandingAdjustmentRow;
+        Insert: Omit<
+          TournamentStandingAdjustmentRow,
+          "id" | "created_at" | "updated_at"
+        > &
+          Partial<
+            Pick<
+              TournamentStandingAdjustmentRow,
+              "id" | "created_at" | "updated_at"
+            >
+          >;
+        Update: Partial<
+          Omit<
+            TournamentStandingAdjustmentRow,
+            "id" | "submission_id" | "created_at"
+          >
+        >;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -649,6 +778,113 @@ export type Database = {
           p_actor_id: string | null;
           p_workspace_token_id: string | null;
         };
+        Returns: Json;
+      };
+      assign_match_bracket_position: {
+        Args: {
+          p_submission_id: string;
+          p_match_id: string;
+          p_expected_updated_at: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      create_tournament_bracket_link: {
+        Args: {
+          p_submission_id: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      delete_tournament_bracket_link: {
+        Args: {
+          p_submission_id: string;
+          p_link_id: string;
+          p_expected_updated_at: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      advance_tournament_bracket_outcome: {
+        Args: {
+          p_submission_id: string;
+          p_match_id: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      update_stage_standings_config: {
+        Args: {
+          p_submission_id: string;
+          p_stage_id: string;
+          p_expected_updated_at: string | null;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      assign_team_to_stage_group: {
+        Args: {
+          p_submission_id: string;
+          p_stage_id: string;
+          p_team_id: string;
+          p_group_name: string;
+          p_sequence_number: number;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      remove_team_from_stage_group: {
+        Args: {
+          p_submission_id: string;
+          p_assignment_id: string;
+          p_expected_updated_at: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      upsert_standing_adjustment: {
+        Args: {
+          p_submission_id: string;
+          p_stage_id: string;
+          p_team_id: string;
+          p_expected_updated_at: string | null;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      delete_standing_adjustment: {
+        Args: {
+          p_submission_id: string;
+          p_adjustment_id: string;
+          p_expected_updated_at: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      get_tournament_stage_standings: {
+        Args: { p_submission_id: string; p_stage_id: string };
         Returns: Json;
       };
       search_players_for_roster: {

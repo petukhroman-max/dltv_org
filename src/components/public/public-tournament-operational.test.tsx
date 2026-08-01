@@ -41,6 +41,65 @@ describe("PublicTournamentOperational", () => {
     expect(screen.getByLabelText("Будет определено")).toBeInTheDocument();
   });
 
+  it("renders conditional public bracket and standings without internal ids", () => {
+    const match = {
+      ...publicTournamentProjectionFixture.matches.upcoming[0],
+      bracket_section: "main",
+      bracket_round: 1,
+      bracket_position: 1,
+    };
+    const projection = {
+      ...publicTournamentProjectionFixture,
+      brackets: [
+        {
+          stage: { name: "Playoffs", slug: "playoffs" },
+          bracket_type: "single_elimination",
+          matches: [match],
+          links: [],
+        },
+      ],
+      standings: [
+        {
+          stage: { name: "Groups", slug: "groups" },
+          groups: [
+            {
+              name: "A",
+              rows: [
+                {
+                  team_name: "Radiant",
+                  team_slug: "radiant",
+                  seed: 1,
+                  played: 0,
+                  wins: 0,
+                  losses: 0,
+                  score_for: 0,
+                  score_against: 0,
+                  score_diff: 0,
+                  points: 0,
+                  rank: 1,
+                  qualified: true,
+                  public_note: null,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const { container } = render(
+      <PublicTournamentOperational projection={projection} />,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Bracket", level: 2 }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Standings", level: 2 }),
+    ).toBeInTheDocument();
+    expect(container).not.toHaveTextContent(
+      "11111111-1111-4111-8111-111111111111",
+    );
+  });
+
   it("renders exact public empty states without internal terminology", () => {
     render(
       <PublicTournamentOperational

@@ -98,10 +98,10 @@ describe("public operational security contract", () => {
     expect(revalidation).not.toContain("anonKey");
     expect(
       workspaceActions.match(/await revalidatePublicTournamentProjection/g),
-    ).toHaveLength(3);
+    ).toHaveLength(4);
     expect(
       adminActions.match(/await revalidatePublicTournamentProjection/g),
-    ).toHaveLength(3);
+    ).toHaveLength(4);
   });
 
   it("logs only fixed warning codes without row payloads", () => {
