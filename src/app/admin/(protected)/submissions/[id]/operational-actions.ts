@@ -16,6 +16,11 @@ import {
   runRosterSearch,
   type RosterOperation,
 } from "@/lib/operational-workspace/roster-action-runner";
+import type {
+  MatchActionState,
+  MatchOperation,
+} from "@/lib/operational-workspace/match-action-state";
+import { runMatchMutation } from "@/lib/operational-workspace/match-action-runner";
 
 async function run(
   entity: "stage" | "team",
@@ -146,4 +151,92 @@ export async function searchAdminPlayersAction(
 ) {
   const identity = await requireAdmin();
   return runRosterSearch(submissionId, { kind: "admin", identity }, formData);
+}
+
+async function runMatch(
+  operation: MatchOperation,
+  submissionId: string,
+  formData: FormData,
+): Promise<MatchActionState> {
+  const identity = await requireAdmin();
+  const result = await runMatchMutation(
+    operation,
+    submissionId,
+    { kind: "admin", identity },
+    formData,
+  );
+  if (result.status === "success")
+    revalidatePath(`/admin/submissions/${submissionId}`);
+  return result;
+}
+
+export async function createAdminMatchAction(
+  submissionId: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runMatch("create", submissionId, formData);
+}
+export async function updateAdminMatchAction(
+  submissionId: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runMatch("update", submissionId, formData);
+}
+export async function scheduleAdminMatchAction(
+  submissionId: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runMatch("schedule", submissionId, formData);
+}
+export async function startAdminMatchAction(
+  submissionId: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runMatch("start", submissionId, formData);
+}
+export async function postponeAdminMatchAction(
+  submissionId: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runMatch("postpone", submissionId, formData);
+}
+export async function completeAdminMatchAction(
+  submissionId: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runMatch("complete", submissionId, formData);
+}
+export async function walkoverAdminMatchAction(
+  submissionId: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runMatch("walkover", submissionId, formData);
+}
+export async function cancelAdminMatchAction(
+  submissionId: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runMatch("cancel", submissionId, formData);
+}
+export async function reopenAdminMatchAction(
+  submissionId: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runMatch("reopen", submissionId, formData);
+}
+export async function deleteAdminMatchAction(
+  submissionId: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runMatch("delete", submissionId, formData);
 }

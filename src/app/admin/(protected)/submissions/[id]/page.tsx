@@ -8,6 +8,11 @@ import { AdminEditLinkPanel } from "@/components/admin/admin-edit-link-panel";
 import { AdminWorkspaceLinkPanel } from "@/components/admin/admin-workspace-link-panel";
 import { StagesTeamsWorkspace } from "@/components/operational/stages-teams-workspace";
 import { RosterWorkspace } from "@/components/operational/roster-workspace";
+import {
+  MatchCreateForm,
+  MatchList,
+  type MatchActions,
+} from "@/components/operational/match-workspace";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import {
   addAdminExistingPlayerAction,
@@ -23,6 +28,16 @@ import {
   updateAdminRosterAction,
   updateAdminStageAction,
   updateAdminTeamAction,
+  cancelAdminMatchAction,
+  completeAdminMatchAction,
+  createAdminMatchAction,
+  deleteAdminMatchAction,
+  postponeAdminMatchAction,
+  reopenAdminMatchAction,
+  scheduleAdminMatchAction,
+  startAdminMatchAction,
+  updateAdminMatchAction,
+  walkoverAdminMatchAction,
 } from "@/app/admin/(protected)/submissions/[id]/operational-actions";
 import { getRequestDictionary, getRequestLocale } from "@/i18n/get-dictionary";
 import { getAdminCopy } from "@/lib/admin/copy";
@@ -31,7 +46,6 @@ import { requireAdmin } from "@/lib/admin/require-admin";
 import { getTournamentSubmissionDetails } from "@/lib/repositories/submission-details";
 import {
   getTournamentOperationalSummary,
-  listTournamentMatches,
   listTournamentStages,
   listTournamentTeams,
 } from "@/lib/repositories/tournament-operational-data";
@@ -39,6 +53,7 @@ import { submissionStatusSchema } from "@/lib/domain/submission";
 import { getSubmissionEditTokenStatus } from "@/lib/organizer-edit/organizer-edit.service";
 import { getWorkspaceTokenStatus } from "@/lib/organizer-workspace/workspace-token.service";
 import { listTeamRoster } from "@/lib/operational-workspace/roster.service";
+import { listTournamentMatches } from "@/lib/operational-workspace/match.service";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -74,7 +89,10 @@ export default async function AdminSubmissionDetailsPage({
       listTournamentStages(details.submission.id),
       listTournamentTeams(details.submission.id),
       listTeamRoster(details.submission.id, { kind: "admin", identity }),
-      listTournamentMatches(details.submission.id),
+      listTournamentMatches(details.submission.id, {
+        kind: "admin",
+        identity,
+      }),
       getTournamentOperationalSummary(details.submission.id),
     ]);
   const canManageOperationalData =
@@ -101,6 +119,18 @@ export default async function AdminSubmissionDetailsPage({
     remove: removeAdminRosterAction.bind(null, details.submission.id),
     restore: restoreAdminRosterAction.bind(null, details.submission.id),
     search: searchAdminPlayersAction.bind(null, details.submission.id),
+  };
+  const matchActions: MatchActions = {
+    create: createAdminMatchAction.bind(null, details.submission.id),
+    update: updateAdminMatchAction.bind(null, details.submission.id),
+    schedule: scheduleAdminMatchAction.bind(null, details.submission.id),
+    start: startAdminMatchAction.bind(null, details.submission.id),
+    postpone: postponeAdminMatchAction.bind(null, details.submission.id),
+    complete: completeAdminMatchAction.bind(null, details.submission.id),
+    walkover: walkoverAdminMatchAction.bind(null, details.submission.id),
+    cancel: cancelAdminMatchAction.bind(null, details.submission.id),
+    reopen: reopenAdminMatchAction.bind(null, details.submission.id),
+    remove: deleteAdminMatchAction.bind(null, details.submission.id),
   };
 
   return (
@@ -176,6 +206,21 @@ export default async function AdminSubmissionDetailsPage({
               actions={rosterActions}
               locale={locale}
             />
+            <section className="adminPanel matchManagementPanel">
+              <MatchCreateForm
+                stages={stages}
+                teams={teams}
+                locale={locale}
+                defaultTimezone={details.submission.timezone}
+                action={matchActions.create}
+              />
+              <MatchList
+                matches={matches}
+                locale={locale}
+                detailBasePath={`/admin/submissions/${details.submission.id}/matches`}
+                view="list"
+              />
+            </section>
           </div>
         ) : null}
         <div id="history">
@@ -193,6 +238,7 @@ export default async function AdminSubmissionDetailsPage({
           summary={operationalSummary}
           showStagesAndTeams={!canManageOperationalData}
           showRosters={!canManageOperationalData}
+          showMatches={!canManageOperationalData}
           locale={locale}
         />
       </div>

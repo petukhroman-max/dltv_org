@@ -571,6 +571,86 @@ export type Database = {
         };
         Returns: Json;
       };
+      create_tournament_match: {
+        Args: {
+          p_submission_id: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      update_tournament_match: {
+        Args: {
+          p_submission_id: string;
+          p_match_id: string;
+          p_expected_updated_at: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      update_tournament_match_status: {
+        Args: {
+          p_submission_id: string;
+          p_match_id: string;
+          p_expected_updated_at: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      complete_tournament_match: {
+        Args: {
+          p_submission_id: string;
+          p_match_id: string;
+          p_expected_updated_at: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      cancel_tournament_match: {
+        Args: {
+          p_submission_id: string;
+          p_match_id: string;
+          p_expected_updated_at: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      reopen_tournament_match: {
+        Args: {
+          p_submission_id: string;
+          p_match_id: string;
+          p_expected_updated_at: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      delete_tournament_match: {
+        Args: {
+          p_submission_id: string;
+          p_match_id: string;
+          p_expected_updated_at: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
       search_players_for_roster: {
         Args: {
           p_submission_id: string;

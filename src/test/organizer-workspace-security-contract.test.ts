@@ -18,6 +18,11 @@ describe("organizer workspace route and UI security", () => {
   );
   const form = source("src/components/operational/stages-teams-workspace.tsx");
   const rosterForm = source("src/components/operational/roster-workspace.tsx");
+  const matchForm = source("src/components/operational/match-workspace.tsx");
+  const matchesPage = source("src/app/workspace/[token]/matches/page.tsx");
+  const matchPage = source(
+    "src/app/workspace/[token]/matches/[matchId]/page.tsx",
+  );
   const middleware = source("src/middleware.ts");
 
   it("uses a dynamic no-store, noindex workspace with generic invalid state", () => {
@@ -48,6 +53,11 @@ describe("organizer workspace route and UI security", () => {
     expect(page).not.toMatch(/>\s*\{token\}\s*</);
     expect(rosterForm).not.toContain("rawToken");
     expect(rosterForm).not.toContain('name="token"');
+    expect(matchForm).not.toContain("rawToken");
+    expect(matchForm).not.toContain('name="token"');
+    expect(matchForm).not.toContain('name="source"');
+    expect(matchesPage).not.toMatch(/>\s*\{token\}\s*</);
+    expect(matchPage).not.toMatch(/>\s*\{token\}\s*</);
   });
 
   it("revalidates workspace access in actions and requires admin in admin actions", () => {
@@ -66,6 +76,9 @@ describe("organizer workspace route and UI security", () => {
     expect(rosterForm).not.toContain('name="actor_id"');
     expect(rosterForm).not.toContain('name="event_type"');
     expect(rosterForm).not.toContain('name="metadata"');
+    expect(matchForm).not.toContain('name="submission_id"');
+    expect(matchForm).not.toContain('name="actor_type"');
+    expect(matchForm).not.toContain('name="event_type"');
   });
 
   it("mounts the shared stage and team CRUD in admin", () => {
@@ -75,6 +88,16 @@ describe("organizer workspace route and UI security", () => {
     expect(adminPage).toContain("<StagesTeamsWorkspace");
     expect(adminPage).toContain("<AdminWorkspaceLinkPanel");
     expect(adminPage).toContain("<RosterWorkspace");
+    expect(adminPage).toContain("<MatchCreateForm");
+    expect(adminPage).toContain("<MatchList");
+  });
+
+  it("keeps nested match routes dynamic and no-store", () => {
+    for (const route of [matchesPage, matchPage]) {
+      expect(route).toContain('dynamic = "force-dynamic"');
+      expect(route).toContain("noStore()");
+      expect(route).toContain("validateWorkspaceAccess(token)");
+    }
   });
 
   it("contains required empty, pending, conflict and dependency copy", () => {

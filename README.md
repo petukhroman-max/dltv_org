@@ -18,7 +18,7 @@ catalog at `/{locale}/tournaments` and stable detail URLs at
 `/{locale}/tournaments/[slug]`.
 
 Administrators can issue a separate reusable organizer workspace link for
-private stage, team, and roster management at
+private stage, team, roster, match, and schedule management at
 `/{locale}/workspace/[token]`. The workspace does
 not expose operational data through the public catalog and does not reuse the
 single-use resubmission token.
@@ -183,3 +183,6 @@ deletion rules, audit events, and the manual verification flow.
 [docs/organizer-workspace-rosters.md](docs/organizer-workspace-rosters.md)
 documents player identity privacy, duplicate handling, roster lifecycle,
 captain guarantees, and shared admin/organizer roster management.
+[docs/organizer-workspace-matches.md](docs/organizer-workspace-matches.md)
+documents shared match CRUD, lifecycle transitions, schedule/timezone handling,
+optimistic concurrency, audit events, and RPC security.

@@ -14,6 +14,7 @@ export type AdminTournamentDataProps = {
   summary: TournamentOperationalSummary;
   showStagesAndTeams?: boolean;
   showRosters?: boolean;
+  showMatches?: boolean;
   locale?: Locale;
 };
 
@@ -29,6 +30,7 @@ export function AdminTournamentData({
   summary,
   showStagesAndTeams = true,
   showRosters = true,
+  showMatches = true,
   locale = "en",
 }: AdminTournamentDataProps) {
   const t = (en: string, ru: string) => (locale === "ru" ? ru : en);
@@ -184,46 +186,50 @@ export function AdminTournamentData({
           </section>
         ) : null}
 
-        <section aria-labelledby="matches-heading">
-          <h3 id="matches-heading">{t("Matches", "Матчи")}</h3>
-          {matches.length === 0 ? (
-            <EmptyState>
-              {t("No matches added.", "Матчей пока нет.")}
-            </EmptyState>
-          ) : (
-            <div className="adminTableScroll">
-              <table className="adminTable">
-                <thead>
-                  <tr>
-                    <th>{t("Match", "Матч")}</th>
-                    <th>{t("Stage", "Этап")}</th>
-                    <th>{t("Teams", "Команды")}</th>
-                    <th>{t("Score", "Счёт")}</th>
-                    <th>{t("Scheduled", "Время")}</th>
-                    <th>{t("Status", "Статус")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {matches.map((match) => (
-                    <tr key={match.id}>
-                      <th scope="row">{match.match_number ?? "—"}</th>
-                      <td>{match.stage?.name ?? "—"}</td>
-                      <td>
-                        {match.team_a?.name ?? "TBD"} vs{" "}
-                        {match.team_b?.name ?? "TBD"}
-                      </td>
-                      <td>
-                        {match.score_a ?? "—"} : {match.score_b ?? "—"}
-                      </td>
-                      <td>{formatAdminDateTime(match.scheduled_at, locale)}</td>
-                      <td>{match.status}</td>
+        {showMatches ? (
+          <section aria-labelledby="matches-heading">
+            <h3 id="matches-heading">{t("Matches", "Матчи")}</h3>
+            {matches.length === 0 ? (
+              <EmptyState>
+                {t("No matches added.", "Матчей пока нет.")}
+              </EmptyState>
+            ) : (
+              <div className="adminTableScroll">
+                <table className="adminTable">
+                  <thead>
+                    <tr>
+                      <th>{t("Match", "Матч")}</th>
+                      <th>{t("Stage", "Этап")}</th>
+                      <th>{t("Teams", "Команды")}</th>
+                      <th>{t("Score", "Счёт")}</th>
+                      <th>{t("Scheduled", "Время")}</th>
+                      <th>{t("Status", "Статус")}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+                  </thead>
+                  <tbody>
+                    {matches.map((match) => (
+                      <tr key={match.id}>
+                        <th scope="row">{match.match_number ?? "—"}</th>
+                        <td>{match.stage?.name ?? "—"}</td>
+                        <td>
+                          {match.team_a?.name ?? "TBD"} vs{" "}
+                          {match.team_b?.name ?? "TBD"}
+                        </td>
+                        <td>
+                          {match.score_a ?? "—"} : {match.score_b ?? "—"}
+                        </td>
+                        <td>
+                          {formatAdminDateTime(match.scheduled_at, locale)}
+                        </td>
+                        <td>{match.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        ) : null}
       </div>
     </section>
   );

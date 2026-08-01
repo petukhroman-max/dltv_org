@@ -39,6 +39,14 @@ const moderationEventLabelsEn: Record<string, string> = {
   roster_member_removed: "Removed from roster",
   roster_member_restored: "Restored to roster",
   roster_captain_changed: "Team captain changed",
+  match_created: "Match created",
+  match_updated: "Match updated",
+  match_status_changed: "Match status changed",
+  match_completed: "Match result recorded",
+  match_walkover_recorded: "Walkover recorded",
+  match_cancelled: "Match cancelled",
+  match_reopened: "Match reopened",
+  match_deleted: "Match deleted",
 };
 const moderationEventLabelsRu: Record<string, string> = {
   submission_approved: "Заявка одобрена",
@@ -64,6 +72,14 @@ const moderationEventLabelsRu: Record<string, string> = {
   roster_member_removed: "Участник убран из состава",
   roster_member_restored: "Участник восстановлен в составе",
   roster_captain_changed: "Капитан команды изменён",
+  match_created: "Матч создан",
+  match_updated: "Матч обновлён",
+  match_status_changed: "Статус матча изменён",
+  match_completed: "Результат матча внесён",
+  match_walkover_recorded: "Техническая победа внесена",
+  match_cancelled: "Матч отменён",
+  match_reopened: "Матч переоткрыт",
+  match_deleted: "Матч удалён",
 };
 
 function label(locale: Locale, en: string, ru: string) {

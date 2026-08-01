@@ -16,6 +16,11 @@ import {
   runRosterSearch,
   type RosterOperation,
 } from "@/lib/operational-workspace/roster-action-runner";
+import type {
+  MatchActionState,
+  MatchOperation,
+} from "@/lib/operational-workspace/match-action-state";
+import { runMatchMutation } from "@/lib/operational-workspace/match-action-runner";
 
 async function run(
   entity: "stage" | "team",
@@ -190,4 +195,102 @@ export async function searchWorkspacePlayersAction(
       results: [],
     };
   return runRosterSearch(access.submissionId, access.context, formData);
+}
+
+async function runWorkspaceMatch(
+  operation: MatchOperation,
+  rawToken: string,
+  formData: FormData,
+): Promise<MatchActionState> {
+  const access = await workspaceContext(rawToken);
+  if (!access)
+    return {
+      status: "error",
+      message: "This workspace link is invalid or no longer available.",
+      fieldErrors: {},
+      values: {},
+    };
+  const result = await runMatchMutation(
+    operation,
+    access.submissionId,
+    access.context,
+    formData,
+  );
+  if (result.status === "success") {
+    revalidatePath(`/workspace/${rawToken}`);
+    revalidatePath(`/workspace/${rawToken}/matches`);
+    revalidatePath(`/admin/submissions/${access.submissionId}`);
+  }
+  return result;
+}
+
+export async function createWorkspaceMatchAction(
+  rawToken: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runWorkspaceMatch("create", rawToken, formData);
+}
+export async function updateWorkspaceMatchAction(
+  rawToken: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runWorkspaceMatch("update", rawToken, formData);
+}
+export async function scheduleWorkspaceMatchAction(
+  rawToken: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runWorkspaceMatch("schedule", rawToken, formData);
+}
+export async function startWorkspaceMatchAction(
+  rawToken: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runWorkspaceMatch("start", rawToken, formData);
+}
+export async function postponeWorkspaceMatchAction(
+  rawToken: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runWorkspaceMatch("postpone", rawToken, formData);
+}
+export async function completeWorkspaceMatchAction(
+  rawToken: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runWorkspaceMatch("complete", rawToken, formData);
+}
+export async function walkoverWorkspaceMatchAction(
+  rawToken: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runWorkspaceMatch("walkover", rawToken, formData);
+}
+export async function cancelWorkspaceMatchAction(
+  rawToken: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runWorkspaceMatch("cancel", rawToken, formData);
+}
+export async function reopenWorkspaceMatchAction(
+  rawToken: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runWorkspaceMatch("reopen", rawToken, formData);
+}
+export async function deleteWorkspaceMatchAction(
+  rawToken: string,
+  _state: MatchActionState,
+  formData: FormData,
+) {
+  return runWorkspaceMatch("delete", rawToken, formData);
 }
