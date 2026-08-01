@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { TournamentDetails } from "@/components/public/tournament-details";
+import { PublicHeader } from "@/components/public/public-header";
 import { loadPublishedTournament } from "@/lib/public-tournaments/load";
 import {
   sportsEventJsonLd,
@@ -39,28 +40,39 @@ export default async function TournamentPage({
     tournament = await loadPublishedTournament(slug);
   } catch {
     return (
-      <main className="catalogShell">
-        <p className="formError" role="alert">
-          Tournament information is temporarily unavailable.
-        </p>
-      </main>
+      <>
+        <PublicHeader active="tournaments" />
+        <main className="catalogShell">
+          <p className="formError" role="alert">
+            Tournament information is temporarily unavailable.
+          </p>
+        </main>
+      </>
     );
   }
   if (!tournament) notFound();
   const jsonLd = sportsEventJsonLd(tournament);
   const today = new Date().toISOString().slice(0, 10);
   return (
-    <main className="catalogShell">
-      <Link className="textLink" href="/tournaments">
-        ← Browse tournaments
-      </Link>
-      <TournamentDetails tournament={tournament} today={today} />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
-        }}
-      />
-    </main>
+    <>
+      <PublicHeader active="tournaments" />
+      <main className="catalogShell">
+        <nav className="contextualNavigation" aria-label="Tournament actions">
+          <Link className="textLink" href="/tournaments">
+            ← All tournaments
+          </Link>
+          <Link className="secondaryButton" href="/submit-tournament">
+            Submit a tournament
+          </Link>
+        </nav>
+        <TournamentDetails tournament={tournament} today={today} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
+        />
+      </main>
+    </>
   );
 }

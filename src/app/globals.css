@@ -45,11 +45,70 @@ a {
   color: inherit;
 }
 
+.publicHeader {
+  border-bottom: 1px solid var(--border);
+  background: rgba(8, 11, 16, 0.94);
+}
+
+.publicHeaderInner {
+  display: flex;
+  width: min(100%, 78rem);
+  min-height: 4.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  margin: 0 auto;
+  padding: 0.75rem clamp(1rem, 4vw, 3rem);
+}
+
+.publicBrand {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.publicNav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.25rem 1rem;
+}
+
+.publicNavLink {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.publicNavLink:hover,
+.publicNavLink[aria-current="page"] {
+  border-bottom-color: var(--accent);
+  color: var(--text);
+}
+
+.publicNavLink[aria-current="page"] {
+  font-weight: 900;
+}
+
+.publicBrand:focus-visible,
+.publicNavLink:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
 .shell {
   display: grid;
   min-height: 100vh;
   place-items: center;
   padding: 2rem;
+}
+
+.publicMain {
+  min-height: calc(100vh - 4.5rem);
 }
 
 .hero,
@@ -768,6 +827,19 @@ h1 {
   padding: 2rem 0;
 }
 
+.contextualActions {
+  margin-top: 1.5rem;
+}
+
+.contextualNavigation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
 .catalogHeader h1,
 .publicTournamentDetails h1 {
   max-width: 18ch;
@@ -940,6 +1012,17 @@ h1 {
 }
 
 @media (max-width: 42rem) {
+  .publicHeaderInner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .publicNav {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   .shell {
     padding: 1rem;
   }

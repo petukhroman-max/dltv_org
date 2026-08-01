@@ -43,6 +43,12 @@ describe("TournamentSubmissionForm", () => {
         name: publicSubmissionCopy.form.submit,
       }),
     ).toBeEnabled();
+    expect(
+      screen.getByRole("link", {
+        name: publicSubmissionCopy.form.browse,
+      }),
+    ).toHaveAttribute("href", "/tournaments");
+    expect(screen.queryByRole("link", { name: /Back/i })).toBeNull();
   });
 
   it("displays field and form errors while preserving entered values", () => {

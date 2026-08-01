@@ -406,8 +406,8 @@ export function TournamentSubmissionForm({
 
       <div className="formActions">
         <SubmitButton />
-        <Link className="textLink" href="/">
-          {publicSubmissionCopy.form.back}
+        <Link className="textLink" href="/tournaments">
+          {publicSubmissionCopy.form.browse}
         </Link>
       </div>
     </form>
