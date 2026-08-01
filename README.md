@@ -19,9 +19,10 @@ catalog at `/{locale}/tournaments` and stable detail URLs at
 
 Administrators can issue a separate reusable organizer workspace link for
 private stage, team, roster, match, and schedule management at
-`/{locale}/workspace/[token]`. The workspace does
-not expose operational data through the public catalog and does not reuse the
-single-use resubmission token.
+`/{locale}/workspace/[token]`. Published tournaments expose a strict,
+server-rendered projection of public stages, teams, active safe rosters, and
+matches at their existing slug route. The workspace token and the single-use
+resubmission token are never part of that public read model.
 
 ## Requirements
 
@@ -186,3 +187,6 @@ captain guarantees, and shared admin/organizer roster management.
 [docs/organizer-workspace-matches.md](docs/organizer-workspace-matches.md)
 documents shared match CRUD, lifecycle transitions, schedule/timezone handling,
 optimistic concurrency, audit events, and RPC security.
+[docs/public-tournament-operational-projection.md](docs/public-tournament-operational-projection.md)
+documents the published boundary, privacy allowlists, public operational UI,
+caching, SEO, QA, and manual smoke-test.

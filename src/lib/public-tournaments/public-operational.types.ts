@@ -91,12 +91,23 @@ export type PublicMatchGroups = {
 export type PublicOperationalSummary = {
   stages: number;
   teams: number;
+  live_matches: number;
   upcoming_matches: number;
   completed_matches: number;
   live_match: PublicMatch | null;
   next_match: PublicMatch | null;
   recent_results: PublicMatch[];
 };
+
+export type PublicProjectionWarningCode =
+  | "completed_match_incomplete_score"
+  | "invalid_public_url"
+  | "match_invalid_schedule"
+  | "match_invalid_score"
+  | "match_stage_not_public"
+  | "match_team_not_public"
+  | "match_winner_not_participant"
+  | "roster_role_not_public";
 
 export type PublicTournamentProjection = {
   locale: Locale;

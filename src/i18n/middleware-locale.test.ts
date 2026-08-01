@@ -29,4 +29,14 @@ describe("locale routing middleware", () => {
     expect(response.headers.get("x-robots-tag")).toContain("noindex");
     expect(response.headers.get("referrer-policy")).toBe("no-referrer");
   });
+
+  it("does not redirect the internal target of a locale rewrite", async () => {
+    const response = await middleware(
+      new NextRequest("https://portal.example/tournaments/cup", {
+        headers: { "x-dltv-internal-locale-rewrite": "1" },
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
 });

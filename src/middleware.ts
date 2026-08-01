@@ -46,6 +46,10 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const firstSegment = pathname.split("/")[1];
   const locale = isLocale(firstSegment) ? firstSegment : null;
+  const isInternalLocaleRewrite =
+    request.headers.get("x-dltv-internal-locale-rewrite") === "1";
+
+  if (!locale && isInternalLocaleRewrite) return NextResponse.next();
 
   if (!locale && shouldLocalize(pathname)) {
     const url = request.nextUrl.clone();
@@ -60,6 +64,7 @@ export async function middleware(request: NextRequest) {
   rewriteUrl.pathname = internalPath;
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-dltv-locale", locale);
+  requestHeaders.set("x-dltv-internal-locale-rewrite", "1");
 
   let response: NextResponse;
   if (internalPath.startsWith("/admin")) {

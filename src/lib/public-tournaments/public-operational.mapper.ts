@@ -15,7 +15,19 @@ import type {
   PublicTeamSummary,
   PublicTournamentOverview,
   PublicTournamentProjection,
+  PublicProjectionWarningCode,
 } from "@/lib/public-tournaments/public-operational.types";
+
+type ProjectionWarning = (code: PublicProjectionWarningCode) => void;
+
+function sanitizePublicUrl(
+  value: string | null,
+  onWarning?: ProjectionWarning,
+) {
+  const sanitized = safePublicUrl(value);
+  if (value && !sanitized) onWarning?.("invalid_public_url");
+  return sanitized;
+}
 
 export function toPublicStage(row: PublicStageRow): PublicStage {
   return {
@@ -44,24 +56,29 @@ export function toPublicRosterMember(row: PublicRosterRow): PublicRosterMember {
   };
 }
 
-function toPublicTeamSummary(row: PublicTeamRow): PublicTeamSummary {
+function toPublicTeamSummary(
+  row: PublicTeamRow,
+  onWarning?: ProjectionWarning,
+): PublicTeamSummary {
   return {
     name: row.name,
     short_name: row.short_name,
     slug: row.slug,
-    logo_url: safePublicUrl(row.logo_url),
+    logo_url: sanitizePublicUrl(row.logo_url, onWarning),
   };
 }
 
 export function toPublicTeam(
   row: PublicTeamRow,
   roster: PublicRosterRow[],
+  onWarning?: ProjectionWarning,
 ): PublicTeam {
+  const publicRoles = new Set(["player", "substitute", "coach", "manager"]);
   return {
     name: row.name,
     short_name: row.short_name,
     slug: row.slug,
-    logo_url: safePublicUrl(row.logo_url),
+    logo_url: sanitizePublicUrl(row.logo_url, onWarning),
     region: row.region,
     seed: row.seed,
     status: row.status,
@@ -70,7 +87,8 @@ export function toPublicTeam(
         (member) =>
           member.tournament_team_id === row.id &&
           member.is_active &&
-          member.player.is_public,
+          member.player.is_public &&
+          publicRoles.has(member.role),
       )
       .map(toPublicRosterMember)
       .sort(
@@ -85,7 +103,7 @@ export function toPublicTeam(
 function matchPublicId(row: PublicMatchRow, ordinal: number) {
   const context = row.group_name ?? row.round_name;
   if (context && row.match_number)
-    return `${context} Â· Match ${row.match_number}`;
+    return `${context} · Match ${row.match_number}`;
   if (row.match_number) return `Match ${row.match_number}`;
   if (context) return context;
   return `Match ${ordinal + 1}`;
@@ -97,11 +115,35 @@ export function toPublicMatch(
   teams: PublicTeamRow[],
   ordinal: number,
   tournamentTimezone: string,
+  onWarning?: ProjectionWarning,
 ): PublicMatch {
   const stage = stages.find((candidate) => candidate.id === row.stage_id);
   const teamA = teams.find((candidate) => candidate.id === row.team_a_id);
   const teamB = teams.find((candidate) => candidate.id === row.team_b_id);
-  const winner = teams.find((candidate) => candidate.id === row.winner_team_id);
+  const winnerIsParticipant =
+    row.winner_team_id !== null &&
+    [row.team_a_id, row.team_b_id].includes(row.winner_team_id);
+  const winner = winnerIsParticipant
+    ? teams.find((candidate) => candidate.id === row.winner_team_id)
+    : undefined;
+  if (row.stage_id && !stage) onWarning?.("match_stage_not_public");
+  if ((row.team_a_id && !teamA) || (row.team_b_id && !teamB))
+    onWarning?.("match_team_not_public");
+  if (row.winner_team_id && !winner)
+    onWarning?.("match_winner_not_participant");
+  const validScheduledAt =
+    row.scheduled_at === null || !Number.isNaN(Date.parse(row.scheduled_at));
+  if (!validScheduledAt) onWarning?.("match_invalid_schedule");
+  const scoreIsValid =
+    row.score_a === null && row.score_b === null
+      ? true
+      : Number.isInteger(row.score_a) &&
+        Number.isInteger(row.score_b) &&
+        row.score_a !== null &&
+        row.score_b !== null &&
+        row.score_a >= 0 &&
+        row.score_b >= 0;
+  if (!scoreIsValid) onWarning?.("match_invalid_score");
   const canExposeTechnicalReference = ["live", "completed"].includes(
     row.status,
   );
@@ -117,18 +159,21 @@ export function toPublicMatch(
     match_number: row.match_number,
     round_name: row.round_name,
     group_name: row.group_name,
-    scheduled_at: row.scheduled_at,
+    scheduled_at: validScheduledAt ? row.scheduled_at : null,
     timezone: stage?.timezone ?? tournamentTimezone,
     best_of: row.best_of,
-    team_a: teamA ? toPublicTeamSummary(teamA) : null,
-    team_b: teamB ? toPublicTeamSummary(teamB) : null,
-    score_a: row.score_a,
-    score_b: row.score_b,
+    team_a: teamA ? toPublicTeamSummary(teamA, onWarning) : null,
+    team_b: teamB ? toPublicTeamSummary(teamB, onWarning) : null,
+    score_a: scoreIsValid ? row.score_a : null,
+    score_b: scoreIsValid ? row.score_b : null,
     status: row.status,
-    winner: winner ? toPublicTeamSummary(winner) : null,
-    stream_url: safePublicUrl(row.stream_url),
-    vod_url: safePublicUrl(row.vod_url),
-    duration_seconds: row.duration_seconds,
+    winner: winner ? toPublicTeamSummary(winner, onWarning) : null,
+    stream_url: sanitizePublicUrl(row.stream_url, onWarning),
+    vod_url: sanitizePublicUrl(row.vod_url, onWarning),
+    duration_seconds:
+      row.duration_seconds && row.duration_seconds > 0
+        ? row.duration_seconds
+        : null,
     deadlock_match_id: canExposeTechnicalReference
       ? row.deadlock_match_id
       : null,
@@ -176,6 +221,7 @@ export function groupPublicMatches(matches: PublicMatch[]): PublicMatchGroups {
 
 function toPublicTournament(
   row: PublishedTournament,
+  onWarning?: ProjectionWarning,
 ): PublicTournamentOverview {
   return {
     slug: row.slug,
@@ -189,11 +235,11 @@ function toPublicTournament(
     timezone: row.timezone,
     format: row.format,
     prize_pool_text: row.prize_pool_text,
-    registration_url: safePublicUrl(row.registration_url),
-    bracket_url: safePublicUrl(row.bracket_url),
-    discord_url: safePublicUrl(row.discord_url),
-    stream_url: safePublicUrl(row.stream_url),
-    rules_url: safePublicUrl(row.rules_url),
+    registration_url: sanitizePublicUrl(row.registration_url, onWarning),
+    bracket_url: sanitizePublicUrl(row.bracket_url, onWarning),
+    discord_url: sanitizePublicUrl(row.discord_url, onWarning),
+    stream_url: sanitizePublicUrl(row.stream_url, onWarning),
+    rules_url: sanitizePublicUrl(row.rules_url, onWarning),
     is_online: row.is_online,
     max_teams: row.max_teams,
     registration_deadline: row.registration_deadline,
@@ -209,6 +255,7 @@ export function getPublicTournamentOperationalSummary(
   return {
     stages: stages.length,
     teams: teams.length,
+    live_matches: matches.live.length,
     upcoming_matches: matches.upcoming.length,
     completed_matches: matches.results.length,
     live_match: matches.live[0] ?? null,
@@ -224,24 +271,39 @@ export function toPublicTournamentProjection(input: {
   teamRows: PublicTeamRow[];
   rosterRows: PublicRosterRow[];
   matchRows: PublicMatchRow[];
+  onWarning?: ProjectionWarning;
 }): PublicTournamentProjection {
   const stages = input.stageRows
-    .filter((row) => row.is_public)
+    .filter(
+      (row) =>
+        row.is_public && row.submission_id === input.tournament.submission_id,
+    )
     .sort(
       (a, b) =>
         a.sequence_number - b.sequence_number || a.slug.localeCompare(b.slug),
     )
     .map(toPublicStage);
   const publicTeamRows = input.teamRows
-    .filter((row) => row.is_public)
+    .filter(
+      (row) =>
+        row.is_public && row.submission_id === input.tournament.submission_id,
+    )
     .sort(
       (a, b) =>
         (a.seed ?? Number.MAX_SAFE_INTEGER) -
           (b.seed ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name),
     );
-  const teams = publicTeamRows.map((row) =>
-    toPublicTeam(row, input.rosterRows),
-  );
+  const teams = publicTeamRows.map((row) => {
+    const unsafeRoleCount = input.rosterRows.filter(
+      (member) =>
+        member.tournament_team_id === row.id &&
+        member.is_active &&
+        member.player.is_public &&
+        !["player", "substitute", "coach", "manager"].includes(member.role),
+    ).length;
+    if (unsafeRoleCount) input.onWarning?.("roster_role_not_public");
+    return toPublicTeam(row, input.rosterRows, input.onWarning);
+  });
   const publicMatchStatuses = new Set([
     "scheduled",
     "live",
@@ -250,28 +312,48 @@ export function toPublicTournamentProjection(input: {
     "cancelled",
     "walkover",
   ]);
-  const visibleRows = input.matchRows.filter(
-    (row) =>
+  const visibleRows = input.matchRows.filter((row) => {
+    const isVisible =
       row.is_public &&
+      row.submission_id === input.tournament.submission_id &&
       publicMatchStatuses.has(row.status) &&
       (row.status !== "cancelled" ||
         (row.scheduled_at !== null &&
-          (row.team_a_id !== null || row.team_b_id !== null))),
-  );
+          (row.team_a_id !== null || row.team_b_id !== null)));
+    if (!isVisible) return false;
+    if (
+      row.status === "completed" &&
+      (!Number.isInteger(row.score_a) ||
+        !Number.isInteger(row.score_b) ||
+        row.score_a === null ||
+        row.score_b === null ||
+        row.score_a < 0 ||
+        row.score_b < 0)
+    ) {
+      input.onWarning?.("completed_match_incomplete_score");
+      return false;
+    }
+    return true;
+  });
   const matches = groupPublicMatches(
     visibleRows.map((row, ordinal) =>
       toPublicMatch(
         row,
-        input.stageRows.filter((stage) => stage.is_public),
+        input.stageRows.filter(
+          (stage) =>
+            stage.is_public &&
+            stage.submission_id === input.tournament.submission_id,
+        ),
         publicTeamRows,
         ordinal,
         input.tournament.timezone,
+        input.onWarning,
       ),
     ),
   );
   return {
     locale: input.locale,
-    tournament: toPublicTournament(input.tournament),
+    tournament: toPublicTournament(input.tournament, input.onWarning),
     stages,
     teams,
     matches,

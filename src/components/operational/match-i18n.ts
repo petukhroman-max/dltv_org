@@ -39,7 +39,8 @@ const en = {
   vodUrl: "VOD URL",
   deadlockMatchId: "Deadlock Match ID",
   duration: "Duration (seconds)",
-  public: "Visible when a public match projection is added later",
+  public:
+    "Public items appear on the tournament page after the tournament is published.",
   status: "Status",
   score: "Score",
   open: "Manage match",
@@ -116,7 +117,8 @@ const ru: typeof en = {
   vodUrl: "Ссылка на запись",
   deadlockMatchId: "Deadlock Match ID",
   duration: "Длительность (секунды)",
-  public: "Показывать после появления публичной проекции матчей",
+  public:
+    "Публичные данные отображаются на странице турнира после его публикации.",
   status: "Статус",
   score: "Счёт",
   open: "Управлять матчем",

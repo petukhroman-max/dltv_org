@@ -13,12 +13,23 @@ export function formatPublicDate(value: string, locale: Locale = "en"): string {
 export function formatPublicDateTime(
   value: string,
   locale: Locale = "en",
+  timeZone = "UTC",
 ): string {
-  return new Intl.DateTimeFormat(localeTags[locale], {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "UTC",
-  }).format(new Date(value));
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  try {
+    return new Intl.DateTimeFormat(localeTags[locale], {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone,
+    }).format(date);
+  } catch {
+    return new Intl.DateTimeFormat(localeTags[locale], {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: "UTC",
+    }).format(date);
+  }
 }
 
 export function safePublicUrl(value: string | null): string | null {
@@ -33,13 +44,18 @@ export function safePublicUrl(value: string | null): string | null {
   }
 }
 
-export function publicDescription(tournament: {
-  description: string | null;
-  tournament_name: string;
-  organizer_name: string;
-}): string {
+export function publicDescription(
+  tournament: {
+    description: string | null;
+    tournament_name: string;
+    organizer_name: string;
+  },
+  locale: Locale = "en",
+): string {
   const description = tournament.description?.trim();
   return description
     ? description.slice(0, 155)
-    : `${tournament.tournament_name}, a Deadlock tournament organized by ${tournament.organizer_name}.`;
+    : locale === "ru"
+      ? `${tournament.tournament_name} — турнир по Deadlock от организатора ${tournament.organizer_name}.`
+      : `${tournament.tournament_name}, a Deadlock tournament organized by ${tournament.organizer_name}.`;
 }

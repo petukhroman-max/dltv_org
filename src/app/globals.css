@@ -1668,7 +1668,7 @@ h1 {
 }
 
 .publicSummaryGrid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
   margin: 0;
 }
 
@@ -1731,6 +1731,7 @@ h1 {
 .publicTeamCard p,
 .matchContext {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .publicStageCard dl,
@@ -1838,6 +1839,19 @@ h1 {
   list-style: none;
 }
 
+.publicRosterGroups {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.publicRosterGroup h5 {
+  margin: 0 0 0.35rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .publicRoster li {
   display: flex;
   align-items: center;
@@ -1845,6 +1859,15 @@ h1 {
   gap: 0.75rem;
   padding-top: 0.5rem;
   border-top: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+
+.publicOperational,
+.publicOperationalSection,
+.publicStageCard,
+.publicTeamCard,
+.publicMatchCard {
+  min-width: 0;
 }
 
 .publicRoster small {

@@ -9,8 +9,13 @@ import { publicTournamentProjectionTag } from "@/lib/public-tournaments/public-o
 
 export const loadPublishedTournament = cache(getPublishedTournamentBySlug);
 
-export const loadPublicTournamentProjection = unstable_cache(
-  getPublicTournamentProjection,
-  ["public-tournament-operational-projection-v1"],
-  { revalidate: 60, tags: [publicTournamentProjectionTag] },
-);
+export async function loadPublicTournamentProjection(
+  slug: string,
+  locale: Parameters<typeof getPublicTournamentProjection>[1],
+) {
+  return unstable_cache(
+    () => getPublicTournamentProjection(slug, locale),
+    ["public-tournament-operational-projection-v2", slug, locale],
+    { revalidate: 60, tags: [publicTournamentProjectionTag(slug)] },
+  )();
+}

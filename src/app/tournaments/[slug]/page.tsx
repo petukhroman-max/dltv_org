@@ -26,9 +26,15 @@ export async function generateMetadata({
     const projection = await loadPublicTournamentProjection(slug, locale);
     return projection
       ? tournamentMetadata(projection.tournament, locale)
-      : { title: "Tournament not found" };
+      : {
+          title: locale === "ru" ? "Турнир не найден" : "Tournament not found",
+          robots: { index: false, follow: false },
+        };
   } catch {
-    return { title: "Tournament unavailable" };
+    return {
+      title: locale === "ru" ? "Турнир недоступен" : "Tournament unavailable",
+      robots: { index: false, follow: false },
+    };
   }
 }
 

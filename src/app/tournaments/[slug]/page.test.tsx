@@ -5,7 +5,9 @@ vi.mock("@/lib/public-tournaments/load", () => ({
   loadPublicTournamentProjection: vi.fn(),
 }));
 
-import TournamentPage from "@/app/tournaments/[slug]/page";
+import TournamentPage, {
+  generateMetadata,
+} from "@/app/tournaments/[slug]/page";
 import { loadPublicTournamentProjection } from "@/lib/public-tournaments/load";
 import { publicTournamentProjectionFixture } from "@/test/public-operational-fixture";
 
@@ -31,5 +33,13 @@ describe("TournamentPage navigation", () => {
         .getAllByRole("link", { name: "Submit a tournament" })
         .every((link) => link.getAttribute("href") === "/en/submit-tournament"),
     ).toBe(true);
+  });
+
+  it("marks hidden or missing tournament metadata as noindex", async () => {
+    vi.mocked(loadPublicTournamentProjection).mockResolvedValue(null);
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ slug: "hidden" }),
+    });
+    expect(metadata.robots).toMatchObject({ index: false, follow: false });
   });
 });

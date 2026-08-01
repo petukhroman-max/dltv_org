@@ -22,10 +22,11 @@ const copy = {
     nextMatch: "Next match",
     liveNow: "Live now",
     recentResults: "Recent results",
-    noStages: "No public stages yet.",
-    noMatches: "No public matches yet.",
-    noTeams: "No public teams yet.",
-    noRoster: "Roster has not been published.",
+    noStages: "Tournament stages have not been published yet.",
+    noMatches: "The match schedule has not been published yet.",
+    noTeams: "Participating teams have not been published yet.",
+    noRoster: "Roster has not been published yet.",
+    liveMatches: "Live matches",
     completedMatches: "Completed matches",
     upcomingMatches: "Upcoming matches",
     stageType: "Type",
@@ -38,6 +39,7 @@ const copy = {
     seed: "Seed",
     region: "Region",
     roster: "Roster",
+    rosterCount: "Roster members",
     captain: "Captain",
     tbd: "TBD",
     tbdLong: "To be determined",
@@ -54,10 +56,24 @@ const copy = {
     playoffs: "Playoffs",
     final: "Final",
     other: "Other",
-    player: "Player",
-    substitute: "Substitute",
-    coach: "Coach",
-    manager: "Manager",
+    players: "Players",
+    substitutes: "Substitutes",
+    coaches: "Coaches",
+    managers: "Managers",
+    round: "Round",
+    group: "Group",
+    scheduled: "Scheduled",
+    invited: "Invited",
+    registered: "Registered",
+    confirmed: "Confirmed",
+    eliminated: "Eliminated",
+    withdrawn: "Withdrawn",
+    disqualified: "Disqualified",
+    swiss: "Swiss",
+    singleElimination: "Single elimination",
+    doubleElimination: "Double elimination",
+    roundRobin: "Round robin",
+    custom: "Custom",
     postponed: "Postponed",
     cancelled: "Cancelled",
     walkover: "W/O",
@@ -67,17 +83,18 @@ const copy = {
     stages: "Этапы",
     matches: "Матчи",
     teams: "Команды",
-    live: "Сейчас",
+    live: "Идёт сейчас",
     upcoming: "Предстоящие",
     results: "Результаты",
     unscheduled: "Без времени",
     nextMatch: "Следующий матч",
     liveNow: "Прямо сейчас",
     recentResults: "Последние результаты",
-    noStages: "Публичных этапов пока нет.",
-    noMatches: "Публичных матчей пока нет.",
-    noTeams: "Публичных команд пока нет.",
+    noStages: "Этапы турнира пока не опубликованы.",
+    noMatches: "Расписание матчей пока не опубликовано.",
+    noTeams: "Участвующие команды пока не опубликованы.",
     noRoster: "Состав пока не опубликован.",
+    liveMatches: "Матчи в прямом эфире",
     completedMatches: "Завершённые матчи",
     upcomingMatches: "Предстоящие матчи",
     stageType: "Тип",
@@ -90,6 +107,7 @@ const copy = {
     seed: "Посев",
     region: "Регион",
     roster: "Состав",
+    rosterCount: "Участники состава",
     captain: "Капитан",
     tbd: "TBD",
     tbdLong: "Будет определено",
@@ -106,10 +124,24 @@ const copy = {
     playoffs: "Плей-офф",
     final: "Финал",
     other: "Другое",
-    player: "Игрок",
-    substitute: "Запасной",
-    coach: "Тренер",
-    manager: "Менеджер",
+    players: "Игроки",
+    substitutes: "Запасные",
+    coaches: "Тренеры",
+    managers: "Менеджеры",
+    round: "Раунд",
+    group: "Группа",
+    scheduled: "Запланирован",
+    invited: "Приглашена",
+    registered: "Зарегистрирована",
+    confirmed: "Подтверждена",
+    eliminated: "Выбыла",
+    withdrawn: "Снялась",
+    disqualified: "Дисквалифицирована",
+    swiss: "Швейцарская система",
+    singleElimination: "Олимпийская система",
+    doubleElimination: "Двойное выбывание",
+    roundRobin: "Круговая система",
+    custom: "Другое",
     postponed: "Перенесён",
     cancelled: "Отменён",
     walkover: "Техническая победа",
@@ -149,10 +181,18 @@ function statusLabel(status: string, locale: Locale) {
 
 function entityStatusLabel(status: string, locale: Locale) {
   const current = copy[locale];
+  if (status === "scheduled") return current.scheduled;
   if (status === "active") return current.active;
   if (status === "inactive") return current.inactive;
   if (status === "completed") return current.completed;
-  return status;
+  if (status === "cancelled") return current.cancelled;
+  if (status === "invited") return current.invited;
+  if (status === "registered") return current.registered;
+  if (status === "confirmed") return current.confirmed;
+  if (status === "eliminated") return current.eliminated;
+  if (status === "withdrawn") return current.withdrawn;
+  if (status === "disqualified") return current.disqualified;
+  return current.other;
 }
 
 function stageTypeLabel(stageType: string, locale: Locale) {
@@ -161,41 +201,40 @@ function stageTypeLabel(stageType: string, locale: Locale) {
   if (stageType === "group_stage") return current.groupStage;
   if (stageType === "playoff") return current.playoffs;
   if (stageType === "final") return current.final;
+  if (stageType === "swiss") return current.swiss;
+  if (stageType === "single_elimination") return current.singleElimination;
+  if (stageType === "double_elimination") return current.doubleElimination;
+  if (stageType === "round_robin") return current.roundRobin;
+  if (stageType === "custom") return current.custom;
   return current.other;
 }
 
-function roleLabel(role: string, locale: Locale) {
-  const current = copy[locale];
-  if (role === "player") return current.player;
-  if (role === "substitute") return current.substitute;
-  if (role === "coach") return current.coach;
-  if (role === "manager") return current.manager;
-  return role;
+export function formatMatchDuration(seconds: number, locale: Locale) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (locale === "ru")
+    return [hours ? `${hours} ч` : null, minutes ? `${minutes} мин` : null]
+      .filter(Boolean)
+      .join(" ");
+  return [hours ? `${hours}h` : null, minutes ? `${minutes}m` : null]
+    .filter(Boolean)
+    .join(" ");
 }
 
 function MatchCard({ match, locale }: { match: PublicMatch; locale: Locale }) {
   const current = copy[locale];
-  const stream = safePublicUrl(match.stream_url);
-  const vod = safePublicUrl(match.vod_url);
+  const stream = ["scheduled", "live", "postponed"].includes(match.status)
+    ? safePublicUrl(match.stream_url)
+    : null;
+  const vod = ["completed", "walkover"].includes(match.status)
+    ? safePublicUrl(match.vod_url)
+    : null;
   const showScore = match.score_a !== null && match.score_b !== null;
   return (
     <article className="publicMatchCard">
       <header>
-        <div
-          className={
-            match.winner?.slug === match.team_a?.slug
-              ? "matchWinner"
-              : undefined
-          }
-          aria-label={
-            match.winner?.slug === match.team_a?.slug
-              ? current.winner
-              : undefined
-          }
-        >
-          <p className="matchContext">
-            {match.stage?.name ?? match.round_name ?? match.group_name}
-          </p>
+        <div>
+          <p className="matchContext">{match.stage?.name ?? current.other}</p>
           <h4>{match.public_id}</h4>
         </div>
         <span className="matchStatus" data-status={match.status}>
@@ -205,12 +244,12 @@ function MatchCard({ match, locale }: { match: PublicMatch; locale: Locale }) {
       <div className="matchTeams" aria-label={match.public_id}>
         <div
           className={
-            match.winner?.slug === match.team_b?.slug
+            match.winner?.slug === match.team_a?.slug
               ? "matchWinner"
               : undefined
           }
           aria-label={
-            match.winner?.slug === match.team_b?.slug
+            match.winner?.slug === match.team_a?.slug
               ? current.winner
               : undefined
           }
@@ -226,13 +265,24 @@ function MatchCard({ match, locale }: { match: PublicMatch; locale: Locale }) {
       <div className="matchMeta">
         {match.scheduled_at ? (
           <time dateTime={match.scheduled_at}>
-            {formatPublicDateTime(match.scheduled_at, locale)} ·{" "}
+            {formatPublicDateTime(match.scheduled_at, locale, match.timezone)} ·{" "}
             {match.timezone}
           </time>
         ) : null}
+        {match.round_name ? (
+          <span>
+            {current.round}: {match.round_name}
+          </span>
+        ) : null}
+        {match.group_name ? (
+          <span>
+            {current.group}: {match.group_name}
+          </span>
+        ) : null}
         {match.best_of ? <span>BO{match.best_of}</span> : null}
-        {match.duration_seconds ? (
-          <span>{Math.ceil(match.duration_seconds / 60)} min</span>
+        {match.duration_seconds &&
+        ["completed", "walkover"].includes(match.status) ? (
+          <span>{formatMatchDuration(match.duration_seconds, locale)}</span>
         ) : null}
       </div>
       {stream || vod || match.deadlock_match_id ? (
@@ -308,6 +358,10 @@ export function PublicTournamentOperational({
       >
         <h2 id="overview-heading">{current.overview}</h2>
         <dl className="publicSummaryGrid">
+          <div>
+            <dt>{current.liveMatches}</dt>
+            <dd>{summary.live_matches}</dd>
+          </div>
           <div>
             <dt>{current.stages}</dt>
             <dd>{summary.stages}</dd>
@@ -390,11 +444,19 @@ export function PublicTournamentOperational({
                       <dt>{current.dates}</dt>
                       <dd>
                         {stage.start_at
-                          ? formatPublicDateTime(stage.start_at, locale)
+                          ? formatPublicDateTime(
+                              stage.start_at,
+                              locale,
+                              stage.timezone ?? projection.tournament.timezone,
+                            )
                           : "—"}{" "}
                         –{" "}
                         {stage.end_at
-                          ? formatPublicDateTime(stage.end_at, locale)
+                          ? formatPublicDateTime(
+                              stage.end_at,
+                              locale,
+                              stage.timezone ?? projection.tournament.timezone,
+                            )
                           : "—"}
                       </dd>
                     </div>
@@ -519,27 +581,72 @@ export function PublicTournamentOperational({
                         <dd>{team.seed}</dd>
                       </div>
                     ) : null}
+                    <div>
+                      <dt>{current.rosterCount}</dt>
+                      <dd>{team.roster.length}</dd>
+                    </div>
                   </dl>
                   <h4>{current.roster}</h4>
                   {team.roster.length ? (
-                    <ul className="publicRoster">
-                      {team.roster.map((member, index) => (
-                        <li
-                          key={`${member.display_name}-${member.role}-${index}`}
-                        >
-                          <span>
-                            {member.country_code
-                              ? `${member.country_code} · `
-                              : ""}
-                            {member.display_name}
-                          </span>
-                          <small>
-                            {roleLabel(member.role, locale)}
-                            {member.is_captain ? ` · ${current.captain}` : ""}
-                          </small>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="publicRosterGroups">
+                      {(
+                        [
+                          [
+                            current.captain,
+                            team.roster.filter((member) => member.is_captain),
+                          ],
+                          [
+                            current.players,
+                            team.roster.filter(
+                              (member) =>
+                                member.role === "player" && !member.is_captain,
+                            ),
+                          ],
+                          [
+                            current.substitutes,
+                            team.roster.filter(
+                              (member) =>
+                                member.role === "substitute" &&
+                                !member.is_captain,
+                            ),
+                          ],
+                          [
+                            current.coaches,
+                            team.roster.filter(
+                              (member) =>
+                                member.role === "coach" && !member.is_captain,
+                            ),
+                          ],
+                          [
+                            current.managers,
+                            team.roster.filter(
+                              (member) =>
+                                member.role === "manager" && !member.is_captain,
+                            ),
+                          ],
+                        ] as const
+                      ).map(([label, members]) =>
+                        members.length ? (
+                          <section key={label} className="publicRosterGroup">
+                            <h5>{label}</h5>
+                            <ul className="publicRoster">
+                              {members.map((member, index) => (
+                                <li
+                                  key={`${member.display_name}-${member.role}-${index}`}
+                                >
+                                  <span>
+                                    {member.country_code
+                                      ? `${member.country_code} · `
+                                      : ""}
+                                    {member.display_name}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </section>
+                        ) : null,
+                      )}
+                    </div>
                   ) : (
                     <p className="publicEmptyState">{current.noRoster}</p>
                   )}

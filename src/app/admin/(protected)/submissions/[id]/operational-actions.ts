@@ -38,7 +38,7 @@ async function run(
     formData,
   );
   if (result.status === "success") {
-    revalidatePublicTournamentProjection();
+    await revalidatePublicTournamentProjection(submissionId);
     revalidatePath(`/admin/submissions/${submissionId}`);
   }
   return result;
@@ -100,7 +100,7 @@ async function runRoster(
     formData,
   );
   if (result.status === "success") {
-    revalidatePublicTournamentProjection();
+    await revalidatePublicTournamentProjection(submissionId);
     revalidatePath(`/admin/submissions/${submissionId}`);
   }
   return result;
@@ -170,7 +170,7 @@ async function runMatch(
     formData,
   );
   if (result.status === "success") {
-    revalidatePublicTournamentProjection();
+    await revalidatePublicTournamentProjection(submissionId);
     revalidatePath(`/admin/submissions/${submissionId}`);
   }
   return result;

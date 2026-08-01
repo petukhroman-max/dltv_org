@@ -50,7 +50,7 @@ async function run(
     formData,
   );
   if (result.status === "success") {
-    revalidatePublicTournamentProjection();
+    await revalidatePublicTournamentProjection(access.submission.id);
     revalidatePath(`/workspace/${rawToken}`);
     revalidatePath(`/admin/submissions/${access.submission.id}`);
   }
@@ -134,7 +134,7 @@ async function runWorkspaceRoster(
     formData,
   );
   if (result.status === "success") {
-    revalidatePublicTournamentProjection();
+    await revalidatePublicTournamentProjection(access.submissionId);
     revalidatePath(`/workspace/${rawToken}`);
     revalidatePath(`/admin/submissions/${access.submissionId}`);
   }
@@ -220,7 +220,7 @@ async function runWorkspaceMatch(
     formData,
   );
   if (result.status === "success") {
-    revalidatePublicTournamentProjection();
+    await revalidatePublicTournamentProjection(access.submissionId);
     revalidatePath(`/workspace/${rawToken}`);
     revalidatePath(`/workspace/${rawToken}/matches`);
     revalidatePath(`/admin/submissions/${access.submissionId}`);

@@ -107,6 +107,7 @@ export const publicTournamentProjectionFixture: PublicTournamentProjection = {
   summary: {
     stages: 1,
     teams: 2,
+    live_matches: 0,
     upcoming_matches: 1,
     completed_matches: 0,
     live_match: null,

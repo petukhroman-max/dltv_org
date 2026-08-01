@@ -47,6 +47,7 @@ export async function getPublicTournamentProjection(
     teamRows,
     rosterRows,
     matchRows,
+    onWarning: (code) => console.warn(`[public-tournament-projection] ${code}`),
   });
 }
 

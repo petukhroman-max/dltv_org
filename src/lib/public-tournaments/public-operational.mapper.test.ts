@@ -233,5 +233,91 @@ describe("public operational projection mapper", () => {
       ["2026-08-09T10:00:00Z", "2026-08-08T10:00:00Z"],
     );
     expect(projection.matches.unscheduled).toHaveLength(1);
+    expect(projection.summary.live_matches).toBe(1);
+  });
+
+  it("sanitizes corrupt legacy match references and reports safe warning codes", () => {
+    const warnings: string[] = [];
+    const projection = toPublicTournamentProjection({
+      locale: "en",
+      tournament: publishedTournamentFixture,
+      stageRows: [stage()],
+      teamRows: [team(teamAId, "Radiant"), team(teamBId, "Dire")],
+      rosterRows: [],
+      matchRows: [
+        match("cross-references", "live", {
+          stage_id: "stage-from-another-tournament",
+          team_b_id: "team-from-another-tournament",
+          winner_team_id: teamBId,
+          scheduled_at: "not-a-date",
+          score_a: 1,
+          score_b: null,
+          stream_url: "javascript:alert(1)",
+          vod_url: "data:text/plain,private",
+          duration_seconds: -5,
+        }),
+      ],
+      onWarning: (code) => warnings.push(code),
+    });
+    const publicMatch = projection.matches.live[0];
+    expect(publicMatch.stage).toBeNull();
+    expect(publicMatch.team_b).toBeNull();
+    expect(publicMatch.winner).toBeNull();
+    expect(publicMatch.scheduled_at).toBeNull();
+    expect(publicMatch.score_a).toBeNull();
+    expect(publicMatch.score_b).toBeNull();
+    expect(publicMatch.stream_url).toBeNull();
+    expect(publicMatch.vod_url).toBeNull();
+    expect(publicMatch.duration_seconds).toBeNull();
+    expect(warnings).toEqual(
+      expect.arrayContaining([
+        "match_stage_not_public",
+        "match_team_not_public",
+        "match_winner_not_participant",
+        "match_invalid_schedule",
+        "match_invalid_score",
+        "invalid_public_url",
+      ]),
+    );
+    expect(JSON.stringify(warnings)).not.toContain("cross-references");
+  });
+
+  it("does not publish an incomplete completed result", () => {
+    const warnings: string[] = [];
+    const projection = toPublicTournamentProjection({
+      locale: "en",
+      tournament: publishedTournamentFixture,
+      stageRows: [stage()],
+      teamRows: [team(teamAId, "Radiant"), team(teamBId, "Dire")],
+      rosterRows: [],
+      matchRows: [match("incomplete", "completed", { score_a: 2 })],
+      onWarning: (code) => warnings.push(code),
+    });
+    expect(projection.matches.results).toEqual([]);
+    expect(projection.matches.unscheduled).toEqual([]);
+    expect(warnings).toEqual(["completed_match_incomplete_score"]);
+  });
+
+  it("groups postponed, cancelled, and walkover states explicitly", () => {
+    const projection = toPublicTournamentProjection({
+      locale: "en",
+      tournament: publishedTournamentFixture,
+      stageRows: [stage()],
+      teamRows: [team(teamAId, "Radiant"), team(teamBId, "Dire")],
+      rosterRows: [],
+      matchRows: [
+        match("postponed", "postponed"),
+        match("cancelled", "cancelled"),
+        match("walkover", "walkover", { winner_team_id: teamAId }),
+      ],
+    });
+    expect(projection.matches.upcoming.map((item) => item.status)).toEqual([
+      "postponed",
+      "cancelled",
+    ]);
+    expect(projection.matches.results[0]).toMatchObject({
+      status: "walkover",
+      winner: { slug: "radiant" },
+    });
   });
 });
