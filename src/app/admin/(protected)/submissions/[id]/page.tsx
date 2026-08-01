@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 
@@ -9,6 +8,7 @@ import { AdminEditLinkPanel } from "@/components/admin/admin-edit-link-panel";
 import { AdminWorkspaceLinkPanel } from "@/components/admin/admin-workspace-link-panel";
 import { StagesTeamsWorkspace } from "@/components/operational/stages-teams-workspace";
 import { RosterWorkspace } from "@/components/operational/roster-workspace";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import {
   addAdminExistingPlayerAction,
   createAdminPlayerAndRosterAction,
@@ -24,7 +24,8 @@ import {
   updateAdminStageAction,
   updateAdminTeamAction,
 } from "@/app/admin/(protected)/submissions/[id]/operational-actions";
-import { adminCopy } from "@/lib/admin/copy";
+import { getRequestDictionary, getRequestLocale } from "@/i18n/get-dictionary";
+import { getAdminCopy } from "@/lib/admin/copy";
 import { loadAdminSubmissionDetails } from "@/lib/admin/details";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { getTournamentSubmissionDetails } from "@/lib/repositories/submission-details";
@@ -48,6 +49,11 @@ export default async function AdminSubmissionDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   noStore();
+  const [locale, dictionary] = await Promise.all([
+    getRequestLocale(),
+    getRequestDictionary(),
+  ]);
+  const adminCopy = getAdminCopy(locale);
   const { id } = await params;
   const details = await loadAdminSubmissionDetails(
     id,
@@ -99,49 +105,86 @@ export default async function AdminSubmissionDetailsPage({
 
   return (
     <main className="adminMain">
-      <Link className="textLink adminBackLink" href="/admin/submissions">
-        ← {adminCopy.details.back}
-      </Link>
+      <Breadcrumbs
+        locale={locale}
+        label={dictionary.a11y.breadcrumbs}
+        items={[
+          { label: adminCopy.nav.submissions, href: "/admin/submissions" },
+          { label: details.submission.tournament_name },
+        ]}
+      />
       <header className="adminPageHeader adminDetailsHeader">
         <p className="eyebrow">{adminCopy.list.eyebrow}</p>
         <h1>{details.submission.tournament_name}</h1>
         <p className="description">
-          Submission reference: <code>{details.submission.id}</code>
+          {dictionary.admin.reference}: <code>{details.submission.id}</code>
         </p>
       </header>
+      <nav
+        className="adminSectionTabs"
+        aria-label={dictionary.a11y.adminSections}
+      >
+        <a href="#overview">{dictionary.nav.overview}</a>
+        <a href="#moderation">{dictionary.nav.moderation}</a>
+        <a href="#tournament-data">{dictionary.nav.tournamentData}</a>
+        <a href="#access">{dictionary.nav.access}</a>
+        <a href="#history">{dictionary.nav.history}</a>
+      </nav>
       <div className="adminDetails">
         {status.success ? (
-          <AdminModerationPanel
-            submissionId={details.submission.id}
-            status={status.data}
-          />
+          <div id="moderation">
+            <AdminModerationPanel
+              submissionId={details.submission.id}
+              status={status.data}
+              locale={locale}
+            />
+          </div>
         ) : null}
-        {status.success && status.data === "needs_changes" ? (
-          <AdminEditLinkPanel
+        <div id="access">
+          {status.success && status.data === "needs_changes" ? (
+            <AdminEditLinkPanel
+              submissionId={details.submission.id}
+              tokenStatus={editTokenStatus}
+              locale={locale}
+            />
+          ) : null}
+          <AdminWorkspaceLinkPanel
             submissionId={details.submission.id}
-            tokenStatus={editTokenStatus}
+            tokenStatus={workspaceTokenStatus}
+            canManage={canManageOperationalData}
+            locale={locale}
           />
-        ) : null}
-        <AdminWorkspaceLinkPanel
-          submissionId={details.submission.id}
-          tokenStatus={workspaceTokenStatus}
-          canManage={canManageOperationalData}
-        />
-        <AdminSubmissionDetails details={details} />
+        </div>
+        <div id="overview">
+          <AdminSubmissionDetails
+            details={details}
+            locale={locale}
+            hideHistory
+          />
+        </div>
         {canManageOperationalData ? (
-          <>
+          <div id="tournament-data">
             <StagesTeamsWorkspace
               stages={stages}
               teams={teams}
               actions={operationalActions}
+              locale={locale}
             />
             <RosterWorkspace
               teams={teams}
               members={rosterMembers}
               actions={rosterActions}
+              locale={locale}
             />
-          </>
+          </div>
         ) : null}
+        <div id="history">
+          <AdminSubmissionDetails
+            details={details}
+            locale={locale}
+            historyOnly
+          />
+        </div>
         <AdminTournamentData
           stages={stages}
           teams={teams}
@@ -150,6 +193,7 @@ export default async function AdminSubmissionDetailsPage({
           summary={operationalSummary}
           showStagesAndTeams={!canManageOperationalData}
           showRosters={!canManageOperationalData}
+          locale={locale}
         />
       </div>
     </main>

@@ -22,14 +22,14 @@ describe("TournamentPage navigation", () => {
         name: "Browse tournaments",
         current: "page",
       }),
-    ).toHaveAttribute("href", "/tournaments");
+    ).toHaveAttribute("href", "/en/tournaments");
     expect(
       screen.getByRole("link", { name: "← All tournaments" }),
-    ).toHaveAttribute("href", "/tournaments");
+    ).toHaveAttribute("href", "/en/tournaments");
     expect(
       screen
         .getAllByRole("link", { name: "Submit a tournament" })
-        .every((link) => link.getAttribute("href") === "/submit-tournament"),
+        .every((link) => link.getAttribute("href") === "/en/submit-tournament"),
     ).toBe(true);
   });
 });

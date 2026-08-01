@@ -18,6 +18,10 @@ import {
 import { StatusBadge } from "@/components/admin/status-badge";
 import { StagesTeamsWorkspace } from "@/components/operational/stages-teams-workspace";
 import { RosterWorkspace } from "@/components/operational/roster-workspace";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { LocaleSwitcher } from "@/components/ui/locale-switcher";
+import { OrganizerShell } from "@/components/ui/organizer-shell";
+import { getRequestDictionary, getRequestLocale } from "@/i18n/get-dictionary";
 import { validateWorkspaceAccess } from "@/lib/organizer-workspace/workspace-token.service";
 import { listTeamRoster } from "@/lib/operational-workspace/roster.service";
 import {
@@ -34,14 +38,19 @@ export default async function OrganizerWorkspacePage({
   params: Promise<{ token: string }>;
 }) {
   noStore();
+  const [locale, dictionary] = await Promise.all([
+    getRequestLocale(),
+    getRequestDictionary(),
+  ]);
   const { token } = await params;
   const access = await validateWorkspaceAccess(token);
   if (!access) {
     return (
       <main className="adminMain workspaceInvalid">
+        <LocaleSwitcher locale={locale} label={dictionary.a11y.language} />
         <section className="adminPanel">
-          <h1>Tournament workspace</h1>
-          <p>This workspace link is invalid or no longer available.</p>
+          <h1>{dictionary.workspace.invalidTitle}</h1>
+          <p>{dictionary.workspace.invalidDescription}</p>
         </section>
       </main>
     );
@@ -73,49 +82,126 @@ export default async function OrganizerWorkspacePage({
     restore: restoreWorkspaceRosterAction.bind(null, token),
     search: searchWorkspacePlayersAction.bind(null, token),
   };
+  const activeRoster = rosterMembers.filter((member) => member.is_active);
+  const teamsWithRoster = new Set(
+    activeRoster.map((member) => member.tournament_team_id),
+  );
+  const nextActions = [
+    stages.length === 0
+      ? [dictionary.workspace.addFirstStage, "#workspace-stages"]
+      : null,
+    teams.length === 0
+      ? [dictionary.workspace.addTeams, "#workspace-teams"]
+      : null,
+    teams.length > teamsWithRoster.size
+      ? [dictionary.workspace.completeRosters, "#workspace-rosters"]
+      : null,
+  ].filter((item): item is [string, string] => item !== null);
   return (
-    <main className="adminMain">
-      <header className="adminPageHeader">
-        <p className="eyebrow">Organizer workspace</p>
-        <h1>{access.submission.tournament_name}</h1>
-        <StatusBadge status={access.submission.status} />
-        <p className="description">
-          Manage the operational structure of your tournament.
-        </p>
-      </header>
-      <section className="adminPanel" aria-labelledby="workspace-overview">
-        <h2 id="workspace-overview">Overview</h2>
-        <dl className="adminDefinitionGrid">
-          <div className="adminDefinition">
-            <dt>Region</dt>
-            <dd>{access.submission.region}</dd>
+    <OrganizerShell
+      locale={locale}
+      dictionary={dictionary}
+      tournamentName={access.submission.tournament_name}
+    >
+      <main className="workspaceMain">
+        <Breadcrumbs
+          locale={locale}
+          label={dictionary.a11y.breadcrumbs}
+          items={[{ label: access.submission.tournament_name }]}
+        />
+        <header className="workspacePageHeader">
+          <div>
+            <p className="eyebrow">{dictionary.workspace.eyebrow}</p>
+            <h1>{access.submission.tournament_name}</h1>
+            <p className="description">{dictionary.workspace.description}</p>
           </div>
-          <div className="adminDefinition">
-            <dt>Dates</dt>
-            <dd>
-              {access.submission.start_date} — {access.submission.end_date}
-            </dd>
-          </div>
-          <div className="adminDefinition">
-            <dt>Timezone</dt>
-            <dd>{access.submission.timezone}</dd>
-          </div>
-          <div className="adminDefinition">
-            <dt>Format</dt>
-            <dd>{access.submission.format ?? "Not set"}</dd>
-          </div>
-        </dl>
-        <p className="adminWarning">
-          Operational changes are saved immediately. Public tournament pages
-          will support these data in a later release.
-        </p>
-      </section>
-      <StagesTeamsWorkspace stages={stages} teams={teams} actions={actions} />
-      <RosterWorkspace
-        teams={teams}
-        members={rosterMembers}
-        actions={rosterActions}
-      />
-    </main>
+          <StatusBadge status={access.submission.status} locale={locale} />
+        </header>
+        <section
+          className="adminPanel"
+          id="overview"
+          aria-labelledby="workspace-overview"
+        >
+          <h2 id="workspace-overview">{dictionary.workspace.overview}</h2>
+          <dl
+            className="operationalSummary"
+            aria-label={dictionary.workspace.overview}
+          >
+            <div>
+              <dt>{dictionary.workspace.stagesCount}</dt>
+              <dd>{stages.length}</dd>
+            </div>
+            <div>
+              <dt>{dictionary.workspace.teamsCount}</dt>
+              <dd>{teams.length}</dd>
+            </div>
+            <div>
+              <dt>{dictionary.workspace.rosterCount}</dt>
+              <dd>{activeRoster.length}</dd>
+            </div>
+            <div>
+              <dt>{dictionary.workspace.emptyTeams}</dt>
+              <dd>{teams.length - teamsWithRoster.size}</dd>
+            </div>
+            <div>
+              <dt>{dictionary.workspace.status}</dt>
+              <dd>
+                <StatusBadge
+                  status={access.submission.status}
+                  locale={locale}
+                />
+              </dd>
+            </div>
+          </dl>
+          <dl className="adminDefinitionGrid">
+            <div className="adminDefinition">
+              <dt>{dictionary.workspace.region}</dt>
+              <dd>{access.submission.region}</dd>
+            </div>
+            <div className="adminDefinition">
+              <dt>{dictionary.workspace.dates}</dt>
+              <dd>
+                {access.submission.start_date} — {access.submission.end_date}
+              </dd>
+            </div>
+            <div className="adminDefinition">
+              <dt>{dictionary.workspace.timezone}</dt>
+              <dd>{access.submission.timezone}</dd>
+            </div>
+            <div className="adminDefinition">
+              <dt>{dictionary.workspace.format}</dt>
+              <dd>{access.submission.format ?? dictionary.common.notSet}</dd>
+            </div>
+          </dl>
+          {nextActions.length ? (
+            <div className="nextActions">
+              <h3>{dictionary.workspace.nextActions}</h3>
+              <ul>
+                {nextActions.map(([label, href]) => (
+                  <li key={href}>
+                    <a href={href}>{label}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          <p className="adminWarning">
+            {dictionary.workspace.savedImmediately}
+          </p>
+        </section>
+        <StagesTeamsWorkspace
+          stages={stages}
+          teams={teams}
+          actions={actions}
+          locale={locale}
+        />
+        <RosterWorkspace
+          teams={teams}
+          members={rosterMembers}
+          actions={rosterActions}
+          locale={locale}
+        />
+      </main>
+    </OrganizerShell>
   );
 }

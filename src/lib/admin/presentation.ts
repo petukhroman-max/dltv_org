@@ -1,9 +1,15 @@
 import type { Json } from "@/lib/supabase/database.types";
+import type { Locale } from "@/i18n/config";
+
+const localeTags: Record<Locale, string> = { en: "en-US", ru: "ru-RU" };
 
 const sensitiveMetadataKey =
   /(?:authorization|cookie|credential|password|refresh|secret|service.?role|token|api.?key)/i;
 
-export function formatAdminDate(value: string | null): string {
+export function formatAdminDate(
+  value: string | null,
+  locale: Locale = "en",
+): string {
   if (!value) {
     return "—";
   }
@@ -11,13 +17,16 @@ export function formatAdminDate(value: string | null): string {
   if (Number.isNaN(date.getTime())) {
     return "—";
   }
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat(localeTags[locale], {
     dateStyle: "medium",
     timeZone: "UTC",
   }).format(date);
 }
 
-export function formatAdminDateTime(value: string | null): string {
+export function formatAdminDateTime(
+  value: string | null,
+  locale: Locale = "en",
+): string {
   if (!value) {
     return "—";
   }
@@ -25,7 +34,7 @@ export function formatAdminDateTime(value: string | null): string {
   if (Number.isNaN(date.getTime())) {
     return "—";
   }
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat(localeTags[locale], {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: "UTC",

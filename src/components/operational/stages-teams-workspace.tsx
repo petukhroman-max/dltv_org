@@ -5,6 +5,9 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import type { Locale } from "@/i18n/config";
 import { getSafeExternalUrl } from "@/lib/admin/presentation";
 import type { AdminTournamentStage } from "@/lib/domain/tournament-stage";
 import type { AdminTournamentTeam } from "@/lib/domain/tournament-team";
@@ -13,6 +16,11 @@ import {
   type OperationalActionState,
   type OperationalServerAction,
 } from "@/lib/operational-workspace/action-state";
+import {
+  localizedOperationalMessage,
+  OperationalI18nProvider,
+  useOperationalCopy,
+} from "@/components/operational/operational-i18n";
 
 export type StagesTeamsActions = {
   createStage: OperationalServerAction;
@@ -39,6 +47,7 @@ function SubmitButton({
 }
 
 function ActionNotice({ state }: { state: OperationalActionState }) {
+  const copy = useOperationalCopy();
   if (!state.message && Object.keys(state.fieldErrors).length === 0)
     return null;
   return (
@@ -46,9 +55,11 @@ function ActionNotice({ state }: { state: OperationalActionState }) {
       className={state.status === "success" ? "adminNotice" : "formError"}
       role={state.status === "success" ? "status" : "alert"}
     >
-      {state.message ? <p>{state.message}</p> : null}
+      {state.message ? (
+        <p>{localizedOperationalMessage(state.message, copy)}</p>
+      ) : null}
       {Object.entries(state.fieldErrors).map(([field, message]) => (
-        <p key={field}>{message}</p>
+        <p key={field}>{message ? copy.genericError : null}</p>
       ))}
     </div>
   );
@@ -61,10 +72,11 @@ function StageFields({
   stage?: AdminTournamentStage;
   nextSequence?: number;
 }) {
+  const copy = useOperationalCopy();
   return (
     <div className="operationalFormGrid">
       <label>
-        Name
+        {copy.name}
         <input
           name="name"
           required
@@ -73,21 +85,21 @@ function StageFields({
         />
       </label>
       <label>
-        Type
+        {copy.type}
         <select
           name="stage_type"
           defaultValue={stage?.stage_type ?? "qualifier"}
         >
           {[
-            ["qualifier", "Qualifier"],
-            ["group_stage", "Group stage"],
-            ["swiss", "Swiss"],
-            ["single_elimination", "Single elimination"],
-            ["double_elimination", "Double elimination"],
-            ["round_robin", "Round robin"],
-            ["playoff", "Playoff"],
-            ["final", "Final"],
-            ["custom", "Custom"],
+            ["qualifier", copy.qualifier],
+            ["group_stage", copy.group_stage],
+            ["swiss", copy.swiss],
+            ["single_elimination", copy.single_elimination],
+            ["double_elimination", copy.double_elimination],
+            ["round_robin", copy.round_robin],
+            ["playoff", copy.playoff],
+            ["final", copy.final],
+            ["custom", copy.custom],
           ].map(([value, label]) => (
             <option key={value} value={value}>
               {label}
@@ -96,7 +108,7 @@ function StageFields({
         </select>
       </label>
       <label>
-        Sequence
+        {copy.sequence}
         <input
           name="sequence_number"
           type="number"
@@ -106,7 +118,7 @@ function StageFields({
         />
       </label>
       <label>
-        Start (ISO with offset)
+        {copy.start}
         <input
           name="start_at"
           placeholder="2026-08-10T10:00:00+02:00"
@@ -114,7 +126,7 @@ function StageFields({
         />
       </label>
       <label>
-        End (ISO with offset)
+        {copy.end}
         <input
           name="end_at"
           placeholder="2026-08-10T18:00:00+02:00"
@@ -122,7 +134,7 @@ function StageFields({
         />
       </label>
       <label>
-        Timezone
+        {copy.timezone}
         <input
           name="timezone"
           placeholder="Europe/Berlin"
@@ -130,7 +142,7 @@ function StageFields({
         />
       </label>
       <label>
-        Format
+        {copy.format}
         <input
           name="format_text"
           maxLength={200}
@@ -138,12 +150,12 @@ function StageFields({
         />
       </label>
       <label>
-        Best of
+        {copy.bestOf}
         <select
           name="best_of_default"
           defaultValue={stage?.best_of_default?.toString() ?? ""}
         >
-          <option value="">Not set</option>
+          <option value="">{copy.notSet}</option>
           {[1, 3, 5, 7].map((value) => (
             <option key={value} value={value}>
               {value}
@@ -152,7 +164,7 @@ function StageFields({
         </select>
       </label>
       <label>
-        Team count
+        {copy.teamCount}
         <input
           name="team_count"
           type="number"
@@ -161,18 +173,18 @@ function StageFields({
         />
       </label>
       <label>
-        Location type
+        {copy.locationType}
         <select
           name="is_online"
           defaultValue={stage?.is_online == null ? "" : String(stage.is_online)}
         >
-          <option value="">Not set</option>
-          <option value="true">Online</option>
-          <option value="false">Offline</option>
+          <option value="">{copy.notSet}</option>
+          <option value="true">{copy.online}</option>
+          <option value="false">{copy.offline}</option>
         </select>
       </label>
       <label>
-        Location name
+        {copy.locationName}
         <input
           name="location_name"
           maxLength={300}
@@ -180,11 +192,11 @@ function StageFields({
         />
       </label>
       <label>
-        Status
+        {copy.status}
         <select name="status" defaultValue={stage?.status ?? "scheduled"}>
           {["scheduled", "live", "completed", "cancelled"].map((value) => (
             <option key={value} value={value}>
-              {value.replace("_", " ")}
+              {copy[value as "scheduled" | "live" | "completed" | "cancelled"]}
             </option>
           ))}
         </select>
@@ -195,17 +207,18 @@ function StageFields({
           type="checkbox"
           defaultChecked={stage?.is_public ?? true}
         />{" "}
-        Mark ready for future public projection
+        {copy.publicReady}
       </label>
     </div>
   );
 }
 
 function TeamFields({ team }: { team?: AdminTournamentTeam }) {
+  const copy = useOperationalCopy();
   return (
     <div className="operationalFormGrid">
       <label>
-        Name
+        {copy.name}
         <input
           name="name"
           required
@@ -214,7 +227,7 @@ function TeamFields({ team }: { team?: AdminTournamentTeam }) {
         />
       </label>
       <label>
-        Short name
+        {copy.shortName}
         <input
           name="short_name"
           maxLength={50}
@@ -222,11 +235,11 @@ function TeamFields({ team }: { team?: AdminTournamentTeam }) {
         />
       </label>
       <label>
-        Logo URL
+        {copy.logoUrl}
         <input name="logo_url" type="url" defaultValue={team?.logo_url ?? ""} />
       </label>
       <label>
-        Region
+        {copy.region}
         <input
           name="region"
           maxLength={100}
@@ -234,7 +247,7 @@ function TeamFields({ team }: { team?: AdminTournamentTeam }) {
         />
       </label>
       <label>
-        Seed
+        {copy.seed}
         <input
           name="seed"
           type="number"
@@ -243,7 +256,7 @@ function TeamFields({ team }: { team?: AdminTournamentTeam }) {
         />
       </label>
       <label>
-        Status
+        {copy.status}
         <select name="status" defaultValue={team?.status ?? "active"}>
           {[
             "invited",
@@ -255,13 +268,24 @@ function TeamFields({ team }: { team?: AdminTournamentTeam }) {
             "disqualified",
           ].map((value) => (
             <option key={value} value={value}>
-              {value}
+              {
+                copy[
+                  value as
+                    | "invited"
+                    | "registered"
+                    | "confirmed"
+                    | "active"
+                    | "eliminated"
+                    | "withdrawn"
+                    | "disqualified"
+                ]
+              }
             </option>
           ))}
         </select>
       </label>
       <label>
-        External team ID
+        {copy.externalTeamId}
         <input
           name="external_team_id"
           maxLength={200}
@@ -274,7 +298,7 @@ function TeamFields({ team }: { team?: AdminTournamentTeam }) {
           type="checkbox"
           defaultChecked={team?.is_public ?? true}
         />{" "}
-        Mark ready for future public projection
+        {copy.publicReady}
       </label>
     </div>
   );
@@ -287,17 +311,20 @@ function CreateStageForm({
   action: OperationalServerAction;
   nextSequence: number;
 }) {
+  const copy = useOperationalCopy();
   const [state, formAction] = useActionState(
     action,
     initialOperationalActionState,
   );
   return (
     <details className="operationalEditor">
-      <summary>Add stage</summary>
+      <summary>{copy.addStage}</summary>
       <form action={formAction}>
         <StageFields nextSequence={nextSequence} />
         <ActionNotice state={state} />
-        <SubmitButton pendingLabel="Saving stage…">Save stage</SubmitButton>
+        <SubmitButton pendingLabel={copy.savingStage}>
+          {copy.saveStage}
+        </SubmitButton>
       </form>
     </details>
   );
@@ -312,6 +339,7 @@ function StageEditor({
   updateAction: OperationalServerAction;
   deleteAction: OperationalServerAction;
 }) {
+  const copy = useOperationalCopy();
   const [updateState, updateFormAction] = useActionState(
     updateAction,
     initialOperationalActionState,
@@ -328,39 +356,42 @@ function StageEditor({
             {stage.sequence_number}. {stage.name}
           </strong>
           <p>
-            {stage.stage_type.replaceAll("_", " ")} · {stage.status}
+            {copy[stage.stage_type as keyof typeof copy] as string} ·{" "}
+            {copy[stage.status as keyof typeof copy] as string}
           </p>
         </div>
         <span>
-          {stage.best_of_default ? `BO${stage.best_of_default}` : "BO not set"}
+          {stage.best_of_default
+            ? `BO${stage.best_of_default}`
+            : `BO ${copy.notSet}`}
         </span>
       </div>
       <dl className="operationalFacts">
         <div>
-          <dt>Dates</dt>
+          <dt>{copy.dates}</dt>
           <dd>
-            {stage.start_at ?? "Not set"} — {stage.end_at ?? "Not set"}
+            {stage.start_at ?? copy.notSet} — {stage.end_at ?? copy.notSet}
           </dd>
         </div>
         <div>
-          <dt>Location</dt>
+          <dt>{copy.location}</dt>
           <dd>
             {stage.is_online === true
-              ? "Online"
-              : (stage.location_name ?? "Not set")}
+              ? copy.online
+              : (stage.location_name ?? copy.notSet)}
           </dd>
         </div>
         <div>
-          <dt>Format</dt>
-          <dd>{stage.format_text ?? "Not set"}</dd>
+          <dt>{copy.format}</dt>
+          <dd>{stage.format_text ?? copy.notSet}</dd>
         </div>
         <div>
-          <dt>Teams</dt>
-          <dd>{stage.team_count ?? "Not set"}</dd>
+          <dt>{copy.teams}</dt>
+          <dd>{stage.team_count ?? copy.notSet}</dd>
         </div>
       </dl>
       <details className="operationalEditor">
-        <summary>Edit</summary>
+        <summary>{copy.edit}</summary>
         <form action={updateFormAction}>
           <input type="hidden" name="id" value={stage.id} />
           <input
@@ -370,41 +401,51 @@ function StageEditor({
           />
           <StageFields stage={stage} />
           <ActionNotice state={updateState} />
-          <SubmitButton pendingLabel="Saving stage…">Save changes</SubmitButton>
-        </form>
-      </details>
-      <details className="deleteConfirmation">
-        <summary>Delete</summary>
-        <p>Delete this unused stage? This cannot be undone.</p>
-        <form action={deleteFormAction}>
-          <input type="hidden" name="id" value={stage.id} />
-          <input
-            type="hidden"
-            name="expected_updated_at"
-            value={stage.updated_at}
-          />
-          <ActionNotice state={deleteState} />
-          <SubmitButton pendingLabel="Deleting stage…">
-            Delete stage
+          <SubmitButton pendingLabel={copy.savingStage}>
+            {copy.saveChanges}
           </SubmitButton>
         </form>
       </details>
+      <div className="deleteConfirmation">
+        <ConfirmationDialog
+          trigger={copy.delete}
+          title={copy.deleteStage}
+          description={copy.deleteStageQuestion(stage.name)}
+          cancelLabel={copy.cancel}
+        >
+          <form action={deleteFormAction}>
+            <input type="hidden" name="id" value={stage.id} />
+            <input
+              type="hidden"
+              name="expected_updated_at"
+              value={stage.updated_at}
+            />
+            <ActionNotice state={deleteState} />
+            <SubmitButton pendingLabel={copy.deletingStage}>
+              {copy.deleteStage}
+            </SubmitButton>
+          </form>
+        </ConfirmationDialog>
+      </div>
     </article>
   );
 }
 
 function CreateTeamForm({ action }: { action: OperationalServerAction }) {
+  const copy = useOperationalCopy();
   const [state, formAction] = useActionState(
     action,
     initialOperationalActionState,
   );
   return (
     <details className="operationalEditor">
-      <summary>Add team</summary>
+      <summary>{copy.addTeam}</summary>
       <form action={formAction}>
         <TeamFields />
         <ActionNotice state={state} />
-        <SubmitButton pendingLabel="Saving team…">Save team</SubmitButton>
+        <SubmitButton pendingLabel={copy.savingTeam}>
+          {copy.saveTeam}
+        </SubmitButton>
       </form>
     </details>
   );
@@ -419,6 +460,7 @@ function TeamEditor({
   updateAction: OperationalServerAction;
   deleteAction: OperationalServerAction;
 }) {
+  const copy = useOperationalCopy();
   const [updateState, updateFormAction] = useActionState(
     updateAction,
     initialOperationalActionState,
@@ -434,7 +476,8 @@ function TeamEditor({
         <div>
           <strong>{team.name}</strong>
           <p>
-            {team.short_name ?? "No short name"} · {team.region ?? "No region"}
+            {team.short_name ?? copy.noShortName} ·{" "}
+            {team.region ?? copy.noRegion}
           </p>
         </div>
         {logo ? (
@@ -443,16 +486,19 @@ function TeamEditor({
       </div>
       <dl className="operationalFacts">
         <div>
-          <dt>Seed</dt>
-          <dd>{team.seed ?? "Not set"}</dd>
+          <dt>{copy.seed}</dt>
+          <dd>{team.seed ?? copy.notSet}</dd>
         </div>
         <div>
-          <dt>Status</dt>
-          <dd>{team.status}</dd>
+          <dt>{copy.status}</dt>
+          <dd>{copy[team.status as keyof typeof copy] as string}</dd>
         </div>
       </dl>
+      <a className="secondaryButton" href={`#roster-${team.id}`}>
+        {copy.manageRoster}
+      </a>
       <details className="operationalEditor">
-        <summary>Edit</summary>
+        <summary>{copy.edit}</summary>
         <form action={updateFormAction}>
           <input type="hidden" name="id" value={team.id} />
           <input
@@ -462,23 +508,32 @@ function TeamEditor({
           />
           <TeamFields team={team} />
           <ActionNotice state={updateState} />
-          <SubmitButton pendingLabel="Saving team…">Save changes</SubmitButton>
+          <SubmitButton pendingLabel={copy.savingTeam}>
+            {copy.saveChanges}
+          </SubmitButton>
         </form>
       </details>
-      <details className="deleteConfirmation">
-        <summary>Delete</summary>
-        <p>Delete this unused team? This cannot be undone.</p>
-        <form action={deleteFormAction}>
-          <input type="hidden" name="id" value={team.id} />
-          <input
-            type="hidden"
-            name="expected_updated_at"
-            value={team.updated_at}
-          />
-          <ActionNotice state={deleteState} />
-          <SubmitButton pendingLabel="Deleting team…">Delete team</SubmitButton>
-        </form>
-      </details>
+      <div className="deleteConfirmation">
+        <ConfirmationDialog
+          trigger={copy.delete}
+          title={copy.deleteTeam}
+          description={copy.deleteTeamQuestion(team.name)}
+          cancelLabel={copy.cancel}
+        >
+          <form action={deleteFormAction}>
+            <input type="hidden" name="id" value={team.id} />
+            <input
+              type="hidden"
+              name="expected_updated_at"
+              value={team.updated_at}
+            />
+            <ActionNotice state={deleteState} />
+            <SubmitButton pendingLabel={copy.deletingTeam}>
+              {copy.deleteTeam}
+            </SubmitButton>
+          </form>
+        </ConfirmationDialog>
+      </div>
     </article>
   );
 }
@@ -487,11 +542,34 @@ export function StagesTeamsWorkspace({
   stages,
   teams,
   actions,
+  locale = "en",
+}: {
+  stages: AdminTournamentStage[];
+  teams: AdminTournamentTeam[];
+  actions: StagesTeamsActions;
+  locale?: Locale;
+}) {
+  return (
+    <OperationalI18nProvider locale={locale}>
+      <StagesTeamsWorkspaceContent
+        stages={stages}
+        teams={teams}
+        actions={actions}
+      />
+    </OperationalI18nProvider>
+  );
+}
+
+function StagesTeamsWorkspaceContent({
+  stages,
+  teams,
+  actions,
 }: {
   stages: AdminTournamentStage[];
   teams: AdminTournamentTeam[];
   actions: StagesTeamsActions;
 }) {
+  const copy = useOperationalCopy();
   const nextSequence =
     Math.max(0, ...stages.map((stage) => stage.sequence_number)) + 1;
   return (
@@ -499,8 +577,8 @@ export function StagesTeamsWorkspace({
       <section className="adminPanel" aria-labelledby="workspace-stages">
         <div className="adminPanelHeading">
           <div>
-            <h2 id="workspace-stages">Stages</h2>
-            <p className="supportingText">Sequence controls display order.</p>
+            <h2 id="workspace-stages">{copy.stagesTitle}</h2>
+            <p className="supportingText">{copy.stagesHelp}</p>
           </div>
           <CreateStageForm
             action={actions.createStage}
@@ -508,7 +586,10 @@ export function StagesTeamsWorkspace({
           />
         </div>
         {stages.length === 0 ? (
-          <p className="adminEmpty">No stages added.</p>
+          <EmptyState
+            title={copy.stagesEmptyTitle}
+            description={copy.stagesEmpty}
+          />
         ) : (
           <div className="operationalCards">
             {stages.map((stage) => (
@@ -525,15 +606,16 @@ export function StagesTeamsWorkspace({
       <section className="adminPanel" aria-labelledby="workspace-teams">
         <div className="adminPanelHeading">
           <div>
-            <h2 id="workspace-teams">Teams</h2>
-            <p className="supportingText">
-              Open the Rosters section below to manage each team lineup.
-            </p>
+            <h2 id="workspace-teams">{copy.teamsTitle}</h2>
+            <p className="supportingText">{copy.teamsHelp}</p>
           </div>
           <CreateTeamForm action={actions.createTeam} />
         </div>
         {teams.length === 0 ? (
-          <p className="adminEmpty">No teams added.</p>
+          <EmptyState
+            title={copy.teamsEmptyTitle}
+            description={copy.teamsEmpty}
+          />
         ) : (
           <div className="operationalCards">
             {teams.map((team) => (

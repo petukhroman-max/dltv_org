@@ -1,3 +1,5 @@
+import type { DictionaryShape } from "@/i18n/types";
+
 export const publicSubmissionCopy = {
   home: {
     eyebrow: "DLTV Organizer Portal",
@@ -124,3 +126,119 @@ export const popularTimezones = [
   "Asia/Tokyo",
   "Australia/Sydney",
 ] as const;
+
+export const ruPublicSubmissionCopy = {
+  home: {
+    eyebrow: "DLTV Organizer Portal",
+    title: "Расскажите сообществу Deadlock о своём турнире.",
+    description:
+      "Отправьте сведения о турнире команде DLTV. Мы проверим заявку перед публикацией.",
+    action: "Добавить турнир",
+  },
+  form: {
+    eyebrow: "Заявка на турнир",
+    title: "Расскажите о своём турнире",
+    intro: "Заполните форму. Обязательные поля отмечены звёздочкой.",
+    sections: {
+      organizer: {
+        title: "Контакты организатора",
+        description: "Как наша команда может связаться с организатором.",
+      },
+      tournament: {
+        title: "Сведения о турнире",
+        description: "Основная информация, необходимая участникам.",
+      },
+      links: {
+        title: "Ссылки и дополнительная информация",
+        description: "Добавьте уже доступные публичные ресурсы.",
+      },
+    },
+    fields: {
+      organization_name: "Название организации",
+      contact_name: "Контактное лицо",
+      contact_email: "Email для связи",
+      discord_username: "Имя пользователя Discord",
+      website_url: "Сайт организации",
+      tournament_name: "Название турнира",
+      description: "Описание",
+      region: "Регион",
+      language: "Язык",
+      start_date: "Дата начала",
+      end_date: "Дата окончания",
+      timezone: "Часовой пояс",
+      format: "Формат турнира",
+      prize_pool_text: "Призовой фонд",
+      is_online: "Турнир проходит онлайн",
+      max_teams: "Максимум команд",
+      registration_deadline: "Окончание регистрации",
+      registration_url: "Ссылка на регистрацию",
+      bracket_url: "Ссылка на сетку",
+      discord_url: "Ссылка на Discord",
+      stream_url: "Ссылка на трансляцию",
+      rules_url: "Ссылка на правила",
+      organizer_notes: "Дополнительные примечания",
+    },
+    helpers: {
+      region: "Например: EU, NA, APAC, CIS",
+      timezone: "Укажите часовой пояс IANA, например Europe/Moscow",
+      format: "Например: Single elimination, League, Swiss",
+      prize_pool_text: "Например: $5,000 или призы сообщества",
+      registration_deadline:
+        "ISO 8601 с часовым поясом, например 2026-08-05T18:00:00+03:00",
+    },
+    consent:
+      "Я подтверждаю право отправить эти сведения и разрешаю Deadlock One / DLTV публиковать, редактировать для ясности, переводить и распространять их на собственных и партнёрских платформах.",
+    submit: "Отправить турнир",
+    submitting: "Отправка турнира…",
+    browse: "Смотреть опубликованные турниры",
+  },
+  success: {
+    eyebrow: "Заявка получена",
+    title: "Спасибо",
+    statusLabel: "Текущий статус",
+    status: "Отправлена",
+    referenceLabel: "Номер заявки",
+    review: "Команда DLTV проверит турнир перед публикацией.",
+    saveReference: "Сохраните номер заявки — он понадобится для обращений.",
+    another: "Отправить ещё один турнир",
+    browse: "Смотреть турниры",
+    invalidReference:
+      "Номер заявки недействителен. Данные турнира не загружены.",
+  },
+  errors: {
+    generic:
+      "Не удалось отправить турнир. Проверьте форму и повторите попытку.",
+    required: "Заполните обязательное поле.",
+    consent: "Необходимо подтвердить согласие на публикацию.",
+    invalid: {
+      organization_name: "Укажите корректное название организации.",
+      contact_name: "Укажите корректное контактное лицо.",
+      contact_email: "Укажите корректный email.",
+      discord_username: "Сократите имя пользователя Discord.",
+      website_url: "Укажите корректный URL с http или https.",
+      tournament_name: "Укажите корректное название турнира.",
+      description: "Сократите описание.",
+      region: "Укажите корректный регион.",
+      language: "Сократите название языка.",
+      start_date: "Укажите корректную дату начала.",
+      end_date: "Дата окончания должна быть не раньше даты начала.",
+      timezone: "Укажите корректный часовой пояс IANA.",
+      format: "Сократите описание формата.",
+      prize_pool_text: "Сократите описание призового фонда.",
+      is_online: "Укажите, проходит ли турнир онлайн.",
+      max_teams: "Укажите положительное целое число.",
+      registration_deadline: "Укажите дату и время ISO 8601 с часовым поясом.",
+      registration_url: "Укажите корректный URL с http или https.",
+      bracket_url: "Укажите корректный URL с http или https.",
+      discord_url: "Укажите корректный URL с http или https.",
+      stream_url: "Укажите корректный URL с http или https.",
+      rules_url: "Укажите корректный URL с http или https.",
+      organizer_notes: "Сократите дополнительные примечания.",
+      consent_to_publish: "Необходимо подтвердить согласие на публикацию.",
+    },
+  },
+} as const satisfies DictionaryShape<typeof publicSubmissionCopy>;
+
+export function getPublicSubmissionCopy(locale: "en" | "ru") {
+  return locale === "ru" ? ruPublicSubmissionCopy : publicSubmissionCopy;
+}

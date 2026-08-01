@@ -2,7 +2,8 @@
 
 import "server-only";
 
-import { adminCopy } from "@/lib/admin/copy";
+import { defaultLocale, isLocale } from "@/i18n/config";
+import { getAdminCopy } from "@/lib/admin/copy";
 import {
   processAdminMagicLinkRequest,
   type AdminLoginState,
@@ -14,6 +15,12 @@ export async function requestAdminMagicLinkAction(
   _previousState: AdminLoginState,
   formData: FormData,
 ): Promise<AdminLoginState> {
+  const requestedLocale = formData.get("locale");
+  const locale =
+    typeof requestedLocale === "string" && isLocale(requestedLocale)
+      ? requestedLocale
+      : defaultLocale;
+  const adminCopy = getAdminCopy(locale);
   return processAdminMagicLinkRequest(
     formData.get("email"),
     async (email) => {
@@ -22,7 +29,7 @@ export async function requestAdminMagicLinkAction(
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${appUrl}/auth/callback`,
+          emailRedirectTo: `${appUrl}/auth/callback?locale=${locale}`,
         },
       });
       if (error) {

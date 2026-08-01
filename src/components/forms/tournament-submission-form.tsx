@@ -10,9 +10,10 @@ import {
 import { useFormStatus } from "react-dom";
 
 import { submitTournamentAction } from "@/app/submit-tournament/actions";
+import { localizePath, type Locale } from "@/i18n/config";
 import {
+  getPublicSubmissionCopy,
   popularTimezones,
-  publicSubmissionCopy,
 } from "@/lib/submissions/public-submission.copy";
 import {
   initialPublicSubmissionState,
@@ -102,7 +103,13 @@ function FieldError({ id, error }: { id?: string; error?: string }) {
   ) : null;
 }
 
-function SubmitButton() {
+function SubmitButton({
+  submit,
+  submitting,
+}: {
+  submit: string;
+  submitting: string;
+}) {
   const { pending } = useFormStatus();
 
   return (
@@ -112,11 +119,7 @@ function SubmitButton() {
       disabled={pending}
       aria-disabled={pending}
     >
-      <span aria-live="polite">
-        {pending
-          ? publicSubmissionCopy.form.submitting
-          : publicSubmissionCopy.form.submit}
-      </span>
+      <span aria-live="polite">{pending ? submitting : submit}</span>
     </button>
   );
 }
@@ -124,16 +127,24 @@ function SubmitButton() {
 export function TournamentSubmissionForm({
   renderedAt,
   initialState = initialPublicSubmissionState,
+  locale = "en",
 }: {
   renderedAt: number;
   initialState?: PublicSubmissionActionState;
+  locale?: Locale;
 }) {
   const [state, formAction] = useActionState(
     submitTournamentAction,
     initialState,
   );
-  const { fields, helpers, sections } = publicSubmissionCopy.form;
-  const errors = state.fieldErrors;
+  const copy = getPublicSubmissionCopy(locale);
+  const { fields, helpers, sections } = copy.form;
+  const errors = Object.fromEntries(
+    Object.keys(state.fieldErrors).map((field) => [
+      field,
+      copy.errors.invalid[field as PublicSubmissionFieldName],
+    ]),
+  ) as PublicSubmissionActionState["fieldErrors"];
   const values = state.values;
 
   useEffect(() => {
@@ -148,6 +159,7 @@ export function TournamentSubmissionForm({
   return (
     <form className="submissionForm" action={formAction} noValidate>
       <input type="hidden" name="rendered_at" value={renderedAt} />
+      <input type="hidden" name="locale" value={locale} />
       <div className="honeypot" aria-hidden="true">
         <label htmlFor="company_fax">Company fax</label>
         <input
@@ -161,7 +173,7 @@ export function TournamentSubmissionForm({
 
       {state.formError ? (
         <div className="formError" role="alert">
-          {state.formError}
+          {copy.errors.generic}
         </div>
       ) : null}
 
@@ -396,7 +408,7 @@ export function TournamentSubmissionForm({
             }
             aria-invalid={Boolean(errors.consent_to_publish)}
           />
-          <span>{publicSubmissionCopy.form.consent}</span>
+          <span>{copy.form.consent}</span>
         </label>
         <FieldError
           id="consent_to_publish-error"
@@ -405,9 +417,12 @@ export function TournamentSubmissionForm({
       </div>
 
       <div className="formActions">
-        <SubmitButton />
-        <Link className="textLink" href="/tournaments">
-          {publicSubmissionCopy.form.browse}
+        <SubmitButton
+          submit={copy.form.submit}
+          submitting={copy.form.submitting}
+        />
+        <Link className="textLink" href={localizePath(locale, "/tournaments")}>
+          {copy.form.browse}
         </Link>
       </div>
     </form>

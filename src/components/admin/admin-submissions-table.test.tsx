@@ -22,10 +22,10 @@ describe("AdminSubmissionsTable", () => {
 
     expect(screen.getByText("Summer Cup")).toBeInTheDocument();
     expect(screen.getByText("DLTV Events")).toBeInTheDocument();
-    expect(screen.getByText("submitted")).toBeInTheDocument();
+    expect(screen.getByText("Submitted")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "View Summer Cup" }),
-    ).toHaveAttribute("href", `/admin/submissions/${submission.id}`);
+    ).toHaveAttribute("href", `/en/admin/submissions/${submission.id}`);
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 

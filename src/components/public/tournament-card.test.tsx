@@ -16,10 +16,10 @@ describe("TournamentCard", () => {
       screen.getByRole("heading", { name: "DLTV Cup" }),
     ).toBeInTheDocument();
     expect(screen.getByText("By Deadlock One")).toBeInTheDocument();
-    expect(screen.getByText("ongoing")).toBeInTheDocument();
+    expect(screen.getByText("Ongoing")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "View tournament" }),
-    ).toHaveAttribute("href", "/tournaments/dltv-cup");
+    ).toHaveAttribute("href", "/en/tournaments/dltv-cup");
     expect(screen.queryByText(/@/)).toBeNull();
   });
 });

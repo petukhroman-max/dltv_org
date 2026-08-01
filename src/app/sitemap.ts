@@ -6,14 +6,18 @@ import { listPublishedTournaments } from "@/lib/public-tournaments/public-tourna
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const entries: MetadataRoute.Sitemap = [
-    { url: absolutePublicUrl("/"), changeFrequency: "weekly", priority: 0.7 },
+  const entries: MetadataRoute.Sitemap = ["en", "ru"].flatMap((locale) => [
     {
-      url: absolutePublicUrl("/tournaments"),
-      changeFrequency: "daily",
+      url: absolutePublicUrl(`/${locale}`),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    },
+    {
+      url: absolutePublicUrl(`/${locale}/tournaments`),
+      changeFrequency: "daily" as const,
       priority: 1,
     },
-  ];
+  ]);
   try {
     let page = 1;
     let totalPages = 1;
@@ -25,12 +29,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       });
       totalPages = result.totalPages;
       entries.push(
-        ...result.tournaments.map((tournament) => ({
-          url: absolutePublicUrl(`/tournaments/${tournament.slug}`),
-          lastModified: tournament.source_updated_at,
-          changeFrequency: "weekly" as const,
-          priority: 0.8,
-        })),
+        ...result.tournaments.flatMap((tournament) =>
+          ["en", "ru"].map((locale) => ({
+            url: absolutePublicUrl(`/${locale}/tournaments/${tournament.slug}`),
+            lastModified: tournament.source_updated_at,
+            changeFrequency: "weekly" as const,
+            priority: 0.8,
+          })),
+        ),
       );
       page += 1;
     } while (page <= totalPages);

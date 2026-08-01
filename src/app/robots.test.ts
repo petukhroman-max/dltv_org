@@ -6,7 +6,7 @@ describe("robots", () => {
   it("allows the public catalog and blocks private workflows", () => {
     const result = robots();
     expect(result.rules).toMatchObject({
-      allow: expect.arrayContaining(["/tournaments", "/tournaments/"]),
+      allow: expect.arrayContaining(["/en/tournaments", "/ru/tournaments"]),
       disallow: expect.arrayContaining([
         "/admin/",
         "/edit-submission/",

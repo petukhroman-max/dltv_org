@@ -28,7 +28,7 @@ describe("TournamentsPage", () => {
         name: "Browse tournaments",
         current: "page",
       }),
-    ).toHaveAttribute("href", "/tournaments");
+    ).toHaveAttribute("href", "/en/tournaments");
     expect(
       screen.getAllByRole("link", { name: "Submit a tournament" }),
     ).toHaveLength(2);
@@ -46,9 +46,7 @@ describe("TournamentsPage", () => {
       totalPages: 1,
     });
     render(await TournamentsPage({ searchParams: Promise.resolve({}) }));
-    expect(
-      screen.getByText("No tournaments have been published yet."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("No published tournaments")).toBeInTheDocument();
   });
 
   it("does not expose database details on failure", async () => {

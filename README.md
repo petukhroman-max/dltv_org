@@ -3,15 +3,23 @@
 Standalone Next.js portal for receiving tournament organizer submissions.
 Supabase provides the PostgreSQL database layer.
 
-The public form is available at `/submit-tournament`. The protected `/admin`
+UX and localization documentation:
+
+- [Organizer Portal UX and EN/RU localization](docs/organizer-portal-ux-i18n.md)
+- [Organizer Portal UX audit](docs/organizer-portal-ux-audit.md)
+
+The localized public form is available at `/en/submit-tournament` and
+`/ru/submit-tournament`. The protected `/{locale}/admin`
 area supports explicit moderation actions and can issue capability links for
 organizers to edit submissions in `needs_changes`.
 
-Published tournaments are available through the indexable public catalog at
-`/tournaments` and stable detail URLs at `/tournaments/[slug]`.
+Published tournaments are available through the localized, indexable public
+catalog at `/{locale}/tournaments` and stable detail URLs at
+`/{locale}/tournaments/[slug]`.
 
 Administrators can issue a separate reusable organizer workspace link for
-private stage and team management at `/workspace/[token]`. The workspace does
+private stage, team, and roster management at
+`/{locale}/workspace/[token]`. The workspace does
 not expose operational data through the public catalog and does not reuse the
 single-use resubmission token.
 

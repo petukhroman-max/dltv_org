@@ -71,7 +71,9 @@ describe("RosterWorkspace", () => {
     expect(screen.getByText("Ace · Captain")).toBeInTheDocument();
     expect(screen.getByText("Edit player profile")).toBeInTheDocument();
     expect(screen.getByText("Edit membership")).toBeInTheDocument();
-    expect(screen.getAllByText("Remove from roster")).toHaveLength(2);
+    expect(
+      screen.getAllByRole("button", { name: "Remove from roster" }),
+    ).toHaveLength(1);
   });
 
   it("shows former members with a restore action and never restores captain in the form", () => {
@@ -102,9 +104,9 @@ describe("RosterWorkspace", () => {
         actions={actions}
       />,
     );
-    expect(screen.getByText("Former roster members (1)")).toBeInTheDocument();
-    expect(screen.getByText("Restore to roster")).toBeInTheDocument();
-    const restoreForm = screen.getByText("Restore to roster").closest("form");
+    expect(screen.getByText("Former members (1)")).toBeInTheDocument();
+    expect(screen.getByText("Restore")).toBeInTheDocument();
+    const restoreForm = screen.getByText("Restore").closest("form");
     expect(restoreForm).not.toBeNull();
     expect(restoreForm?.querySelector('[name="is_captain"]')).toBeNull();
     expect(container.querySelector('[name="real_name"]')).toBeNull();

@@ -1,15 +1,21 @@
 import type { PublishedTournament } from "@/lib/public-tournaments/public-tournaments.types";
+import type { Locale } from "@/i18n/config";
 
-export function formatPublicDate(value: string): string {
+const localeTags: Record<Locale, string> = { en: "en-US", ru: "ru-RU" };
+
+export function formatPublicDate(value: string, locale: Locale = "en"): string {
   const date = new Date(`${value}T00:00:00Z`);
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat(localeTags[locale], {
     dateStyle: "medium",
     timeZone: "UTC",
   }).format(date);
 }
 
-export function formatPublicDateTime(value: string): string {
-  return new Intl.DateTimeFormat("en-GB", {
+export function formatPublicDateTime(
+  value: string,
+  locale: Locale = "en",
+): string {
+  return new Intl.DateTimeFormat(localeTags[locale], {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: "UTC",

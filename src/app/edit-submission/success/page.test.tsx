@@ -4,8 +4,8 @@ import { describe, expect, it } from "vitest";
 import EditSubmissionSuccessPage from "@/app/edit-submission/success/page";
 
 describe("EditSubmissionSuccessPage", () => {
-  it("shows the submitted state without token or contact data", () => {
-    const { container } = render(<EditSubmissionSuccessPage />);
+  it("shows the submitted state without token or contact data", async () => {
+    const { container } = render(await EditSubmissionSuccessPage());
     expect(screen.getByText("Changes submitted")).toBeInTheDocument();
     expect(screen.getByText("Submitted")).toBeInTheDocument();
     expect(
@@ -15,7 +15,7 @@ describe("EditSubmissionSuccessPage", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Return to home" }),
-    ).toHaveAttribute("href", "/");
+    ).toHaveAttribute("href", "/en");
     expect(container).not.toHaveTextContent(/[A-Za-z0-9_-]{43}/);
     expect(container).not.toHaveTextContent(/@/);
   });

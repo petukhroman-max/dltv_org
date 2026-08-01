@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { localizePath, type Locale } from "@/i18n/config";
 import { env } from "@/lib/env";
 import { publicDescription } from "@/lib/public-tournaments/presentation";
 import type { PublishedTournament } from "@/lib/public-tournaments/public-tournaments.types";
@@ -11,19 +12,32 @@ export function absolutePublicUrl(path: string): string {
   ).toString();
 }
 
-export function tournamentMetadata(tournament: PublishedTournament): Metadata {
+export function tournamentMetadata(
+  tournament: PublishedTournament,
+  locale: Locale = "en",
+): Metadata {
   const title = `${tournament.tournament_name} | Deadlock tournaments`;
   const description = publicDescription(tournament);
-  const url = absolutePublicUrl(`/tournaments/${tournament.slug}`);
+  const path = `/tournaments/${tournament.slug}`;
+  const url = absolutePublicUrl(localizePath(locale, path));
   return {
     title,
     description,
-    alternates: { canonical: url },
+    alternates: {
+      canonical: url,
+      languages: {
+        en: absolutePublicUrl(localizePath("en", path)),
+        ru: absolutePublicUrl(localizePath("ru", path)),
+      },
+    },
     openGraph: { type: "website", title, description, url },
   };
 }
 
-export function sportsEventJsonLd(tournament: PublishedTournament) {
+export function sportsEventJsonLd(
+  tournament: PublishedTournament,
+  locale: Locale = "en",
+) {
   return {
     "@context": "https://schema.org",
     "@type": "SportsEvent",
@@ -38,6 +52,8 @@ export function sportsEventJsonLd(tournament: PublishedTournament) {
       "@type": "Organization",
       name: tournament.organizer_name,
     },
-    url: absolutePublicUrl(`/tournaments/${tournament.slug}`),
+    url: absolutePublicUrl(
+      localizePath(locale, `/tournaments/${tournament.slug}`),
+    ),
   };
 }
