@@ -3,6 +3,7 @@ import {
   formatPublicDateTime,
   safePublicUrl,
 } from "@/lib/public-tournaments/presentation";
+import type { ReactNode } from "react";
 import type { Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { getTournamentLifecycle } from "@/lib/public-tournaments/lifecycle";
@@ -12,10 +13,12 @@ export function TournamentDetails({
   tournament,
   today,
   locale = "en",
+  operational,
 }: {
   tournament: PublicTournamentOverview;
   today: string;
   locale?: Locale;
+  operational?: ReactNode;
 }) {
   const copy = getDictionary(locale).catalog;
   const links = [
@@ -42,6 +45,7 @@ export function TournamentDetails({
           {copy[lifecycle]}
         </span>
       </header>
+      {operational}
       <section className="formSection" aria-labelledby="details-heading">
         <h2 id="details-heading">{copy.details}</h2>
         <dl className="tournamentDetailGrid">

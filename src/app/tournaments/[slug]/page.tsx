@@ -88,8 +88,8 @@ export default async function TournamentPage({
           tournament={projection.tournament}
           today={today}
           locale={locale}
+          operational={<PublicTournamentOperational projection={projection} />}
         />
-        <PublicTournamentOperational projection={projection} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
