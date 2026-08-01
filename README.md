@@ -5,6 +5,8 @@ Supabase provides the PostgreSQL database layer.
 
 UX and localization documentation:
 
+- [DLTV visual redesign](docs/dltv-visual-redesign.md)
+- [DLTV baseline visual audit](docs/dltv-visual-audit.md)
 - [Organizer Portal UX and EN/RU localization](docs/organizer-portal-ux-i18n.md)
 - [Organizer Portal UX audit](docs/organizer-portal-ux-audit.md)
 

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { PublicHeader } from "@/components/public/public-header";
@@ -35,5 +35,19 @@ describe("PublicHeader", () => {
       "aria-current",
       "page",
     );
+  });
+
+  it("exposes an accessible mobile navigation toggle", () => {
+    render(<PublicHeader />);
+
+    const menu = screen.getByRole("button", { name: "Menu" });
+    expect(menu).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(menu);
+
+    expect(menu).toHaveAttribute("aria-expanded", "true");
+    expect(
+      screen.getByRole("navigation", { name: "Public navigation" }),
+    ).toHaveAttribute("data-open", "true");
   });
 });

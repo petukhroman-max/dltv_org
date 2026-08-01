@@ -43,9 +43,55 @@ export const en = {
   },
   home: {
     eyebrow: "DLTV Organizer Portal",
-    title: "Bring your tournament to the Deadlock community.",
+    title: "Run and publish your Deadlock tournament in one place.",
     description:
-      "Share your tournament details with the DLTV team. We review every submission before publication.",
+      "Manage stages, teams, rosters, matches, schedules, and results in a secure organizer workspace, then publish verified tournament data for the community.",
+    workflowEyebrow: "A clear operating flow",
+    workflowTitle: "From submission to a public tournament page",
+    workflowDescription:
+      "The current product keeps review, tournament operations, and public data connected without exposing organizer access or private player fields.",
+    workflow: [
+      {
+        title: "Submit the event",
+        description:
+          "Share the tournament, organizer, schedule, and official links required for review.",
+      },
+      {
+        title: "Operate the tournament",
+        description:
+          "Use the secure workspace to maintain stages, teams, rosters, matches, and results.",
+      },
+      {
+        title: "Publish trusted data",
+        description:
+          "Approved tournament information is projected to a localized public page and catalog.",
+      },
+    ],
+    workspaceEyebrow: "Organizer workspace",
+    workspaceTitle: "Built for tournament operations, not busywork",
+    workspaceDescription:
+      "A focused workspace keeps the tournament structure and day-to-day updates in one predictable navigation model.",
+    capabilities: [
+      "Build stages and tournament structure",
+      "Manage teams and role-based rosters",
+      "Schedule matches and record results",
+      "Keep operational changes in audit history",
+    ],
+    publicEyebrow: "Public tournament data",
+    publicTitle: "The information viewers need, in match-first order",
+    publicDescription:
+      "Published pages prioritize live and upcoming matches, then stages, results, teams, and rosters. Only the approved public projection is rendered.",
+    recentEyebrow: "Recently published",
+    recentTitle: "Tournaments on DLTV",
+    recentDescription:
+      "These cards use currently published tournament records. No sample events or invented metrics are shown.",
+    recentUnavailable:
+      "Published tournaments are temporarily unavailable. Browse the catalog to try again.",
+    statusEyebrow: "Current product status",
+    statusTitle: "The operating foundation is available today",
+    statusDescription:
+      "Submission, moderation, organizer operations, and localized public tournament data are implemented. Brackets, standings, imports, and a public API are outside the current product scope.",
+    browseAll: "Browse all tournaments",
   },
   catalog: {
     eyebrow: "DLTV public catalog",

@@ -346,8 +346,8 @@ export function PublicTournamentOperational({
     <div className="publicOperational">
       <nav className="publicSectionNav" aria-label="Tournament sections">
         <a href="#overview">{current.overview}</a>
-        <a href="#stages">{current.stages}</a>
         <a href="#matches">{current.matches}</a>
+        <a href="#stages">{current.stages}</a>
         <a href="#teams">{current.teams}</a>
       </nav>
 

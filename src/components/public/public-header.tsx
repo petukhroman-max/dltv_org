@@ -1,9 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import { Suspense } from "react";
+import { useState } from "react";
 
 import { LocaleSwitcher } from "@/components/ui/locale-switcher";
 import { defaultLocale, localizePath, type Locale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/get-dictionary";
+import { en } from "@/i18n/dictionaries/en";
+import { ru } from "@/i18n/dictionaries/ru";
 
 type PublicSection = "tournaments" | "submit";
 
@@ -14,26 +18,46 @@ export function PublicHeader({
   active?: PublicSection;
   locale?: Locale;
 }) {
-  const dictionary = getDictionary(locale);
+  const dictionary = locale === "ru" ? ru : en;
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <header className="publicHeader">
       <div className="publicHeaderInner">
         <Link className="publicBrand" href={localizePath(locale, "/")}>
-          {dictionary.common.brand}
+          <span className="publicBrandMark" aria-hidden="true">
+            D
+          </span>
+          <span>{dictionary.common.brand}</span>
         </Link>
         <div className="publicHeaderActions">
-          <nav className="publicNav" aria-label={dictionary.nav.publicLabel}>
+          <button
+            className="publicMenuButton"
+            type="button"
+            aria-expanded={menuOpen}
+            aria-controls="public-navigation"
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            {dictionary.nav.menu}
+          </button>
+          <nav
+            id="public-navigation"
+            className="publicNav"
+            data-open={menuOpen ? "true" : "false"}
+            aria-label={dictionary.nav.publicLabel}
+          >
             <Link
               className="publicNavLink"
               href={localizePath(locale, "/tournaments")}
               aria-current={active === "tournaments" ? "page" : undefined}
+              onClick={() => setMenuOpen(false)}
             >
               {dictionary.nav.tournaments}
             </Link>
             <Link
-              className="publicNavLink"
+              className="publicNavLink publicNavCta"
               href={localizePath(locale, "/submit-tournament")}
               aria-current={active === "submit" ? "page" : undefined}
+              onClick={() => setMenuOpen(false)}
             >
               {dictionary.nav.submit}
             </Link>
