@@ -24,6 +24,15 @@ describe("TournamentsPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Region")).toBeInTheDocument();
     expect(
+      screen.getByRole("link", {
+        name: "Browse tournaments",
+        current: "page",
+      }),
+    ).toHaveAttribute("href", "/tournaments");
+    expect(
+      screen.getAllByRole("link", { name: "Submit a tournament" }),
+    ).toHaveLength(2);
+    expect(
       screen.getByRole("link", { name: "View tournament" }),
     ).toBeInTheDocument();
   });

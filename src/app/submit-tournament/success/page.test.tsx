@@ -18,10 +18,23 @@ describe("SubmissionSuccessPage", () => {
       screen.getByText(publicSubmissionCopy.success.status),
     ).toBeInTheDocument();
     expect(
+      screen
+        .getAllByRole("link", {
+          name: publicSubmissionCopy.success.another,
+        })
+        .every((link) => link.getAttribute("href") === "/submit-tournament"),
+    ).toBe(true);
+    expect(
+      screen
+        .getAllByRole("link", { name: "Browse tournaments" })
+        .every((link) => link.getAttribute("href") === "/tournaments"),
+    ).toBe(true);
+    expect(
       screen.getByRole("link", {
-        name: publicSubmissionCopy.success.another,
+        name: "Submit a tournament",
+        current: "page",
       }),
-    ).toHaveAttribute("href", "/submit-tournament");
+    ).toBeInTheDocument();
   });
 
   it("rejects an invalid reference without loading submission data", async () => {

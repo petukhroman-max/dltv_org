@@ -63,7 +63,7 @@ export const publicSubmissionCopy = {
       "I confirm that I am authorized to submit this tournament information and allow Deadlock One / DLTV to publish, edit for clarity, translate, and distribute it on its own and partner platforms.",
     submit: "Submit tournament",
     submitting: "Submitting tournament…",
-    back: "Back to home",
+    browse: "Browse published tournaments",
   },
   success: {
     eyebrow: "Submission received",
@@ -75,7 +75,7 @@ export const publicSubmissionCopy = {
     saveReference:
       "Save this submission ID. It is the reference for your request.",
     another: "Submit another tournament",
-    home: "Back to home",
+    browse: "Browse tournaments",
     invalidReference:
       "This submission reference is invalid. No tournament data was loaded.",
   },

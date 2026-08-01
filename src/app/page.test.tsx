@@ -11,10 +11,11 @@ describe("Home", () => {
       "Bring your tournament to the Deadlock community.",
     );
     expect(
-      screen.getByRole("link", { name: "Submit a tournament" }),
-    ).toHaveAttribute("href", "/submit-tournament");
+      screen.getAllByRole("link", { name: "Submit a tournament" }),
+    ).toHaveLength(2);
     expect(
-      screen.getByRole("link", { name: "Browse tournaments" }),
-    ).toHaveAttribute("href", "/tournaments");
+      screen.getAllByRole("link", { name: "Browse tournaments" }),
+    ).toHaveLength(2);
+    expect(screen.queryByRole("link", { current: "page" })).toBeNull();
   });
 });

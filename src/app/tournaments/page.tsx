@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { PublicHeader } from "@/components/public/public-header";
 import { TournamentCard } from "@/components/public/tournament-card";
 import { absolutePublicUrl } from "@/lib/public-tournaments/seo";
 import { listPublishedTournaments } from "@/lib/public-tournaments/public-tournaments.repository";
@@ -57,96 +58,110 @@ export default async function TournamentsPage({
     );
   } catch {
     return (
-      <main className="catalogShell">
-        <p className="formError" role="alert">
-          Tournaments are temporarily unavailable. Please try again later.
-        </p>
-      </main>
+      <>
+        <PublicHeader active="tournaments" />
+        <main className="catalogShell">
+          <p className="formError" role="alert">
+            Tournaments are temporarily unavailable. Please try again later.
+          </p>
+        </main>
+      </>
     );
   }
 
   return (
-    <main className="catalogShell">
-      <header className="catalogHeader">
-        <p className="eyebrow">DLTV public catalog</p>
-        <h1>Deadlock tournaments</h1>
-        <p className="description">
-          Discover upcoming events, follow tournaments in progress, and browse
-          recently completed competitions.
-        </p>
-      </header>
-      <nav className="lifecycleFilters" aria-label="Tournament lifecycle">
-        {["all", "upcoming", "ongoing", "completed"].map((value) => (
-          <Link
-            key={value}
-            href={catalogHref(value, region)}
-            aria-current={lifecycle === value ? "page" : undefined}
-          >
-            {value[0].toUpperCase() + value.slice(1)}
-          </Link>
-        ))}
-      </nav>
-      <form className="regionFilter" method="get">
-        {lifecycle !== "all" ? (
-          <input type="hidden" name="lifecycle" value={lifecycle} />
-        ) : null}
-        <label htmlFor="region">Region</label>
-        <input
-          id="region"
-          name="region"
-          type="text"
-          maxLength={100}
-          defaultValue={region}
-        />
-        <button className="secondaryButton" type="submit">
-          Apply
-        </button>
-        {region ? (
-          <Link className="textLink" href={catalogHref(lifecycle, "")}>
-            Clear region
-          </Link>
-        ) : null}
-      </form>
-      {result.tournaments.length === 0 ? (
-        <p className="adminEmpty">No tournaments have been published yet.</p>
-      ) : (
-        <section className="tournamentGrid" aria-label="Published tournaments">
-          {result.tournaments.map((tournament) => (
-            <TournamentCard
-              key={tournament.id}
-              tournament={tournament}
-              today={today}
-            />
-          ))}
-        </section>
-      )}
-      {result.totalPages > 1 ? (
-        <nav className="adminPagination" aria-label="Tournament pages">
-          {result.page > 1 ? (
-            <Link
-              className="secondaryButton"
-              rel="prev"
-              href={catalogHref(lifecycle, region, result.page - 1)}
-            >
-              Previous
+    <>
+      <PublicHeader active="tournaments" />
+      <main className="catalogShell">
+        <header className="catalogHeader">
+          <p className="eyebrow">DLTV public catalog</p>
+          <h1>Deadlock tournaments</h1>
+          <p className="description">
+            Discover upcoming events, follow tournaments in progress, and browse
+            recently completed competitions.
+          </p>
+          <div className="contextualActions">
+            <Link className="secondaryButton" href="/submit-tournament">
+              Submit a tournament
             </Link>
-          ) : (
-            <span />
-          )}
-          <span>
-            Page {result.page} of {result.totalPages}
-          </span>
-          {result.page < result.totalPages ? (
+          </div>
+        </header>
+        <nav className="lifecycleFilters" aria-label="Tournament lifecycle">
+          {["all", "upcoming", "ongoing", "completed"].map((value) => (
             <Link
-              className="secondaryButton"
-              rel="next"
-              href={catalogHref(lifecycle, region, result.page + 1)}
+              key={value}
+              href={catalogHref(value, region)}
+              aria-current={lifecycle === value ? "page" : undefined}
             >
-              Next
+              {value[0].toUpperCase() + value.slice(1)}
+            </Link>
+          ))}
+        </nav>
+        <form className="regionFilter" method="get">
+          {lifecycle !== "all" ? (
+            <input type="hidden" name="lifecycle" value={lifecycle} />
+          ) : null}
+          <label htmlFor="region">Region</label>
+          <input
+            id="region"
+            name="region"
+            type="text"
+            maxLength={100}
+            defaultValue={region}
+          />
+          <button className="secondaryButton" type="submit">
+            Apply
+          </button>
+          {region ? (
+            <Link className="textLink" href={catalogHref(lifecycle, "")}>
+              Clear region
             </Link>
           ) : null}
-        </nav>
-      ) : null}
-    </main>
+        </form>
+        {result.tournaments.length === 0 ? (
+          <p className="adminEmpty">No tournaments have been published yet.</p>
+        ) : (
+          <section
+            className="tournamentGrid"
+            aria-label="Published tournaments"
+          >
+            {result.tournaments.map((tournament) => (
+              <TournamentCard
+                key={tournament.id}
+                tournament={tournament}
+                today={today}
+              />
+            ))}
+          </section>
+        )}
+        {result.totalPages > 1 ? (
+          <nav className="adminPagination" aria-label="Tournament pages">
+            {result.page > 1 ? (
+              <Link
+                className="secondaryButton"
+                rel="prev"
+                href={catalogHref(lifecycle, region, result.page - 1)}
+              >
+                Previous
+              </Link>
+            ) : (
+              <span />
+            )}
+            <span>
+              Page {result.page} of {result.totalPages}
+            </span>
+            {result.page < result.totalPages ? (
+              <Link
+                className="secondaryButton"
+                rel="next"
+                href={catalogHref(lifecycle, region, result.page + 1)}
+              >
+                Next
+              </Link>
+            ) : null}
+          </nav>
+        ) : null}
+      </main>
+    </>
   );
 }
