@@ -161,3 +161,6 @@ transitions, timestamps, audit events, and deployment of its migration.
 edit-link issuance, resubmission, expiry, revocation, and deployment.
 [docs/public-tournament-catalog.md](docs/public-tournament-catalog.md)
 documents the public read model, projection lifecycle, RLS, routes, and SEO.
+[docs/tournament-data-model-v2.md](docs/tournament-data-model-v2.md) documents
+the private operational stage, team, player, roster, and match foundation for
+the future Organizer Workspace.

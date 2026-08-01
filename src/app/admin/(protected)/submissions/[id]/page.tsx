@@ -3,11 +3,19 @@ import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 
 import { AdminSubmissionDetails } from "@/components/admin/admin-submission-details";
+import { AdminTournamentData } from "@/components/admin/admin-tournament-data";
 import { AdminModerationPanel } from "@/components/admin/admin-moderation-panel";
 import { AdminEditLinkPanel } from "@/components/admin/admin-edit-link-panel";
 import { adminCopy } from "@/lib/admin/copy";
 import { loadAdminSubmissionDetails } from "@/lib/admin/details";
 import { getTournamentSubmissionDetails } from "@/lib/repositories/submission-details";
+import {
+  getTournamentOperationalSummary,
+  listTournamentMatches,
+  listTournamentRosters,
+  listTournamentStages,
+  listTournamentTeams,
+} from "@/lib/repositories/tournament-operational-data";
 import { submissionStatusSchema } from "@/lib/domain/submission";
 import { getSubmissionEditTokenStatus } from "@/lib/organizer-edit/organizer-edit.service";
 
@@ -31,6 +39,14 @@ export default async function AdminSubmissionDetailsPage({
     status.success && status.data === "needs_changes"
       ? await getSubmissionEditTokenStatus(details.submission.id)
       : null;
+  const [stages, teams, rosters, matches, operationalSummary] =
+    await Promise.all([
+      listTournamentStages(details.submission.id),
+      listTournamentTeams(details.submission.id),
+      listTournamentRosters(details.submission.id),
+      listTournamentMatches(details.submission.id),
+      getTournamentOperationalSummary(details.submission.id),
+    ]);
 
   return (
     <main className="adminMain">
@@ -58,6 +74,13 @@ export default async function AdminSubmissionDetailsPage({
           />
         ) : null}
         <AdminSubmissionDetails details={details} />
+        <AdminTournamentData
+          stages={stages}
+          teams={teams}
+          rosters={rosters}
+          matches={matches}
+          summary={operationalSummary}
+        />
       </div>
     </main>
   );
