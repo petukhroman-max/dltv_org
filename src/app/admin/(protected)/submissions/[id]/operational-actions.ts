@@ -21,6 +21,7 @@ import type {
   MatchOperation,
 } from "@/lib/operational-workspace/match-action-state";
 import { runMatchMutation } from "@/lib/operational-workspace/match-action-runner";
+import { revalidatePublicTournamentProjection } from "@/lib/public-tournaments/public-operational.revalidation";
 
 async function run(
   entity: "stage" | "team",
@@ -37,6 +38,7 @@ async function run(
     formData,
   );
   if (result.status === "success") {
+    await revalidatePublicTournamentProjection(submissionId);
     revalidatePath(`/admin/submissions/${submissionId}`);
   }
   return result;
@@ -97,8 +99,10 @@ async function runRoster(
     { kind: "admin", identity },
     formData,
   );
-  if (result.status === "success")
+  if (result.status === "success") {
+    await revalidatePublicTournamentProjection(submissionId);
     revalidatePath(`/admin/submissions/${submissionId}`);
+  }
   return result;
 }
 
@@ -165,8 +169,10 @@ async function runMatch(
     { kind: "admin", identity },
     formData,
   );
-  if (result.status === "success")
+  if (result.status === "success") {
+    await revalidatePublicTournamentProjection(submissionId);
     revalidatePath(`/admin/submissions/${submissionId}`);
+  }
   return result;
 }
 

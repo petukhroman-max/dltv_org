@@ -20,7 +20,8 @@ const en = {
   notSet: "Not set",
   online: "Online",
   offline: "Offline",
-  publicReady: "Mark ready for future public projection",
+  publicReady:
+    "Public items appear on the tournament page after the tournament is published.",
   qualifier: "Qualifier",
   group_stage: "Group stage",
   swiss: "Swiss",
@@ -149,7 +150,8 @@ const ru = {
   notSet: "Не указано",
   online: "Онлайн",
   offline: "Офлайн",
-  publicReady: "Готово к будущей публичной публикации",
+  publicReady:
+    "Публичные данные отображаются на странице турнира после его публикации.",
   qualifier: "Квалификация",
   group_stage: "Групповой этап",
   swiss: "Швейцарская система",

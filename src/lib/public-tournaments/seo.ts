@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { localizePath, type Locale } from "@/i18n/config";
 import { env } from "@/lib/env";
 import { publicDescription } from "@/lib/public-tournaments/presentation";
-import type { PublishedTournament } from "@/lib/public-tournaments/public-tournaments.types";
+import type { PublicTournamentOverview } from "@/lib/public-tournaments/public-operational.types";
 
 export function absolutePublicUrl(path: string): string {
   return new URL(
@@ -13,11 +13,11 @@ export function absolutePublicUrl(path: string): string {
 }
 
 export function tournamentMetadata(
-  tournament: PublishedTournament,
+  tournament: PublicTournamentOverview,
   locale: Locale = "en",
 ): Metadata {
-  const title = `${tournament.tournament_name} | Deadlock tournaments`;
-  const description = publicDescription(tournament);
+  const title = `${tournament.tournament_name} | ${locale === "ru" ? "Турниры Deadlock" : "Deadlock tournaments"}`;
+  const description = publicDescription(tournament, locale);
   const path = `/tournaments/${tournament.slug}`;
   const url = absolutePublicUrl(localizePath(locale, path));
   return {
@@ -30,12 +30,19 @@ export function tournamentMetadata(
         ru: absolutePublicUrl(localizePath("ru", path)),
       },
     },
-    openGraph: { type: "website", title, description, url },
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url,
+      locale: locale === "ru" ? "ru_RU" : "en_US",
+      alternateLocale: locale === "ru" ? ["en_US"] : ["ru_RU"],
+    },
   };
 }
 
 export function sportsEventJsonLd(
-  tournament: PublishedTournament,
+  tournament: PublicTournamentOverview,
   locale: Locale = "en",
 ) {
   return {
@@ -48,6 +55,16 @@ export function sportsEventJsonLd(
     eventAttendanceMode: tournament.is_online
       ? "https://schema.org/OnlineEventAttendanceMode"
       : undefined,
+    location: tournament.is_online
+      ? {
+          "@type": "VirtualLocation",
+          url: absolutePublicUrl(
+            localizePath(locale, `/tournaments/${tournament.slug}`),
+          ),
+        }
+      : tournament.region
+        ? { "@type": "Place", name: tournament.region }
+        : undefined,
     organizer: {
       "@type": "Organization",
       name: tournament.organizer_name,
