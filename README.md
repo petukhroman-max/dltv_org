@@ -192,3 +192,6 @@ optimistic concurrency, audit events, and RPC security.
 [docs/public-tournament-operational-projection.md](docs/public-tournament-operational-projection.md)
 documents the published boundary, privacy allowlists, public operational UI,
 caching, SEO, QA, and manual smoke-test.
+[docs/bracket-standings.md](docs/bracket-standings.md) documents bracket links,
+safe winner/loser advancement, derived standings, public privacy, localization,
+security, limitations, and the manual smoke-test.

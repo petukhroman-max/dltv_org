@@ -22,6 +22,9 @@ import type {
 } from "@/lib/operational-workspace/match-action-state";
 import { runMatchMutation } from "@/lib/operational-workspace/match-action-runner";
 import { revalidatePublicTournamentProjection } from "@/lib/public-tournaments/public-operational.revalidation";
+import type { StructureOperation } from "@/lib/operational-workspace/bracket-standings.service";
+import type { StructureActionState } from "@/lib/operational-workspace/bracket-standings-state";
+import { runStructureMutation } from "@/lib/operational-workspace/bracket-standings.service";
 
 async function run(
   entity: "stage" | "team",
@@ -297,4 +300,40 @@ export async function deleteWorkspaceMatchAction(
   formData: FormData,
 ) {
   return runWorkspaceMatch("delete", rawToken, formData);
+}
+
+async function runWorkspaceStructure(
+  operation: StructureOperation,
+  rawToken: string,
+  formData: FormData,
+): Promise<StructureActionState> {
+  const access = await workspaceContext(rawToken);
+  if (!access)
+    return {
+      status: "error",
+      message: "This workspace link is invalid or no longer available.",
+      fieldErrors: {},
+    };
+  const result = await runStructureMutation(
+    operation,
+    access.submissionId,
+    access.context,
+    formData,
+  );
+  if (result.status === "success") {
+    await revalidatePublicTournamentProjection(access.submissionId);
+    revalidatePath(`/workspace/${rawToken}`);
+    revalidatePath(`/workspace/${rawToken}/stages`);
+    revalidatePath(`/admin/submissions/${access.submissionId}`);
+  }
+  return result;
+}
+
+export async function mutateWorkspaceTournamentStructureAction(
+  operation: StructureOperation,
+  rawToken: string,
+  _state: StructureActionState,
+  formData: FormData,
+) {
+  return runWorkspaceStructure(operation, rawToken, formData);
 }

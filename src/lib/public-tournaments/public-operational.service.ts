@@ -7,6 +7,7 @@ import {
   listPublicTournamentRosters,
   listPublicTournamentStages,
   listPublicTournamentTeams,
+  listPublicTournamentStructures,
 } from "@/lib/public-tournaments/public-operational.repository";
 import type { PublicTournamentProjection } from "@/lib/public-tournaments/public-operational.types";
 import { getPublishedTournamentBySlug } from "@/lib/public-tournaments/public-tournaments.repository";
@@ -17,6 +18,7 @@ type ProjectionDependencies = {
   teams: typeof listPublicTournamentTeams;
   rosters: typeof listPublicTournamentRosters;
   matches: typeof listPublicTournamentMatches;
+  structures?: typeof listPublicTournamentStructures;
 };
 
 const defaults: ProjectionDependencies = {
@@ -25,6 +27,7 @@ const defaults: ProjectionDependencies = {
   teams: listPublicTournamentTeams,
   rosters: listPublicTournamentRosters,
   matches: listPublicTournamentMatches,
+  structures: listPublicTournamentStructures,
 };
 
 export async function getPublicTournamentProjection(
@@ -40,6 +43,12 @@ export async function getPublicTournamentProjection(
     dependencies.rosters(tournament.submission_id),
     dependencies.matches(tournament.submission_id),
   ]);
+  const structureRows = dependencies.structures
+    ? await dependencies.structures(
+        tournament.submission_id,
+        stageRows.filter((stage) => stage.is_public).map((stage) => stage.id),
+      )
+    : { bracketLinks: [], standingsByStage: {} };
   return toPublicTournamentProjection({
     locale,
     tournament,
@@ -47,8 +56,34 @@ export async function getPublicTournamentProjection(
     teamRows,
     rosterRows,
     matchRows,
+    structureRows,
     onWarning: (code) => console.warn(`[public-tournament-projection] ${code}`),
   });
 }
 
 export const getPublicTournamentPage = getPublicTournamentProjection;
+
+export async function getPublicStageBracket(
+  slug: string,
+  locale: Locale,
+  stageSlug: string,
+) {
+  const projection = await getPublicTournamentProjection(slug, locale);
+  return (
+    projection?.brackets?.find((bracket) => bracket.stage.slug === stageSlug) ??
+    null
+  );
+}
+
+export async function getPublicStageStandings(
+  slug: string,
+  locale: Locale,
+  stageSlug: string,
+) {
+  const projection = await getPublicTournamentProjection(slug, locale);
+  return (
+    projection?.standings?.find(
+      (standings) => standings.stage.slug === stageSlug,
+    ) ?? null
+  );
+}

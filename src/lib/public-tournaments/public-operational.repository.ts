@@ -6,6 +6,7 @@ import type {
   PublicRosterRow,
   PublicStageRow,
   PublicTeamRow,
+  PublicStructureRows,
 } from "@/lib/public-tournaments/public-operational.types";
 
 function queryFailed(): never {
@@ -18,7 +19,7 @@ export async function listPublicTournamentStages(
   const { data, error } = await createSupabaseAdminClient()
     .from("tournament_stages")
     .select(
-      "id, submission_id, name, slug, stage_type, sequence_number, start_at, end_at, timezone, format_text, best_of_default, team_count, is_online, location_name, status, is_public",
+      "id, submission_id, name, slug, stage_type, bracket_type, sequence_number, start_at, end_at, timezone, format_text, best_of_default, team_count, is_online, location_name, status, is_public",
     )
     .eq("submission_id", submissionId)
     .eq("is_public", true)
@@ -66,7 +67,7 @@ export async function listPublicTournamentMatches(
   const { data, error } = await createSupabaseAdminClient()
     .from("tournament_matches")
     .select(
-      "id, submission_id, stage_id, match_number, round_name, group_name, scheduled_at, best_of, team_a_id, team_b_id, score_a, score_b, winner_team_id, status, deadlock_match_id, stream_url, vod_url, duration_seconds, is_public",
+      "id, submission_id, stage_id, match_number, round_name, group_name, bracket_section, bracket_round, bracket_position, scheduled_at, best_of, team_a_id, team_b_id, score_a, score_b, winner_team_id, status, deadlock_match_id, stream_url, vod_url, duration_seconds, is_public",
     )
     .eq("submission_id", submissionId)
     .eq("is_public", true)
@@ -80,4 +81,32 @@ export async function listPublicTournamentMatches(
     ]);
   if (error) queryFailed();
   return (data ?? []) as PublicMatchRow[];
+}
+
+export async function listPublicTournamentStructures(
+  submissionId: string,
+  stageIds: string[],
+): Promise<PublicStructureRows> {
+  const client = createSupabaseAdminClient();
+  const { data: bracketLinks, error } = await client
+    .from("tournament_bracket_links")
+    .select("stage_id, source_match_id, outcome, target_match_id, target_slot")
+    .eq("submission_id", submissionId);
+  if (error) queryFailed();
+  const standingsEntries = await Promise.all(
+    stageIds.map(async (stageId) => {
+      const { data, error: standingsError } = await client.rpc(
+        "get_tournament_stage_standings",
+        { p_submission_id: submissionId, p_stage_id: stageId },
+      );
+      if (standingsError) queryFailed();
+      return [stageId, data ?? []] as const;
+    }),
+  );
+  return {
+    bracketLinks: bracketLinks ?? [],
+    standingsByStage: Object.fromEntries(
+      standingsEntries,
+    ) as PublicStructureRows["standingsByStage"],
+  };
 }

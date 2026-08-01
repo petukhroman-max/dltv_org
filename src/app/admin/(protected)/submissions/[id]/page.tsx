@@ -8,6 +8,7 @@ import { AdminEditLinkPanel } from "@/components/admin/admin-edit-link-panel";
 import { AdminWorkspaceLinkPanel } from "@/components/admin/admin-workspace-link-panel";
 import { StagesTeamsWorkspace } from "@/components/operational/stages-teams-workspace";
 import { RosterWorkspace } from "@/components/operational/roster-workspace";
+import { StageStructureLinks } from "@/components/operational/stage-structure-links";
 import {
   MatchCreateForm,
   MatchList,
@@ -198,6 +199,11 @@ export default async function AdminSubmissionDetailsPage({
               stages={stages}
               teams={teams}
               actions={operationalActions}
+              locale={locale}
+            />
+            <StageStructureLinks
+              stages={stages}
+              basePath={`/admin/submissions/${details.submission.id}`}
               locale={locale}
             />
             <RosterWorkspace

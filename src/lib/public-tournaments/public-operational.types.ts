@@ -27,6 +27,7 @@ export type PublicStage = {
   name: string;
   slug: string;
   stage_type: string;
+  bracket_type?: string | null;
   sequence_number: number;
   start_at: string | null;
   end_at: string | null;
@@ -66,6 +67,9 @@ export type PublicMatch = {
   match_number: number | null;
   round_name: string | null;
   group_name: string | null;
+  bracket_section?: string | null;
+  bracket_round?: number | null;
+  bracket_position?: number | null;
   scheduled_at: string | null;
   timezone: string;
   best_of: number | null;
@@ -115,6 +119,8 @@ export type PublicTournamentProjection = {
   stages: PublicStage[];
   teams: PublicTeam[];
   matches: PublicMatchGroups;
+  brackets?: PublicBracket[];
+  standings?: PublicStageStandings[];
   summary: PublicOperationalSummary;
 };
 
@@ -149,6 +155,9 @@ export type PublicMatchRow = {
   match_number: number | null;
   round_name: string | null;
   group_name: string | null;
+  bracket_section?: string | null;
+  bracket_round?: number | null;
+  bracket_position?: number | null;
   scheduled_at: string | null;
   best_of: number | null;
   team_a_id: string | null;
@@ -162,4 +171,51 @@ export type PublicMatchRow = {
   vod_url: string | null;
   duration_seconds: number | null;
   is_public: boolean;
+};
+
+export type PublicBracketLinkRow = {
+  stage_id: string;
+  source_match_id: string;
+  outcome: string;
+  target_match_id: string;
+  target_slot: string;
+};
+export type PublicStandingRow = {
+  team_id: string;
+  team_name: string;
+  team_slug: string;
+  seed: number | null;
+  group_name: string;
+  played: number;
+  wins: number;
+  losses: number;
+  score_for: number;
+  score_against: number;
+  score_diff: number;
+  points: number;
+  rank: number;
+  qualified: boolean;
+  public_note: string | null;
+};
+export type PublicStructureRows = {
+  bracketLinks: PublicBracketLinkRow[];
+  standingsByStage: Record<string, PublicStandingRow[]>;
+};
+export type PublicBracket = {
+  stage: Pick<PublicStage, "name" | "slug">;
+  bracket_type: string;
+  matches: PublicMatch[];
+  links: Array<{
+    source: string;
+    outcome: string;
+    target: string;
+    target_slot: string;
+  }>;
+};
+export type PublicStageStandings = {
+  stage: Pick<PublicStage, "name" | "slug">;
+  groups: Array<{
+    name: string;
+    rows: Array<Omit<PublicStandingRow, "team_id" | "group_name">>;
+  }>;
 };

@@ -15,6 +15,11 @@ const copy = {
     stages: "Stages",
     matches: "Matches",
     teams: "Teams",
+    bracket: "Bracket",
+    standings: "Standings",
+    qualified: "Qualified",
+    note: "Note",
+    bracketUpdating: "The bracket is still being updated.",
     live: "Live",
     upcoming: "Upcoming",
     results: "Results",
@@ -83,6 +88,11 @@ const copy = {
     stages: "Этапы",
     matches: "Матчи",
     teams: "Команды",
+    bracket: "Сетка",
+    standings: "Таблица",
+    qualified: "Проходит дальше",
+    note: "Примечание",
+    bracketUpdating: "Сетка турнира ещё обновляется.",
     live: "Идёт сейчас",
     upcoming: "Предстоящие",
     results: "Результаты",
@@ -340,6 +350,8 @@ export function PublicTournamentOperational({
   projection: PublicTournamentProjection;
 }) {
   const { locale, stages, teams, matches, summary } = projection;
+  const brackets = projection.brackets ?? [];
+  const standings = projection.standings ?? [];
   const current = copy[locale];
   const hasMatches = Object.values(matches).some((group) => group.length > 0);
   return (
@@ -348,6 +360,8 @@ export function PublicTournamentOperational({
         <a href="#overview">{current.overview}</a>
         <a href="#matches">{current.matches}</a>
         <a href="#stages">{current.stages}</a>
+        {brackets.length ? <a href="#bracket">{current.bracket}</a> : null}
+        {standings.length ? <a href="#standings">{current.standings}</a> : null}
         <a href="#teams">{current.teams}</a>
       </nav>
 
@@ -529,6 +543,126 @@ export function PublicTournamentOperational({
           <p className="publicEmptyState">{current.noMatches}</p>
         )}
       </section>
+
+      {brackets.length ? (
+        <section
+          id="bracket"
+          className="publicOperationalSection"
+          aria-labelledby="bracket-heading"
+        >
+          <h2 id="bracket-heading">{current.bracket}</h2>
+          {brackets.map((bracket) => (
+            <article key={bracket.stage.slug} className="publicBracket">
+              <h3>{bracket.stage.name}</h3>
+              {bracket.links.length === 0 ||
+              bracket.matches.some(
+                (match) => !match.team_a || !match.team_b,
+              ) ? (
+                <p className="publicEmptyState">{current.bracketUpdating}</p>
+              ) : null}
+              <div className="publicBracketRounds">
+                {[
+                  ...new Set(
+                    bracket.matches.map(
+                      (match) =>
+                        `${match.bracket_section}:${match.bracket_round}`,
+                    ),
+                  ),
+                ].map((round) => (
+                  <section key={round}>
+                    <h4>{round.replace(":", " · ")}</h4>
+                    {bracket.matches
+                      .filter(
+                        (match) =>
+                          `${match.bracket_section}:${match.bracket_round}` ===
+                          round,
+                      )
+                      .sort(
+                        (a, b) =>
+                          (a.bracket_position ?? 0) - (b.bracket_position ?? 0),
+                      )
+                      .map((match) => (
+                        <MatchCard
+                          key={match.public_id}
+                          match={match}
+                          locale={locale}
+                        />
+                      ))}
+                  </section>
+                ))}
+              </div>
+              {bracket.links.length ? (
+                <ul
+                  className="publicBracketLinks"
+                  aria-label="Advancement paths"
+                >
+                  {bracket.links.map((link, index) => (
+                    <li key={`${link.source}-${index}`}>
+                      {link.source} {link.outcome} → {link.target}{" "}
+                      {link.target_slot}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </article>
+          ))}
+        </section>
+      ) : null}
+
+      {standings.length ? (
+        <section
+          id="standings"
+          className="publicOperationalSection"
+          aria-labelledby="standings-heading"
+        >
+          <h2 id="standings-heading">{current.standings}</h2>
+          {standings.map((stage) => (
+            <article key={stage.stage.slug}>
+              <h3>{stage.stage.name}</h3>
+              {stage.groups.map((group) => (
+                <div key={group.name} className="standingsTableWrap">
+                  <h4>
+                    {current.group} {group.name}
+                  </h4>
+                  <table className="standingsTable">
+                    <caption>
+                      {stage.stage.name} · {current.group} {group.name}
+                    </caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">{current.teams}</th>
+                        <th scope="col">P</th>
+                        <th scope="col">W</th>
+                        <th scope="col">L</th>
+                        <th scope="col">+/-</th>
+                        <th scope="col">Pts</th>
+                        <th scope="col">{current.qualified}</th>
+                        <th scope="col">{current.note}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {group.rows.map((row) => (
+                        <tr key={row.team_slug}>
+                          <td>{row.rank}</td>
+                          <th scope="row">{row.team_name}</th>
+                          <td>{row.played}</td>
+                          <td>{row.wins}</td>
+                          <td>{row.losses}</td>
+                          <td>{row.score_diff}</td>
+                          <td>{row.points}</td>
+                          <td>{row.qualified ? "✓" : ""}</td>
+                          <td>{row.public_note ?? ""}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </article>
+          ))}
+        </section>
+      ) : null}
 
       <section
         id="teams"

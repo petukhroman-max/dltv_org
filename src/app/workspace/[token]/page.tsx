@@ -18,6 +18,7 @@ import {
 import { StatusBadge } from "@/components/admin/status-badge";
 import { StagesTeamsWorkspace } from "@/components/operational/stages-teams-workspace";
 import { RosterWorkspace } from "@/components/operational/roster-workspace";
+import { StageStructureLinks } from "@/components/operational/stage-structure-links";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { LocaleSwitcher } from "@/components/ui/locale-switcher";
 import { OrganizerShell } from "@/components/ui/organizer-shell";
@@ -206,6 +207,11 @@ export default async function OrganizerWorkspacePage({
           stages={stages}
           teams={teams}
           actions={actions}
+          locale={locale}
+        />
+        <StageStructureLinks
+          stages={stages}
+          basePath={localizePath(locale, `/workspace/${token}`)}
           locale={locale}
         />
         <RosterWorkspace

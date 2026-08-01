@@ -22,6 +22,9 @@ import type {
 } from "@/lib/operational-workspace/match-action-state";
 import { runMatchMutation } from "@/lib/operational-workspace/match-action-runner";
 import { revalidatePublicTournamentProjection } from "@/lib/public-tournaments/public-operational.revalidation";
+import type { StructureOperation } from "@/lib/operational-workspace/bracket-standings.service";
+import type { StructureActionState } from "@/lib/operational-workspace/bracket-standings-state";
+import { runStructureMutation } from "@/lib/operational-workspace/bracket-standings.service";
 
 async function run(
   entity: "stage" | "team",
@@ -245,4 +248,24 @@ export async function deleteAdminMatchAction(
   formData: FormData,
 ) {
   return runMatch("delete", submissionId, formData);
+}
+
+export async function mutateAdminTournamentStructureAction(
+  operation: StructureOperation,
+  submissionId: string,
+  _state: StructureActionState,
+  formData: FormData,
+) {
+  const identity = await requireAdmin();
+  const result = await runStructureMutation(
+    operation,
+    submissionId,
+    { kind: "admin", identity },
+    formData,
+  );
+  if (result.status === "success") {
+    await revalidatePublicTournamentProjection(submissionId);
+    revalidatePath(`/admin/submissions/${submissionId}`);
+  }
+  return result;
 }

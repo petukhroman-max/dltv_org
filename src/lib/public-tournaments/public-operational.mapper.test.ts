@@ -320,4 +320,92 @@ describe("public operational projection mapper", () => {
       winner: { slug: "radiant" },
     });
   });
+
+  it("allowlists bracket and standings while excluding private entities and UUIDs", () => {
+    const publicMatchId = "30000000-0000-4000-8000-000000000001";
+    const privateMatchId = "30000000-0000-4000-8000-000000000002";
+    const projection = toPublicTournamentProjection({
+      locale: "en",
+      tournament: publishedTournamentFixture,
+      stageRows: [
+        stage({ stage_type: "custom", bracket_type: "single_elimination" }),
+      ],
+      teamRows: [
+        team(teamAId, "Radiant"),
+        team(teamBId, "Dire", { is_public: false }),
+      ],
+      rosterRows: [],
+      matchRows: [
+        match(publicMatchId, "scheduled", {
+          team_b_id: null,
+          bracket_section: "main",
+          bracket_round: 1,
+          bracket_position: 1,
+        }),
+        match(privateMatchId, "scheduled", {
+          is_public: false,
+          bracket_section: "grand_final",
+          bracket_round: 2,
+          bracket_position: 1,
+        }),
+      ],
+      structureRows: {
+        bracketLinks: [
+          {
+            stage_id: stageId,
+            source_match_id: publicMatchId,
+            outcome: "winner",
+            target_match_id: privateMatchId,
+            target_slot: "team_a",
+          },
+        ],
+        standingsByStage: {
+          [stageId]: [
+            {
+              team_id: teamAId,
+              team_name: "Radiant",
+              team_slug: "radiant",
+              seed: 1,
+              group_name: "A",
+              played: 0,
+              wins: 0,
+              losses: 0,
+              score_for: 0,
+              score_against: 0,
+              score_diff: 0,
+              points: 0,
+              rank: 1,
+              qualified: true,
+              public_note: "Seeded",
+            },
+            {
+              team_id: teamBId,
+              team_name: "Dire",
+              team_slug: "dire",
+              seed: 2,
+              group_name: "A",
+              played: 0,
+              wins: 0,
+              losses: 0,
+              score_for: 0,
+              score_against: 0,
+              score_diff: 0,
+              points: 0,
+              rank: 2,
+              qualified: false,
+              public_note: null,
+            },
+          ],
+        },
+      },
+    });
+    expect(projection.brackets?.[0].matches).toHaveLength(1);
+    expect(projection.brackets?.[0].links).toEqual([]);
+    expect(projection.standings?.[0].groups[0].rows).toHaveLength(1);
+    const serialized = JSON.stringify(projection);
+    expect(serialized).not.toContain(publicMatchId);
+    expect(serialized).not.toContain(privateMatchId);
+    expect(serialized).not.toContain(teamAId);
+    expect(serialized).not.toContain(teamBId);
+  });
 });
