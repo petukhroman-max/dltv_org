@@ -35,6 +35,7 @@ import {
   selectTournamentMatches,
 } from "@/lib/operational-workspace/match.repository";
 import type { Json } from "@/lib/supabase/database.types";
+import { logOperationalMutationFailure } from "@/lib/operational-workspace/operational-diagnostics";
 
 const envelopeSchema = z.object({
   submissionId: z.uuid(),
@@ -110,28 +111,49 @@ function code(error: unknown) {
     : "";
 }
 
-function mapError(error: unknown): never {
+function stableErrorCode(error: unknown): MatchErrorCode {
+  const errorMessage = message(error);
+  if (code(error) === "40001" || errorMessage.includes("match_stale_update"))
+    return "MATCH_STALE_UPDATE";
+  if (code(error) === "42501") return "MATCH_ACCESS_DENIED";
+  if (errorMessage.includes("match_transition_invalid"))
+    return "MATCH_TRANSITION_INVALID";
+  if (errorMessage.includes("match_delete_has_history"))
+    return "MATCH_DELETE_HAS_HISTORY";
+  if (errorMessage.includes("match_number_conflict"))
+    return "MATCH_NUMBER_CONFLICT";
+  if (errorMessage.includes("match_deadlock_id_conflict"))
+    return "MATCH_DEADLOCK_ID_CONFLICT";
+  if (
+    code(error) === "23514" &&
+    errorMessage.includes("must belong to the same tournament submission")
+  )
+    return "MATCH_SCOPE_INVALID";
+  return "MATCH_MUTATION_FAILED";
+}
+
+function mapError(
+  error: unknown,
+  diagnostic: {
+    operation: string;
+    submissionId: string;
+    matchId?: string;
+  },
+): never {
   if (
     error instanceof MatchValidationError ||
     error instanceof MatchApplicationError
   )
     throw error;
-  const errorMessage = message(error);
-  if (code(error) === "40001" || errorMessage.includes("match_stale_update"))
-    throw new MatchApplicationError("MATCH_STALE_UPDATE");
-  if (code(error) === "42501")
-    throw new MatchApplicationError("MATCH_ACCESS_DENIED");
-  if (errorMessage.includes("match_transition_invalid"))
-    throw new MatchApplicationError("MATCH_TRANSITION_INVALID");
-  if (errorMessage.includes("match_delete_has_history"))
-    throw new MatchApplicationError("MATCH_DELETE_HAS_HISTORY");
-  if (errorMessage.includes("match_number_conflict"))
-    throw new MatchApplicationError("MATCH_NUMBER_CONFLICT");
-  if (errorMessage.includes("match_deadlock_id_conflict"))
-    throw new MatchApplicationError("MATCH_DEADLOCK_ID_CONFLICT");
-  if (code(error) === "23514")
-    throw new MatchApplicationError("MATCH_SCOPE_INVALID");
-  throw new MatchApplicationError("MATCH_MUTATION_FAILED");
+  const stableCode = stableErrorCode(error);
+  logOperationalMutationFailure({
+    operation: diagnostic.operation,
+    submissionId: diagnostic.submissionId,
+    entityIds: diagnostic.matchId ? { match_id: diagnostic.matchId } : {},
+    stableCode,
+    databaseCode: code(error),
+  });
+  throw new MatchApplicationError(stableCode);
 }
 
 type Dependencies = {
@@ -276,7 +298,10 @@ export async function createTournamentMatch(
       }),
     );
   } catch (error) {
-    mapError(error);
+    mapError(error, {
+      operation: "create_tournament_match",
+      submissionId: parsedEnvelope.submissionId,
+    });
   }
 }
 
@@ -317,7 +342,11 @@ export async function updateTournamentMatch(
       }),
     );
   } catch (error) {
-    mapError(error);
+    mapError(error, {
+      operation: "update_tournament_match",
+      submissionId: parsedEnvelope.submissionId,
+      matchId: id,
+    });
   }
 }
 
@@ -369,7 +398,11 @@ export async function updateTournamentMatchStatus(
       }),
     );
   } catch (error) {
-    mapError(error);
+    mapError(error, {
+      operation: "update_tournament_match_status",
+      submissionId: parsedEnvelope.submissionId,
+      matchId: values.id,
+    });
   }
 }
 
@@ -440,7 +473,11 @@ export async function completeTournamentMatch(
       }),
     );
   } catch (error) {
-    mapError(error);
+    mapError(error, {
+      operation: "complete_tournament_match",
+      submissionId: parsedEnvelope.submissionId,
+      matchId: values.id,
+    });
   }
 }
 
@@ -474,7 +511,11 @@ export async function createWalkoverResult(
       }),
     );
   } catch (error) {
-    mapError(error);
+    mapError(error, {
+      operation: "create_walkover_result",
+      submissionId: parsedEnvelope.submissionId,
+      matchId: values.id,
+    });
   }
 }
 
@@ -504,7 +545,11 @@ export async function cancelTournamentMatch(
       }),
     );
   } catch (error) {
-    mapError(error);
+    mapError(error, {
+      operation: "cancel_tournament_match",
+      submissionId: parsedEnvelope.submissionId,
+      matchId: values.id,
+    });
   }
 }
 
@@ -531,7 +576,11 @@ export async function reopenTournamentMatch(
       }),
     );
   } catch (error) {
-    mapError(error);
+    mapError(error, {
+      operation: "reopen_tournament_match",
+      submissionId: parsedEnvelope.submissionId,
+      matchId: values.id,
+    });
   }
 }
 
@@ -558,7 +607,11 @@ export async function deleteTournamentMatch(
       }),
     );
   } catch (error) {
-    mapError(error);
+    mapError(error, {
+      operation: "delete_tournament_match",
+      submissionId: parsedEnvelope.submissionId,
+      matchId: values.id,
+    });
   }
 }
 

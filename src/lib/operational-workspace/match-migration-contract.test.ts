@@ -10,6 +10,24 @@ const migration = fs.readFileSync(
   ),
   "utf8",
 );
+const correctiveMigration = fs.readFileSync(
+  path.join(
+    process.cwd(),
+    "supabase/migrations/20260801200000_fix_match_audit_status_constraints.sql",
+  ),
+  "utf8",
+);
+const baseMigration = fs.readFileSync(
+  path.join(
+    process.cwd(),
+    "supabase/migrations/20260801050000_add_tournament_operational_data_model.sql",
+  ),
+  "utf8",
+);
+const repository = fs.readFileSync(
+  path.join(process.cwd(), "src/lib/operational-workspace/match.repository.ts"),
+  "utf8",
+);
 
 const rpcNames = [
   "create_tournament_match",
@@ -76,5 +94,57 @@ describe("match management migration contract", () => {
     expect(migration).toContain("match_delete_has_history");
     expect(migration).toContain("'manual'");
     expect(migration).not.toMatch(/p_payload\s*->>\s*'source'/);
+  });
+
+  it("keeps match lifecycle audit writes compatible with submission event constraints", () => {
+    expect(migration).toContain("from_status");
+    expect(migration).toContain("to_status");
+    expect(correctiveMigration).toContain(
+      "drop constraint submission_events_from_status_allowed",
+    );
+    expect(correctiveMigration).toContain(
+      "drop constraint submission_events_to_status_allowed",
+    );
+    for (const status of [
+      "draft",
+      "scheduled",
+      "live",
+      "completed",
+      "postponed",
+      "cancelled",
+      "walkover",
+    ]) {
+      expect(correctiveMigration).toContain(`'${status}'`);
+    }
+  });
+
+  it("checks nullable stage, team, and winner ownership against submission IDs", () => {
+    for (const entity of ["stage", "team_a", "team_b", "winner"]) {
+      expect(baseMigration).toContain(
+        `match ${entity} must belong to the same tournament submission`,
+      );
+    }
+    expect(baseMigration).toContain("new.stage_id is not null");
+    expect(baseMigration).toContain("new.team_a_id is not null");
+    expect(baseMigration).toContain("new.team_b_id is not null");
+    expect(baseMigration).toContain("new.winner_team_id is not null");
+  });
+
+  it("keeps TypeScript RPC names and argument contracts aligned with SQL", () => {
+    for (const name of rpcNames) {
+      expect(repository).toContain(`executeRpc("${name}", args)`);
+    }
+    for (const argument of [
+      "p_submission_id",
+      "p_payload",
+      "p_match_id",
+      "p_expected_updated_at",
+      "p_actor_type",
+      "p_actor_id",
+      "p_workspace_token_id",
+    ]) {
+      expect(migration).toContain(argument);
+      expect(repository).toContain(argument);
+    }
   });
 });

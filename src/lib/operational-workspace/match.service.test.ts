@@ -100,6 +100,91 @@ describe("match service", () => {
     expect(args.p_payload).not.toHaveProperty("timezone");
   });
 
+  it.each([
+    {
+      label: "same-submission teams",
+      teamA,
+      teamB,
+    },
+    {
+      label: "one TBD team",
+      teamA,
+      teamB: null,
+    },
+  ])("accepts a scheduled match with $label", async ({ teamA, teamB }) => {
+    const deps = dependencies();
+    await createTournamentMatch(
+      {
+        submissionId,
+        values: {
+          stage_id: "00000000-0000-4000-8000-000000000003",
+          match_number: 1,
+          round_name: "Round 1",
+          group_name: null,
+          scheduled_at: "2026-08-10T12:00:00.000Z",
+          timezone: "UTC",
+          best_of: 3,
+          team_a_id: teamA,
+          team_b_id: teamB,
+          stream_url: null,
+          is_public: true,
+          status: "scheduled",
+        },
+      },
+      context,
+      deps as never,
+    );
+    expect(deps.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        p_submission_id: submissionId,
+        p_payload: expect.objectContaining({
+          team_a_id: teamA,
+          team_b_id: teamB,
+          status: "scheduled",
+        }),
+      }),
+    );
+  });
+
+  it("creates a match with trusted admin identity", async () => {
+    const deps = dependencies();
+    await createTournamentMatch(
+      {
+        submissionId,
+        values: {
+          stage_id: null,
+          match_number: null,
+          round_name: null,
+          group_name: null,
+          scheduled_at: null,
+          timezone: "UTC",
+          best_of: null,
+          team_a_id: null,
+          team_b_id: null,
+          stream_url: null,
+          is_public: false,
+          status: "draft",
+        },
+      },
+      {
+        kind: "admin",
+        identity: {
+          userId: "1ada7551-3958-41c6-9da4-47ca541e9fca",
+          email: "admin@example.com",
+        },
+      },
+      deps as never,
+    );
+    expect(deps.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        p_submission_id: submissionId,
+        p_actor_type: "admin",
+        p_actor_id: "1ada7551-3958-41c6-9da4-47ca541e9fca",
+        p_workspace_token_id: null,
+      }),
+    );
+  });
+
   it("derives winner in the RPC and never accepts it from the browser", async () => {
     const deps = dependencies(
       makeMatch({ status: "live", team_a_id: teamA, team_b_id: teamB }),
@@ -236,4 +321,92 @@ describe("match service", () => {
       ),
     ).rejects.toMatchObject({ code: "MATCH_DELETE_HAS_HISTORY" });
   });
+
+  it("does not misreport an audit CHECK violation as cross-submission scope", async () => {
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    const deps = dependencies();
+    deps.create.mockRejectedValue({
+      code: "23514",
+      message:
+        'new row violates check constraint "submission_events_to_status_allowed" secret-detail',
+    });
+
+    await expect(
+      createTournamentMatch(
+        {
+          submissionId,
+          values: {
+            stage_id: null,
+            match_number: null,
+            round_name: null,
+            group_name: null,
+            scheduled_at: null,
+            timezone: "UTC",
+            best_of: null,
+            team_a_id: null,
+            team_b_id: null,
+            stream_url: null,
+            is_public: false,
+            status: "draft",
+          },
+        },
+        context,
+        deps as never,
+      ),
+    ).rejects.toMatchObject({ code: "MATCH_MUTATION_FAILED" });
+    expect(consoleError).toHaveBeenCalledWith(
+      "operational_mutation_failed",
+      expect.objectContaining({
+        operation: "create_tournament_match",
+        submissionId,
+        databaseCode: "23514",
+        stableCode: "MATCH_MUTATION_FAILED",
+      }),
+    );
+    expect(JSON.stringify(consoleError.mock.calls)).not.toContain(
+      "secret-detail",
+    );
+    consoleError.mockRestore();
+  });
+
+  it.each(["stage", "team_a", "team_b", "winner"])(
+    "keeps explicit cross-submission %s errors mapped to scope",
+    async (entity) => {
+      const consoleError = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      const deps = dependencies();
+      deps.create.mockRejectedValue({
+        code: "23514",
+        message: `${entity} must belong to the same tournament submission`,
+      });
+
+      await expect(
+        createTournamentMatch(
+          {
+            submissionId,
+            values: {
+              stage_id: null,
+              match_number: null,
+              round_name: null,
+              group_name: null,
+              scheduled_at: null,
+              timezone: "UTC",
+              best_of: null,
+              team_a_id: null,
+              team_b_id: null,
+              stream_url: null,
+              is_public: false,
+              status: "draft",
+            },
+          },
+          context,
+          deps as never,
+        ),
+      ).rejects.toMatchObject({ code: "MATCH_SCOPE_INVALID" });
+      consoleError.mockRestore();
+    },
+  );
 });
