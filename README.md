@@ -10,6 +10,11 @@ organizers to edit submissions in `needs_changes`.
 Published tournaments are available through the indexable public catalog at
 `/tournaments` and stable detail URLs at `/tournaments/[slug]`.
 
+Administrators can issue a separate reusable organizer workspace link for
+private stage and team management at `/workspace/[token]`. The workspace does
+not expose operational data through the public catalog and does not reuse the
+single-use resubmission token.
+
 ## Requirements
 
 - Node.js 24.x
@@ -164,3 +169,6 @@ documents the public read model, projection lifecycle, RLS, routes, and SEO.
 [docs/tournament-data-model-v2.md](docs/tournament-data-model-v2.md) documents
 the private operational stage, team, player, roster, and match foundation for
 the future Organizer Workspace.
+[docs/organizer-workspace-stages-teams.md](docs/organizer-workspace-stages-teams.md)
+documents secure workspace links, shared stage/team CRUD, concurrency,
+deletion rules, audit events, and the manual verification flow.

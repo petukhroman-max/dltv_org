@@ -125,4 +125,28 @@ describe("AdminSubmissionDetails", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText(/moderation_source/)).toBeNull();
   });
+
+  it("renders operational audit labels and safe entity names without raw JSON", () => {
+    render(
+      <AdminSubmissionDetails
+        details={{
+          submission: makeSubmission(),
+          organizer: makeOrganizer(),
+          events: [
+            makeEvent({
+              event_type: "stage_created",
+              metadata: {
+                entity_id: "37452ac3-8871-4a33-9bad-81b4059a1703",
+                entity_name: "Online Qualifier",
+                operational_version: "v1",
+              },
+            }),
+          ],
+        }}
+      />,
+    );
+    expect(screen.getByText("Stage created")).toBeInTheDocument();
+    expect(screen.getByText("Online Qualifier")).toBeInTheDocument();
+    expect(screen.queryByText(/operational_version/)).toBeNull();
+  });
 });

@@ -22,6 +22,15 @@ const moderationEventLabels: Record<string, string> = {
   edit_link_created: "Organizer edit link created",
   edit_link_revoked: "Organizer edit link revoked",
   submission_resubmitted: "Resubmitted by organizer",
+  workspace_link_created: "Workspace link created",
+  workspace_link_revoked: "Workspace link revoked",
+  workspace_link_rotated: "Workspace link rotated",
+  stage_created: "Stage created",
+  stage_updated: "Stage updated",
+  stage_deleted: "Stage deleted",
+  team_created: "Team created",
+  team_updated: "Team updated",
+  team_deleted: "Team deleted",
 };
 
 function Value({
@@ -164,6 +173,10 @@ export function AdminSubmissionDetails({
                 typeof objectMetadata.reviewer_note === "string"
                   ? objectMetadata.reviewer_note
                   : null;
+              const entityName =
+                objectMetadata && typeof objectMetadata.entity_name === "string"
+                  ? objectMetadata.entity_name
+                  : null;
               return (
                 <li key={event.id}>
                   <div className="adminEventHeading">
@@ -181,6 +194,9 @@ export function AdminSubmissionDetails({
                     <dl className="adminEventMetadata">
                       <Value label="Reviewer note">{reviewerNote}</Value>
                     </dl>
+                  ) : null}
+                  {moderationLabel && entityName ? (
+                    <p className="supportingText">{entityName}</p>
                   ) : null}
                   {objectMetadata && "consent_to_publish" in objectMetadata ? (
                     <dl className="adminEventMetadata">

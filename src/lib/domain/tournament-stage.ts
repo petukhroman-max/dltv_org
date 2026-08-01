@@ -49,6 +49,11 @@ const stageInputFields = z.object({
   is_public: z.boolean().default(true),
 });
 
+const stageEditableFields = stageInputFields.omit({
+  submission_id: true,
+  slug: true,
+});
+
 function validateStageDates(
   value: { start_at?: string | null; end_at?: string | null },
   context: z.RefinementCtx,
@@ -71,6 +76,19 @@ export const updateTournamentStageSchema = stageInputFields
   .omit({ submission_id: true })
   .partial()
   .superRefine(validateStageDates);
+
+export const createTournamentStageMutationSchema =
+  stageEditableFields.superRefine(validateStageDates);
+export const updateTournamentStageMutationSchema = stageEditableFields
+  .extend({
+    id: operationalUuidSchema,
+    expected_updated_at: z.string().datetime({ offset: true }),
+  })
+  .superRefine(validateStageDates);
+export const deleteTournamentStageSchema = z.object({
+  id: operationalUuidSchema,
+  expected_updated_at: z.string().datetime({ offset: true }),
+});
 
 export type TournamentStageRow = TableRow<"tournament_stages">;
 export type CreateTournamentStageInput = z.infer<

@@ -10,6 +10,7 @@ export default function robots(): MetadataRoute.Robots {
       disallow: [
         "/admin/",
         "/edit-submission/",
+        "/workspace/",
         "/auth/",
         "/submit-tournament/success",
       ],

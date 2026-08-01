@@ -12,7 +12,7 @@ function sourceFiles(directory: string): string[] {
 }
 
 describe("public navigation route scope", () => {
-  it.each(["admin", "auth", "edit-submission"])(
+  it.each(["admin", "auth", "edit-submission", "workspace"])(
     "does not mount the public header in /%s routes",
     (route) => {
       const directory = join(process.cwd(), "src", "app", route);
