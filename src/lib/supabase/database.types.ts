@@ -107,6 +107,97 @@ type PublishedTournamentRow = {
   updated_at: string;
 };
 
+type TournamentStageRow = {
+  id: string;
+  submission_id: string;
+  name: string;
+  slug: string;
+  stage_type: string;
+  sequence_number: number;
+  start_at: string | null;
+  end_at: string | null;
+  timezone: string | null;
+  format_text: string | null;
+  best_of_default: number | null;
+  team_count: number | null;
+  is_online: boolean | null;
+  location_name: string | null;
+  status: string;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+type TournamentTeamRow = {
+  id: string;
+  submission_id: string;
+  name: string;
+  short_name: string | null;
+  slug: string;
+  logo_url: string | null;
+  region: string | null;
+  seed: number | null;
+  status: string;
+  external_team_id: string | null;
+  source: string;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+type PlayerRow = {
+  id: string;
+  display_name: string;
+  normalized_name: string;
+  real_name: string | null;
+  country_code: string | null;
+  steam_id: string | null;
+  deadlock_account_id: string | null;
+  external_player_id: string | null;
+  source: string;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+type TournamentRosterMemberRow = {
+  id: string;
+  tournament_team_id: string;
+  player_id: string;
+  role: string;
+  is_captain: boolean;
+  is_active: boolean;
+  joined_at: string | null;
+  left_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type TournamentMatchRow = {
+  id: string;
+  submission_id: string;
+  stage_id: string | null;
+  match_number: number | null;
+  round_name: string | null;
+  group_name: string | null;
+  scheduled_at: string | null;
+  best_of: number | null;
+  team_a_id: string | null;
+  team_b_id: string | null;
+  score_a: number | null;
+  score_b: number | null;
+  winner_team_id: string | null;
+  status: string;
+  deadlock_match_id: string | null;
+  stream_url: string | null;
+  vod_url: string | null;
+  duration_seconds: number | null;
+  source: string;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -200,6 +291,142 @@ export type Database = {
         };
         Update: Partial<Omit<PublishedTournamentRow, "id" | "created_at">>;
         Relationships: [];
+      };
+      tournament_stages: {
+        Row: TournamentStageRow;
+        Insert: Pick<
+          TournamentStageRow,
+          "submission_id" | "name" | "slug" | "stage_type" | "sequence_number"
+        > &
+          Partial<
+            Omit<
+              TournamentStageRow,
+              | "id"
+              | "submission_id"
+              | "name"
+              | "slug"
+              | "stage_type"
+              | "sequence_number"
+            >
+          >;
+        Update: Partial<
+          Omit<TournamentStageRow, "id" | "submission_id" | "created_at">
+        >;
+        Relationships: [
+          {
+            foreignKeyName: "tournament_stages_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: false;
+            referencedRelation: "tournament_submissions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tournament_teams: {
+        Row: TournamentTeamRow;
+        Insert: Pick<TournamentTeamRow, "submission_id" | "name" | "slug"> &
+          Partial<
+            Omit<TournamentTeamRow, "id" | "submission_id" | "name" | "slug">
+          >;
+        Update: Partial<
+          Omit<TournamentTeamRow, "id" | "submission_id" | "created_at">
+        >;
+        Relationships: [
+          {
+            foreignKeyName: "tournament_teams_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: false;
+            referencedRelation: "tournament_submissions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      players: {
+        Row: PlayerRow;
+        Insert: Pick<PlayerRow, "display_name" | "normalized_name"> &
+          Partial<Omit<PlayerRow, "id" | "display_name" | "normalized_name">>;
+        Update: Partial<Omit<PlayerRow, "id" | "created_at">>;
+        Relationships: [];
+      };
+      tournament_roster_members: {
+        Row: TournamentRosterMemberRow;
+        Insert: Pick<
+          TournamentRosterMemberRow,
+          "tournament_team_id" | "player_id"
+        > &
+          Partial<
+            Omit<
+              TournamentRosterMemberRow,
+              "id" | "tournament_team_id" | "player_id"
+            >
+          >;
+        Update: Partial<
+          Omit<
+            TournamentRosterMemberRow,
+            "id" | "tournament_team_id" | "player_id" | "created_at"
+          >
+        >;
+        Relationships: [
+          {
+            foreignKeyName: "tournament_roster_members_tournament_team_id_fkey";
+            columns: ["tournament_team_id"];
+            isOneToOne: false;
+            referencedRelation: "tournament_teams";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tournament_roster_members_player_id_fkey";
+            columns: ["player_id"];
+            isOneToOne: false;
+            referencedRelation: "players";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tournament_matches: {
+        Row: TournamentMatchRow;
+        Insert: Pick<TournamentMatchRow, "submission_id"> &
+          Partial<Omit<TournamentMatchRow, "id" | "submission_id">>;
+        Update: Partial<
+          Omit<TournamentMatchRow, "id" | "submission_id" | "created_at">
+        >;
+        Relationships: [
+          {
+            foreignKeyName: "tournament_matches_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: false;
+            referencedRelation: "tournament_submissions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tournament_matches_stage_id_fkey";
+            columns: ["stage_id"];
+            isOneToOne: false;
+            referencedRelation: "tournament_stages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tournament_matches_team_a_id_fkey";
+            columns: ["team_a_id"];
+            isOneToOne: false;
+            referencedRelation: "tournament_teams";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tournament_matches_team_b_id_fkey";
+            columns: ["team_b_id"];
+            isOneToOne: false;
+            referencedRelation: "tournament_teams";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tournament_matches_winner_team_id_fkey";
+            columns: ["winner_team_id"];
+            isOneToOne: false;
+            referencedRelation: "tournament_teams";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: Record<string, never>;

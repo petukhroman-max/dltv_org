@@ -664,6 +664,42 @@ h1 {
   margin: 0;
 }
 
+.operationalSummary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.operationalSummary div {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.operationalSummary dt {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.operationalSummary dd {
+  margin: 0.35rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+.operationalSections {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.operationalSections h3 {
+  margin: 0 0 0.75rem;
+}
+
 .adminDefinition {
   min-width: 0;
 }
@@ -1081,7 +1117,8 @@ h1 {
 
   .adminFilterGrid,
   .adminDefinitionGrid,
-  .moderationGrid {
+  .moderationGrid,
+  .operationalSummary {
     grid-template-columns: 1fr;
   }
 
@@ -1092,7 +1129,8 @@ h1 {
 }
 
 @media (min-width: 42.01rem) and (max-width: 70rem) {
-  .adminFilterGrid {
+  .adminFilterGrid,
+  .operationalSummary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
