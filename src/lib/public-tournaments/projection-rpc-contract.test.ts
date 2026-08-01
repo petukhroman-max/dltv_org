@@ -9,7 +9,9 @@ const sql = readFileSync(
     "supabase/migrations/20260731203000_add_public_tournament_catalog.sql",
   ),
   "utf8",
-).toLowerCase();
+)
+  .replace(/\r\n/g, "\n")
+  .toLowerCase();
 
 describe("public tournament projection migration", () => {
   it("creates a public-safe read model with read-only RLS", () => {

@@ -8,7 +8,7 @@ const migrationFilename = "20260731174500_add_submission_moderation_rpc.sql";
 const migration = readFileSync(
   join(migrationsDirectory, migrationFilename),
   "utf8",
-);
+).replace(/\r\n/g, "\n");
 
 describe("moderation RPC migration contract", () => {
   it("uses a unique 14-digit migration timestamp", () => {

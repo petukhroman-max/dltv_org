@@ -34,10 +34,26 @@ const teamInputFields = z.object({
   is_public: z.boolean().default(true),
 });
 
+const teamEditableFields = teamInputFields.omit({
+  submission_id: true,
+  slug: true,
+  source: true,
+});
+
 export const createTournamentTeamSchema = teamInputFields;
 export const updateTournamentTeamSchema = teamInputFields
   .omit({ submission_id: true })
   .partial();
+
+export const createTournamentTeamMutationSchema = teamEditableFields;
+export const updateTournamentTeamMutationSchema = teamEditableFields.extend({
+  id: operationalUuidSchema,
+  expected_updated_at: z.string().datetime({ offset: true }),
+});
+export const deleteTournamentTeamSchema = z.object({
+  id: operationalUuidSchema,
+  expected_updated_at: z.string().datetime({ offset: true }),
+});
 
 export type TournamentTeamRow = TableRow<"tournament_teams">;
 export type CreateTournamentTeamInput = z.infer<

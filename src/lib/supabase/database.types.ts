@@ -78,6 +78,18 @@ type SubmissionEditTokenRow = {
   created_at: string;
 };
 
+type OrganizerWorkspaceTokenRow = {
+  id: string;
+  submission_id: string;
+  token_hash: string;
+  label: string | null;
+  expires_at: string;
+  revoked_at: string | null;
+  last_used_at: string | null;
+  created_by: string;
+  created_at: string;
+};
+
 type PublishedTournamentRow = {
   id: string;
   submission_id: string;
@@ -279,6 +291,20 @@ export type Database = {
         Update: Partial<Omit<SubmissionEditTokenRow, "id" | "created_at">>;
         Relationships: [];
       };
+      organizer_workspace_tokens: {
+        Row: OrganizerWorkspaceTokenRow;
+        Insert: Omit<
+          OrganizerWorkspaceTokenRow,
+          "id" | "created_at" | "revoked_at" | "last_used_at"
+        > & {
+          id?: string;
+          created_at?: string;
+          revoked_at?: string | null;
+          last_used_at?: string | null;
+        };
+        Update: Partial<Omit<OrganizerWorkspaceTokenRow, "id" | "created_at">>;
+        Relationships: [];
+      };
       published_tournaments: {
         Row: PublishedTournamentRow;
         Insert: Omit<
@@ -459,6 +485,90 @@ export type Database = {
       };
       revoke_submission_edit_tokens: {
         Args: { p_submission_id: string; p_reviewer_id: string };
+        Returns: Json;
+      };
+      create_organizer_workspace_token: {
+        Args: {
+          p_submission_id: string;
+          p_token_hash: string;
+          p_label: string | null;
+          p_expires_at: string;
+          p_created_by: string;
+        };
+        Returns: Json;
+      };
+      revoke_organizer_workspace_token: {
+        Args: { p_submission_id: string; p_reviewer_id: string };
+        Returns: Json;
+      };
+      validate_organizer_workspace_access: {
+        Args: { p_token_hash: string };
+        Returns: Json;
+      };
+      create_tournament_stage: {
+        Args: {
+          p_submission_id: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      update_tournament_stage: {
+        Args: {
+          p_submission_id: string;
+          p_stage_id: string;
+          p_expected_updated_at: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      delete_tournament_stage: {
+        Args: {
+          p_submission_id: string;
+          p_stage_id: string;
+          p_expected_updated_at: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      create_tournament_team: {
+        Args: {
+          p_submission_id: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      update_tournament_team: {
+        Args: {
+          p_submission_id: string;
+          p_team_id: string;
+          p_expected_updated_at: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      delete_tournament_team: {
+        Args: {
+          p_submission_id: string;
+          p_team_id: string;
+          p_expected_updated_at: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
         Returns: Json;
       };
       resubmit_tournament_submission: {

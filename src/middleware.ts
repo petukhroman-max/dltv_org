@@ -3,7 +3,10 @@ import { type NextRequest, NextResponse } from "next/server";
 import { refreshSupabaseSession } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname.startsWith("/edit-submission")) {
+  if (
+    request.nextUrl.pathname.startsWith("/edit-submission") ||
+    request.nextUrl.pathname.startsWith("/workspace")
+  ) {
     const response = NextResponse.next({ request });
     response.headers.set(
       "Cache-Control",
@@ -18,5 +21,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/edit-submission/:path*"],
+  matcher: ["/admin/:path*", "/edit-submission/:path*", "/workspace/:path*"],
 };

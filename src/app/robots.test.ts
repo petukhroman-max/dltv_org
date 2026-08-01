@@ -10,6 +10,7 @@ describe("robots", () => {
       disallow: expect.arrayContaining([
         "/admin/",
         "/edit-submission/",
+        "/workspace/",
         "/auth/",
         "/submit-tournament/success",
       ]),

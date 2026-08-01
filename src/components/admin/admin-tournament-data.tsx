@@ -11,6 +11,7 @@ export type AdminTournamentDataProps = {
   rosters: AdminTournamentRosterMember[];
   matches: AdminTournamentMatch[];
   summary: TournamentOperationalSummary;
+  showStagesAndTeams?: boolean;
 };
 
 function EmptyState({ children }: { children: React.ReactNode }) {
@@ -23,6 +24,7 @@ export function AdminTournamentData({
   rosters,
   matches,
   summary,
+  showStagesAndTeams = true,
 }: AdminTournamentDataProps) {
   return (
     <section className="adminPanel" aria-labelledby="tournament-data-heading">
@@ -64,65 +66,69 @@ export function AdminTournamentData({
       </dl>
 
       <div className="operationalSections">
-        <section aria-labelledby="stages-heading">
-          <h3 id="stages-heading">Stages</h3>
-          {stages.length === 0 ? (
-            <EmptyState>No stages added.</EmptyState>
-          ) : (
-            <div className="adminTableScroll">
-              <table className="adminTable">
-                <thead>
-                  <tr>
-                    <th>Sequence</th>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stages.map((stage) => (
-                    <tr key={stage.id}>
-                      <td>{stage.sequence_number}</td>
-                      <th scope="row">{stage.name}</th>
-                      <td>{stage.stage_type}</td>
-                      <td>{stage.status}</td>
+        {showStagesAndTeams ? (
+          <section aria-labelledby="stages-heading">
+            <h3 id="stages-heading">Stages</h3>
+            {stages.length === 0 ? (
+              <EmptyState>No stages added.</EmptyState>
+            ) : (
+              <div className="adminTableScroll">
+                <table className="adminTable">
+                  <thead>
+                    <tr>
+                      <th>Sequence</th>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+                  </thead>
+                  <tbody>
+                    {stages.map((stage) => (
+                      <tr key={stage.id}>
+                        <td>{stage.sequence_number}</td>
+                        <th scope="row">{stage.name}</th>
+                        <td>{stage.stage_type}</td>
+                        <td>{stage.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        ) : null}
 
-        <section aria-labelledby="teams-heading">
-          <h3 id="teams-heading">Teams</h3>
-          {teams.length === 0 ? (
-            <EmptyState>No teams added.</EmptyState>
-          ) : (
-            <div className="adminTableScroll">
-              <table className="adminTable">
-                <thead>
-                  <tr>
-                    <th>Seed</th>
-                    <th>Name</th>
-                    <th>Region</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {teams.map((team) => (
-                    <tr key={team.id}>
-                      <td>{team.seed ?? "—"}</td>
-                      <th scope="row">{team.name}</th>
-                      <td>{team.region ?? "—"}</td>
-                      <td>{team.status}</td>
+        {showStagesAndTeams ? (
+          <section aria-labelledby="teams-heading">
+            <h3 id="teams-heading">Teams</h3>
+            {teams.length === 0 ? (
+              <EmptyState>No teams added.</EmptyState>
+            ) : (
+              <div className="adminTableScroll">
+                <table className="adminTable">
+                  <thead>
+                    <tr>
+                      <th>Seed</th>
+                      <th>Name</th>
+                      <th>Region</th>
+                      <th>Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+                  </thead>
+                  <tbody>
+                    {teams.map((team) => (
+                      <tr key={team.id}>
+                        <td>{team.seed ?? "—"}</td>
+                        <th scope="row">{team.name}</th>
+                        <td>{team.region ?? "—"}</td>
+                        <td>{team.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        ) : null}
 
         <section aria-labelledby="rosters-heading">
           <h3 id="rosters-heading">Rosters</h3>

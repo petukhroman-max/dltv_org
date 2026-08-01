@@ -107,4 +107,14 @@ describe('"use server" module exports', () => {
     expect(actionSource).not.toContain("initialModerationActionState");
     expect(stateSource).toContain("initialModerationActionState");
   });
+
+  it("discovers the admin and organizer operational action modules", () => {
+    expect(serverActionModules).toEqual(
+      expect.arrayContaining([
+        "src/app/admin/(protected)/submissions/[id]/operational-actions.ts",
+        "src/app/admin/(protected)/submissions/[id]/workspace-link-actions.ts",
+        "src/app/workspace/[token]/actions.ts",
+      ]),
+    );
+  });
 });
