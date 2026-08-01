@@ -47,7 +47,7 @@ describe("TournamentSubmissionForm", () => {
       screen.getByRole("link", {
         name: publicSubmissionCopy.form.browse,
       }),
-    ).toHaveAttribute("href", "/tournaments");
+    ).toHaveAttribute("href", "/en/tournaments");
     expect(screen.queryByRole("link", { name: /Back/i })).toBeNull();
   });
 

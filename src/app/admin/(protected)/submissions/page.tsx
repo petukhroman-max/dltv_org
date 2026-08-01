@@ -5,11 +5,13 @@ import {
   AdminSubmissionsTable,
   type AdminSubmissionListRow,
 } from "@/components/admin/admin-submissions-table";
+import { localizePath } from "@/i18n/config";
+import { getRequestDictionary, getRequestLocale } from "@/i18n/get-dictionary";
 import {
   buildAdminSubmissionsQuery,
   parseAdminSubmissionFilters,
 } from "@/lib/admin/filters";
-import { adminCopy } from "@/lib/admin/copy";
+import { getAdminCopy } from "@/lib/admin/copy";
 import { submissionStatuses } from "@/lib/domain/submission";
 import { listTournamentSubmissions } from "@/lib/repositories/tournament-submissions";
 
@@ -22,6 +24,11 @@ export default async function AdminSubmissionsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   noStore();
+  const [locale, dictionary] = await Promise.all([
+    getRequestLocale(),
+    getRequestDictionary(),
+  ]);
+  const adminCopy = getAdminCopy(locale);
   const filters = parseAdminSubmissionFilters(await searchParams);
   let submissions: AdminSubmissionListRow[] = [];
   let loadFailed = false;
@@ -54,7 +61,7 @@ export default async function AdminSubmissionsPage({
               <option value="">{adminCopy.list.allStatuses}</option>
               {submissionStatuses.map((status) => (
                 <option value={status} key={status}>
-                  {status.replaceAll("_", " ")}
+                  {dictionary.domain.status[status]}
                 </option>
               ))}
             </select>
@@ -89,7 +96,10 @@ export default async function AdminSubmissionsPage({
           <button className="primaryButton" type="submit">
             {adminCopy.list.apply}
           </button>
-          <Link className="textLink" href="/admin/submissions">
+          <Link
+            className="textLink"
+            href={localizePath(locale, "/admin/submissions")}
+          >
             {adminCopy.list.clear}
           </Link>
         </div>
@@ -100,7 +110,10 @@ export default async function AdminSubmissionsPage({
           {adminCopy.list.error}
         </p>
       ) : (
-        <AdminSubmissionsTable submissions={visibleSubmissions} />
+        <AdminSubmissionsTable
+          submissions={visibleSubmissions}
+          locale={locale}
+        />
       )}
 
       {!loadFailed && (filters.page > 1 || hasNextPage) ? (
@@ -108,7 +121,10 @@ export default async function AdminSubmissionsPage({
           {filters.page > 1 ? (
             <Link
               className="secondaryButton"
-              href={buildAdminSubmissionsQuery(filters, filters.page - 1)}
+              href={localizePath(
+                locale,
+                buildAdminSubmissionsQuery(filters, filters.page - 1),
+              )}
             >
               {adminCopy.list.previous}
             </Link>
@@ -118,7 +134,10 @@ export default async function AdminSubmissionsPage({
           {hasNextPage ? (
             <Link
               className="secondaryButton"
-              href={buildAdminSubmissionsQuery(filters, filters.page + 1)}
+              href={localizePath(
+                locale,
+                buildAdminSubmissionsQuery(filters, filters.page + 1),
+              )}
             >
               {adminCopy.list.next}
             </Link>

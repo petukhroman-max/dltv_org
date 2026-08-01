@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 
 import { TournamentDetails } from "@/components/public/tournament-details";
 import { PublicHeader } from "@/components/public/public-header";
+import { localizePath } from "@/i18n/config";
+import { getRequestDictionary, getRequestLocale } from "@/i18n/get-dictionary";
 import { loadPublishedTournament } from "@/lib/public-tournaments/load";
 import {
   sportsEventJsonLd,
@@ -19,10 +21,11 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const locale = await getRequestLocale();
   try {
     const tournament = await loadPublishedTournament(slug);
     return tournament
-      ? tournamentMetadata(tournament)
+      ? tournamentMetadata(tournament, locale)
       : { title: "Tournament not found" };
   } catch {
     return { title: "Tournament unavailable" };
@@ -35,37 +38,51 @@ export default async function TournamentPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const [locale, dictionary] = await Promise.all([
+    getRequestLocale(),
+    getRequestDictionary(),
+  ]);
   let tournament;
   try {
     tournament = await loadPublishedTournament(slug);
   } catch {
     return (
       <>
-        <PublicHeader active="tournaments" />
+        <PublicHeader active="tournaments" locale={locale} />
         <main className="catalogShell">
           <p className="formError" role="alert">
-            Tournament information is temporarily unavailable.
+            {dictionary.catalog.unavailableOne}
           </p>
         </main>
       </>
     );
   }
   if (!tournament) notFound();
-  const jsonLd = sportsEventJsonLd(tournament);
+  const jsonLd = sportsEventJsonLd(tournament, locale);
   const today = new Date().toISOString().slice(0, 10);
   return (
     <>
-      <PublicHeader active="tournaments" />
+      <PublicHeader active="tournaments" locale={locale} />
       <main className="catalogShell">
         <nav className="contextualNavigation" aria-label="Tournament actions">
-          <Link className="textLink" href="/tournaments">
-            ← All tournaments
+          <Link
+            className="textLink"
+            href={localizePath(locale, "/tournaments")}
+          >
+            ← {dictionary.catalog.allTournaments}
           </Link>
-          <Link className="secondaryButton" href="/submit-tournament">
-            Submit a tournament
+          <Link
+            className="secondaryButton"
+            href={localizePath(locale, "/submit-tournament")}
+          >
+            {dictionary.nav.submit}
           </Link>
         </nav>
-        <TournamentDetails tournament={tournament} today={today} />
+        <TournamentDetails
+          tournament={tournament}
+          today={today}
+          locale={locale}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

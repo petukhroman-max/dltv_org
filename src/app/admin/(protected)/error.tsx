@@ -1,6 +1,8 @@
 "use client";
 
-import { adminCopy } from "@/lib/admin/copy";
+import { usePathname } from "next/navigation";
+import { defaultLocale, localeFromPathname } from "@/i18n/config";
+import { getAdminCopy } from "@/lib/admin/copy";
 
 export default function AdminError({
   reset,
@@ -8,17 +10,19 @@ export default function AdminError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const locale = localeFromPathname(usePathname()) ?? defaultLocale;
+  const copy = getAdminCopy(locale);
   return (
     <main className="adminMain">
       <section className="adminPanel">
-        <h1>{adminCopy.error.title}</h1>
-        <p className="description">{adminCopy.error.description}</p>
+        <h1>{copy.error.title}</h1>
+        <p className="description">{copy.error.description}</p>
         <button
           className="primaryButton adminStandaloneAction"
           type="button"
           onClick={reset}
         >
-          {adminCopy.error.retry}
+          {copy.error.retry}
         </button>
       </section>
     </main>

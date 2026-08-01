@@ -3,13 +3,36 @@
   --background: #080b10;
   --surface: #111722;
   --surface-raised: #171f2d;
+  --surface-elevated: #1d2635;
   --text: #f5f7fa;
+  --text-secondary: #c8d0dc;
   --muted: #a9b2c2;
   --border: rgba(255, 255, 255, 0.12);
   --accent: #72f1b8;
   --accent-strong: #42d99a;
   --danger: #ff8b8b;
+  --success: #72f1b8;
+  --warning: #ffd278;
+  --error: #ff8b8b;
   --focus: #9af8cf;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --radius-sm: 0.45rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --text-sm: 0.85rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: clamp(1.75rem, 4vw, 2.75rem);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
 }
 
 .operationalWorkspace {
@@ -181,15 +204,274 @@ body {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(114, 241, 184, 0.12),
-      transparent 34rem
-    ),
-    var(--background);
+  background: var(--background);
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.publicHeaderActions,
+.localeSwitcher,
+.workspacePageHeader,
+.adminSectionTabs,
+.dialogActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.publicHeaderActions {
+  justify-content: flex-end;
+}
+
+.localeSwitcher {
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--border);
+}
+
+.localeSwitcher a {
+  min-width: 2.35rem;
+  padding: 0.45rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-align: center;
+  text-decoration: none;
+}
+
+.localeSwitcher a[aria-current="page"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.workspaceShell {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.workspaceSidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  padding: 1.5rem 1rem;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.workspaceBrand {
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.workspaceTournamentName {
+  margin: 1.25rem 0;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspaceSidebar nav,
+.mobileSectionMenu nav {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.workspaceSidebar nav a,
+.mobileSectionMenu nav a {
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.workspaceSidebar nav a:hover,
+.workspaceSidebar nav a:focus-visible,
+.mobileSectionMenu nav a:hover,
+.workspaceSidebar nav a[aria-current="page"],
+.mobileSectionMenu nav a[aria-current="page"] {
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.workspaceFrame {
+  min-width: 0;
+}
+
+.workspaceTopbar {
+  position: sticky;
+  z-index: 8;
+  top: 0;
+  display: flex;
+  min-height: 4rem;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.65rem clamp(1rem, 4vw, 2rem);
+  border-bottom: 1px solid var(--border);
+  background: rgba(8, 11, 16, 0.96);
+}
+
+.workspaceMain {
+  width: min(100%, 82rem);
+  margin: 0 auto;
+  padding: clamp(1rem, 4vw, 2.5rem);
+}
+
+.workspacePageHeader {
+  justify-content: space-between;
+  margin: 1rem 0 2rem;
+}
+
+.workspacePageHeader h1 {
+  max-width: 24ch;
+  font-size: var(--text-xl);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.mobileSectionMenu {
+  display: none;
+}
+
+.breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  list-style: none;
+}
+
+.breadcrumbs li:not(:last-child)::after {
+  margin-left: 0.35rem;
+  color: #657084;
+  content: "/";
+}
+
+.breadcrumbs a {
+  color: var(--accent);
+  text-underline-offset: 0.2rem;
+}
+
+.adminSectionTabs {
+  position: sticky;
+  z-index: 6;
+  top: 4.75rem;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  padding: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.adminSectionTabs a {
+  flex: 0 0 auto;
+  padding: 0.65rem 0.8rem;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.adminSectionTabs a:hover,
+.adminSectionTabs a:focus-visible {
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.emptyState {
+  padding: 1.25rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.emptyState h3,
+.emptyState p {
+  margin: 0;
+}
+
+.emptyState p {
+  margin-top: 0.45rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.nextActions {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid rgba(114, 241, 184, 0.28);
+  border-radius: var(--radius-md);
+  background: rgba(114, 241, 184, 0.05);
+}
+
+.nextActions h3 {
+  margin: 0;
+}
+
+.nextActions ul {
+  display: grid;
+  gap: 0.55rem;
+  margin-bottom: 0;
+}
+
+.nextActions a {
+  color: var(--accent);
+  font-weight: 750;
+}
+
+.dangerButton {
+  min-height: 2.7rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid rgba(255, 139, 139, 0.5);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 139, 139, 0.08);
+  color: #ffc5c5;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.confirmationDialog {
+  width: min(calc(100% - 2rem), 32rem);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-elevated);
+  color: var(--text);
+}
+
+.confirmationDialog::backdrop {
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.dialogContent {
+  padding: 1.5rem;
+}
+
+.dialogContent h2 {
+  margin-top: 0;
+}
+
+.dialogContent p {
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.dialogActions {
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.dialogActions form {
+  margin: 0;
 }
 
 button,
@@ -1206,6 +1488,59 @@ h1 {
 }
 
 @media (max-width: 42rem) {
+  .publicHeaderActions {
+    width: 100%;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .localeSwitcher {
+    padding: 0;
+    border: 0;
+  }
+
+  .workspaceShell {
+    display: block;
+  }
+
+  .workspaceSidebar {
+    display: none;
+  }
+
+  .workspaceTopbar {
+    justify-content: space-between;
+  }
+
+  .mobileSectionMenu {
+    display: block;
+  }
+
+  .mobileSectionMenu summary {
+    min-height: 2.75rem;
+    padding: 0.75rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .mobileSectionMenu nav {
+    position: absolute;
+    top: 3.5rem;
+    left: 1rem;
+    width: min(18rem, calc(100vw - 2rem));
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-elevated);
+  }
+
+  .workspacePageHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .adminSectionTabs {
+    position: static;
+  }
   .publicHeaderInner {
     align-items: flex-start;
     flex-direction: column;

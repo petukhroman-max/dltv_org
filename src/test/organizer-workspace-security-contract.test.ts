@@ -23,8 +23,9 @@ describe("organizer workspace route and UI security", () => {
   it("uses a dynamic no-store, noindex workspace with generic invalid state", () => {
     expect(page).toContain('dynamic = "force-dynamic"');
     expect(page).toContain("noStore()");
-    expect(page).toContain(
-      "This workspace link is invalid or no longer available.",
+    expect(page).toContain("dictionary.workspace.invalidDescription");
+    expect(source("src/i18n/dictionaries/en.ts")).toContain(
+      "This workspace link is invalid, expired, or has been revoked.",
     );
     const layout = source("src/app/workspace/layout.tsx");
     expect(layout).toContain("index: false");
@@ -32,7 +33,8 @@ describe("organizer workspace route and UI security", () => {
   });
 
   it("sets private response headers for every workspace route", () => {
-    expect(middleware).toContain('startsWith("/workspace")');
+    expect(middleware).toContain('"/workspace"');
+    expect(middleware).toContain("isPrivatePath(internalPath)");
     expect(middleware).toContain("private, no-store, no-cache");
     expect(middleware).toContain("noindex, nofollow, noarchive");
     expect(middleware).toContain("Referrer-Policy");
@@ -79,16 +81,18 @@ describe("organizer workspace route and UI security", () => {
     const runner = source(
       "src/lib/operational-workspace/operational-action-runner.ts",
     );
+    const operationalCopy = source(
+      "src/components/operational/operational-i18n.tsx",
+    );
     for (const label of [
       "Saving stage…",
       "Deleting stage…",
       "Saving team…",
       "Deleting team…",
-      "No stages added.",
-      "No teams added.",
-    ]) {
-      expect(form).toContain(label);
-    }
+      "No stages yet",
+      "No teams yet",
+    ])
+      expect(operationalCopy).toContain(label);
     expect(runner).toContain("This item was updated elsewhere");
     expect(runner).toContain("This stage cannot be deleted");
     expect(runner).toContain("This team cannot be deleted");

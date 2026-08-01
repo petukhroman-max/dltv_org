@@ -3,7 +3,10 @@ import { unstable_noStore as noStore } from "next/cache";
 import type { ReactNode } from "react";
 
 import { logoutAdminAction } from "@/app/admin/actions";
-import { adminCopy } from "@/lib/admin/copy";
+import { LocaleSwitcher } from "@/components/ui/locale-switcher";
+import { localizePath } from "@/i18n/config";
+import { getRequestLocale } from "@/i18n/get-dictionary";
+import { getAdminCopy } from "@/lib/admin/copy";
 import { requireAdmin } from "@/lib/admin/require-admin";
 
 export const dynamic = "force-dynamic";
@@ -15,27 +18,33 @@ export default async function ProtectedAdminLayout({
   children: ReactNode;
 }) {
   noStore();
+  const locale = await getRequestLocale();
+  const adminCopy = getAdminCopy(locale);
   const admin = await requireAdmin();
 
   return (
     <div className="adminShell">
       <header className="adminHeader">
         <div>
-          <Link className="adminBrand" href="/admin/submissions">
+          <Link
+            className="adminBrand"
+            href={localizePath(locale, "/admin/submissions")}
+          >
             {adminCopy.brand}
           </Link>
           <span className="adminSectionLabel">{adminCopy.nav.section}</span>
         </div>
         <nav className="adminNav" aria-label="Admin navigation">
           <Link
-            href="/admin/submissions"
+            href={localizePath(locale, "/admin/submissions")}
             aria-current="page"
             className="adminNavLink"
           >
             {adminCopy.nav.submissions}
           </Link>
           <span className="adminEmail">{admin.email}</span>
-          <form action={logoutAdminAction}>
+          <LocaleSwitcher locale={locale} label={adminCopy.nav.section} />
+          <form action={logoutAdminAction.bind(null, locale)}>
             <button className="secondaryButton" type="submit">
               {adminCopy.nav.logout}
             </button>

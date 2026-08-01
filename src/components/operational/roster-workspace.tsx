@@ -3,6 +3,15 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
+import {
+  localizedOperationalMessage,
+  OperationalI18nProvider,
+  useOperationalCopy,
+  useOperationalLocale,
+} from "@/components/operational/operational-i18n";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import type { Locale } from "@/i18n/config";
 import type { SafeRosterMember } from "@/lib/domain/roster-management";
 import type { AdminTournamentTeam } from "@/lib/domain/tournament-team";
 import {
@@ -24,13 +33,6 @@ export type RosterActions = {
 };
 
 const roles = ["player", "substitute", "coach", "manager"] as const;
-const roleLabels = {
-  player: "Player",
-  substitute: "Substitute",
-  coach: "Coach",
-  manager: "Manager",
-} as const;
-
 function Submit({
   pending,
   children,
@@ -47,15 +49,23 @@ function Submit({
 }
 
 function Notice({ state }: { state: RosterActionState }) {
+  const copy = useOperationalCopy();
+  const locale = useOperationalLocale();
   if (!state.message && !Object.keys(state.fieldErrors).length) return null;
   return (
     <div
       className={state.status === "success" ? "adminNotice" : "formError"}
       role={state.status === "success" ? "status" : "alert"}
     >
-      {state.message ? <p>{state.message}</p> : null}
+      {state.message ? (
+        <p>
+          {locale === "en"
+            ? state.message
+            : localizedOperationalMessage(state.message, copy)}
+        </p>
+      ) : null}
       {Object.entries(state.fieldErrors).map(([name, value]) => (
-        <p key={name}>{value}</p>
+        <p key={name}>{locale === "en" ? value : copy.genericError}</p>
       ))}
     </div>
   );
@@ -68,35 +78,39 @@ function RoleFields({
   defaultRole?: string;
   captain?: boolean;
 }) {
+  const copy = useOperationalCopy();
+  const locale = useOperationalLocale();
   return (
     <>
       <label>
-        Role
+        {copy.role}
         <select name="role" defaultValue={defaultRole}>
           {roles.map((role) => (
             <option key={role} value={role}>
-              {roleLabels[role]}
+              {copy[role]}
             </option>
           ))}
         </select>
       </label>
       <label className="checkboxRow">
         <input name="is_captain" type="checkbox" defaultChecked={captain} />{" "}
-        Captain
+        {copy.captainLabel}
       </label>
       <p className="supportingText">
-        Assigning this player as captain will replace the current captain. Only
-        the player role can be captain.
+        {locale === "ru"
+          ? "Назначение нового капитана заменит текущего. Капитаном может быть только игрок."
+          : "Assigning this player as captain will replace the current captain. Only the player role can be captain."}
       </p>
     </>
   );
 }
 
 function PlayerFields({ member }: { member?: SafeRosterMember }) {
+  const copy = useOperationalCopy();
   return (
     <div className="operationalFormGrid">
       <label>
-        Display name
+        {copy.displayName}
         <input
           name="display_name"
           required
@@ -105,7 +119,7 @@ function PlayerFields({ member }: { member?: SafeRosterMember }) {
         />
       </label>
       <label>
-        Country code
+        {copy.countryCode}
         <input
           name="country_code"
           maxLength={2}
@@ -114,7 +128,7 @@ function PlayerFields({ member }: { member?: SafeRosterMember }) {
         />
       </label>
       <label>
-        Steam ID
+        {copy.steamId}
         <input
           name="steam_id"
           maxLength={100}
@@ -122,7 +136,7 @@ function PlayerFields({ member }: { member?: SafeRosterMember }) {
         />
       </label>
       <label>
-        Deadlock account ID
+        {copy.deadlockId}
         <input
           name="deadlock_account_id"
           maxLength={100}
@@ -140,26 +154,26 @@ function CreatePlayer({
   teamId: string;
   action: RosterServerAction;
 }) {
+  const copy = useOperationalCopy();
   const [state, formAction] = useActionState(action, initialRosterActionState);
   return (
     <details className="operationalEditor">
-      <summary>Create player and add to roster</summary>
+      <summary>{copy.createPlayer}</summary>
       <form action={formAction}>
         <input type="hidden" name="tournament_team_id" value={teamId} />
         <PlayerFields />
         <div className="operationalFormGrid">
           <RoleFields />
           <label>
-            Joined at (optional)
+            {copy.joinedAt}
             <input name="joined_at" placeholder="2026-08-01T10:00:00+00:00" />
           </label>
         </div>
         <label className="checkboxRow">
-          <input name="confirm_same_name" type="checkbox" /> Create a different
-          player even if the same display name exists
+          <input name="confirm_same_name" type="checkbox" /> {copy.sameName}
         </label>
         <Notice state={state} />
-        <Submit pending="Adding player…">Add player</Submit>
+        <Submit pending={copy.addingPlayer}>{copy.addPlayer}</Submit>
       </form>
     </details>
   );
@@ -174,16 +188,17 @@ function SearchAndAdd({
   search: RosterSearchServerAction;
   add: RosterServerAction;
 }) {
+  const copy = useOperationalCopy();
   const [searchState, searchAction] = useActionState(
     search,
     initialRosterSearchState,
   );
   return (
     <details className="operationalEditor">
-      <summary>Find existing player</summary>
+      <summary>{copy.findPlayer}</summary>
       <form action={searchAction} className="inlineForm">
         <label>
-          Display name or platform ID
+          {copy.query}
           <input
             name="query"
             minLength={2}
@@ -192,7 +207,7 @@ function SearchAndAdd({
             defaultValue={searchState.values.query ?? ""}
           />
         </label>
-        <Submit pending="Searching…">Search</Submit>
+        <Submit pending={copy.searching}>{copy.search}</Submit>
       </form>
       <Notice state={searchState} />
       {searchState.results.map((player) => (
@@ -216,13 +231,14 @@ function ExistingResult({
   player: SafeRosterMember["player"];
   action: RosterServerAction;
 }) {
+  const copy = useOperationalCopy();
   const [state, formAction] = useActionState(action, initialRosterActionState);
   return (
     <article className="operationalCard">
       <strong>{player.display_name}</strong>
       <p>
-        {player.country_code ?? "No country"} · Steam: {player.steam_id ?? "—"}{" "}
-        · Deadlock: {player.deadlock_account_id ?? "—"}
+        {player.country_code ?? copy.noCountry} · Steam:{" "}
+        {player.steam_id ?? "—"} · Deadlock: {player.deadlock_account_id ?? "—"}
       </p>
       <form action={formAction}>
         <input type="hidden" name="tournament_team_id" value={teamId} />
@@ -231,7 +247,7 @@ function ExistingResult({
           <RoleFields />
         </div>
         <Notice state={state} />
-        <Submit pending="Adding…">Use existing player</Submit>
+        <Submit pending={copy.addingPlayer}>{copy.useExisting}</Submit>
       </form>
     </article>
   );
@@ -244,6 +260,7 @@ function ActiveMember({
   member: SafeRosterMember;
   actions: RosterActions;
 }) {
+  const copy = useOperationalCopy();
   const [profileState, profileAction] = useActionState(
     actions.updatePlayer,
     initialRosterActionState,
@@ -262,30 +279,26 @@ function ActiveMember({
         <div>
           <strong>
             {member.player.display_name}
-            {member.is_captain ? " · Captain" : ""}
+            {member.is_captain ? ` · ${copy.captain}` : ""}
           </strong>
           <p>
-            {roleLabels[member.role]} ·{" "}
-            {member.player.country_code ?? "No country"}
+            {copy[member.role]} · {member.player.country_code ?? copy.noCountry}
           </p>
         </div>
       </div>
       <dl className="operationalFacts">
         <div>
-          <dt>Steam ID</dt>
-          <dd>{member.player.steam_id ?? "Not set"}</dd>
+          <dt>{copy.steamId}</dt>
+          <dd>{member.player.steam_id ?? copy.notSet}</dd>
         </div>
         <div>
-          <dt>Deadlock ID</dt>
-          <dd>{member.player.deadlock_account_id ?? "Not set"}</dd>
+          <dt>{copy.deadlockId}</dt>
+          <dd>{member.player.deadlock_account_id ?? copy.notSet}</dd>
         </div>
       </dl>
       <details className="operationalEditor">
-        <summary>Edit player profile</summary>
-        <p className="adminWarning">
-          This player profile may be used in other tournaments. Profile changes
-          can affect those rosters.
-        </p>
+        <summary>{copy.editProfile}</summary>
+        <p className="adminWarning">{copy.sharedProfileWarning}</p>
         <form action={profileAction}>
           <input type="hidden" name="player_id" value={member.player.id} />
           <input
@@ -295,11 +308,11 @@ function ActiveMember({
           />
           <PlayerFields member={member} />
           <Notice state={profileState} />
-          <Submit pending="Saving profile…">Save profile</Submit>
+          <Submit pending={copy.savingProfile}>{copy.saveProfile}</Submit>
         </form>
       </details>
       <details className="operationalEditor">
-        <summary>Edit membership</summary>
+        <summary>{copy.editMembership}</summary>
         <form action={memberAction}>
           <input type="hidden" name="membership_id" value={member.id} />
           <input
@@ -316,28 +329,33 @@ function ActiveMember({
             <RoleFields defaultRole={member.role} captain={member.is_captain} />
           </div>
           <Notice state={memberState} />
-          <Submit pending="Saving membership…">Save membership</Submit>
+          <Submit pending={copy.savingMembership}>{copy.saveMembership}</Submit>
         </form>
       </details>
-      <details className="deleteConfirmation">
-        <summary>Remove from roster</summary>
-        <p>The historical membership will be retained.</p>
-        <form action={removeAction}>
-          <input type="hidden" name="membership_id" value={member.id} />
-          <input
-            type="hidden"
-            name="tournament_team_id"
-            value={member.tournament_team_id}
-          />
-          <input
-            type="hidden"
-            name="expected_updated_at"
-            value={member.updated_at}
-          />
-          <Notice state={removeState} />
-          <Submit pending="Removing…">Remove from roster</Submit>
-        </form>
-      </details>
+      <div className="deleteConfirmation">
+        <ConfirmationDialog
+          trigger={copy.removeRoster}
+          title={copy.removeRoster}
+          description={copy.removeQuestion(member.player.display_name)}
+          cancelLabel={copy.cancel}
+        >
+          <form action={removeAction}>
+            <input type="hidden" name="membership_id" value={member.id} />
+            <input
+              type="hidden"
+              name="tournament_team_id"
+              value={member.tournament_team_id}
+            />
+            <input
+              type="hidden"
+              name="expected_updated_at"
+              value={member.updated_at}
+            />
+            <Notice state={removeState} />
+            <Submit pending={copy.removing}>{copy.removeRoster}</Submit>
+          </form>
+        </ConfirmationDialog>
+      </div>
     </article>
   );
 }
@@ -349,11 +367,16 @@ function InactiveMember({
   member: SafeRosterMember;
   action: RosterServerAction;
 }) {
+  const copy = useOperationalCopy();
+  const locale = useOperationalLocale();
   const [state, formAction] = useActionState(action, initialRosterActionState);
   return (
     <article className="operationalCard">
       <strong>{member.player.display_name}</strong>
-      <p>Previously {roleLabels[member.role]}</p>
+      <p>
+        {locale === "ru" ? "Предыдущая роль" : "Previously"}:{" "}
+        {copy[member.role]}
+      </p>
       <form action={formAction}>
         <input type="hidden" name="membership_id" value={member.id} />
         <input
@@ -367,17 +390,17 @@ function InactiveMember({
           value={member.updated_at}
         />
         <label>
-          Role
+          {copy.role}
           <select name="role" defaultValue={member.role}>
             {roles.map((role) => (
               <option key={role} value={role}>
-                {roleLabels[role]}
+                {copy[role]}
               </option>
             ))}
           </select>
         </label>
         <Notice state={state} />
-        <Submit pending="Restoring…">Restore to roster</Submit>
+        <Submit pending={copy.restoring}>{copy.restore}</Submit>
       </form>
     </article>
   );
@@ -387,40 +410,63 @@ export function RosterWorkspace({
   teams,
   members,
   actions,
+  locale = "en",
+}: {
+  teams: AdminTournamentTeam[];
+  members: SafeRosterMember[];
+  actions: RosterActions;
+  locale?: Locale;
+}) {
+  return (
+    <OperationalI18nProvider locale={locale}>
+      <RosterWorkspaceContent
+        teams={teams}
+        members={members}
+        actions={actions}
+      />
+    </OperationalI18nProvider>
+  );
+}
+
+function RosterWorkspaceContent({
+  teams,
+  members,
+  actions,
 }: {
   teams: AdminTournamentTeam[];
   members: SafeRosterMember[];
   actions: RosterActions;
 }) {
+  const copy = useOperationalCopy();
   const activeCount = members.filter((member) => member.is_active).length;
   const inactiveCount = members.length - activeCount;
   return (
     <section className="adminPanel" aria-labelledby="workspace-rosters">
       <div className="adminPanelHeading">
         <div>
-          <h2 id="workspace-rosters">Rosters</h2>
-          <p className="supportingText">
-            Manage active players and retain historical memberships. Real names
-            are never shown here.
-          </p>
+          <h2 id="workspace-rosters">{copy.rostersTitle}</h2>
+          <p className="supportingText">{copy.rostersHelp}</p>
         </div>
       </div>
       <dl className="operationalSummary" aria-label="Roster summary">
         <div>
-          <dt>Active members</dt>
+          <dt>{copy.activeMembers}</dt>
           <dd>{activeCount}</dd>
         </div>
         <div>
-          <dt>Former members</dt>
+          <dt>{copy.formerMembers}</dt>
           <dd>{inactiveCount}</dd>
         </div>
         <div>
-          <dt>Unique players</dt>
+          <dt>{copy.uniquePlayers}</dt>
           <dd>{new Set(members.map((member) => member.player_id)).size}</dd>
         </div>
       </dl>
       {teams.length === 0 ? (
-        <p className="adminEmpty">Add a team before managing rosters.</p>
+        <EmptyState
+          title={copy.teamsEmptyTitle}
+          description={copy.noTeamsForRoster}
+        />
       ) : (
         teams.map((team) => {
           const roster = members.filter(
@@ -450,7 +496,7 @@ export function RosterWorkspace({
                   );
                   return roleMembers.length ? (
                     <section key={role} className="rosterRoleGroup">
-                      <h4>{roleLabels[role]}</h4>
+                      <h4>{copy[role]}</h4>
                       <div className="operationalCards">
                         {roleMembers.map((member) => (
                           <ActiveMember
@@ -464,11 +510,16 @@ export function RosterWorkspace({
                   ) : null;
                 })
               ) : (
-                <p className="adminEmpty">No active roster members.</p>
+                <EmptyState
+                  title={copy.noRosterTitle}
+                  description={copy.noRoster}
+                />
               )}
               {inactive.length ? (
                 <details className="operationalEditor">
-                  <summary>Former roster members ({inactive.length})</summary>
+                  <summary>
+                    {copy.formerMembers} ({inactive.length})
+                  </summary>
                   <div className="operationalCards">
                     {inactive.map((member) => (
                       <InactiveMember

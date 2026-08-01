@@ -1,4 +1,5 @@
 import { formatAdminDateTime } from "@/lib/admin/presentation";
+import type { Locale } from "@/i18n/config";
 import type { AdminTournamentMatch } from "@/lib/domain/tournament-match";
 import type { AdminTournamentRosterMember } from "@/lib/domain/tournament-roster";
 import type { AdminTournamentStage } from "@/lib/domain/tournament-stage";
@@ -13,6 +14,7 @@ export type AdminTournamentDataProps = {
   summary: TournamentOperationalSummary;
   showStagesAndTeams?: boolean;
   showRosters?: boolean;
+  locale?: Locale;
 };
 
 function EmptyState({ children }: { children: React.ReactNode }) {
@@ -27,42 +29,52 @@ export function AdminTournamentData({
   summary,
   showStagesAndTeams = true,
   showRosters = true,
+  locale = "en",
 }: AdminTournamentDataProps) {
+  const t = (en: string, ru: string) => (locale === "ru" ? ru : en);
   return (
-    <section className="adminPanel" aria-labelledby="tournament-data-heading">
+    <section
+      id="tournament-data"
+      className="adminPanel"
+      aria-labelledby="tournament-data-heading"
+    >
       <div className="adminPanelHeading">
         <div>
-          <h2 id="tournament-data-heading">Tournament data</h2>
+          <h2 id="tournament-data-heading">
+            {t("Tournament data", "Данные турнира")}
+          </h2>
           <p className="supportingText">
-            Operational data model ready. Editing will be added in the next
-            step.
+            {t(
+              "Review operational structure and current counts.",
+              "Проверяйте структуру турнира и текущие показатели.",
+            )}
           </p>
         </div>
       </div>
 
       <dl className="operationalSummary" aria-label="Operational summary">
         <div>
-          <dt>Stages</dt>
+          <dt>{t("Stages", "Этапы")}</dt>
           <dd>{summary.stages_count}</dd>
         </div>
         <div>
-          <dt>Teams</dt>
+          <dt>{t("Teams", "Команды")}</dt>
           <dd>{summary.teams_count}</dd>
         </div>
         <div>
-          <dt>Players</dt>
+          <dt>{t("Players", "Игроки")}</dt>
           <dd>{summary.players_count}</dd>
         </div>
         <div>
-          <dt>Matches</dt>
+          <dt>{t("Matches", "Матчи")}</dt>
           <dd>{summary.matches_count}</dd>
         </div>
         <div>
-          <dt>Scheduled</dt>
+          <dt>{t("Scheduled", "Запланировано")}</dt>
           <dd>{summary.scheduled_matches_count}</dd>
         </div>
         <div>
-          <dt>Completed</dt>
+          <dt>{t("Completed", "Завершено")}</dt>
           <dd>{summary.completed_matches_count}</dd>
         </div>
       </dl>
@@ -70,18 +82,20 @@ export function AdminTournamentData({
       <div className="operationalSections">
         {showStagesAndTeams ? (
           <section aria-labelledby="stages-heading">
-            <h3 id="stages-heading">Stages</h3>
+            <h3 id="stages-heading">{t("Stages", "Этапы")}</h3>
             {stages.length === 0 ? (
-              <EmptyState>No stages added.</EmptyState>
+              <EmptyState>
+                {t("No stages added.", "Этапов пока нет.")}
+              </EmptyState>
             ) : (
               <div className="adminTableScroll">
                 <table className="adminTable">
                   <thead>
                     <tr>
-                      <th>Sequence</th>
-                      <th>Name</th>
-                      <th>Type</th>
-                      <th>Status</th>
+                      <th>{t("Sequence", "Порядок")}</th>
+                      <th>{t("Name", "Название")}</th>
+                      <th>{t("Type", "Тип")}</th>
+                      <th>{t("Status", "Статус")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -102,18 +116,20 @@ export function AdminTournamentData({
 
         {showStagesAndTeams ? (
           <section aria-labelledby="teams-heading">
-            <h3 id="teams-heading">Teams</h3>
+            <h3 id="teams-heading">{t("Teams", "Команды")}</h3>
             {teams.length === 0 ? (
-              <EmptyState>No teams added.</EmptyState>
+              <EmptyState>
+                {t("No teams added.", "Команд пока нет.")}
+              </EmptyState>
             ) : (
               <div className="adminTableScroll">
                 <table className="adminTable">
                   <thead>
                     <tr>
-                      <th>Seed</th>
-                      <th>Name</th>
-                      <th>Region</th>
-                      <th>Status</th>
+                      <th>{t("Seed", "Посев")}</th>
+                      <th>{t("Name", "Название")}</th>
+                      <th>{t("Region", "Регион")}</th>
+                      <th>{t("Status", "Статус")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -134,18 +150,20 @@ export function AdminTournamentData({
 
         {showRosters ? (
           <section aria-labelledby="rosters-heading">
-            <h3 id="rosters-heading">Rosters</h3>
+            <h3 id="rosters-heading">{t("Rosters", "Составы")}</h3>
             {rosters.length === 0 ? (
-              <EmptyState>No roster members added.</EmptyState>
+              <EmptyState>
+                {t("No roster members added.", "Участников состава пока нет.")}
+              </EmptyState>
             ) : (
               <div className="adminTableScroll">
                 <table className="adminTable">
                   <thead>
                     <tr>
-                      <th>Team</th>
-                      <th>Player</th>
-                      <th>Role</th>
-                      <th>Active</th>
+                      <th>{t("Team", "Команда")}</th>
+                      <th>{t("Player", "Игрок")}</th>
+                      <th>{t("Role", "Роль")}</th>
+                      <th>{t("Active", "Активен")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -154,7 +172,9 @@ export function AdminTournamentData({
                         <td>{member.team.name}</td>
                         <th scope="row">{member.player.display_name}</th>
                         <td>{member.role}</td>
-                        <td>{member.is_active ? "Yes" : "No"}</td>
+                        <td>
+                          {member.is_active ? t("Yes", "Да") : t("No", "Нет")}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -165,20 +185,22 @@ export function AdminTournamentData({
         ) : null}
 
         <section aria-labelledby="matches-heading">
-          <h3 id="matches-heading">Matches</h3>
+          <h3 id="matches-heading">{t("Matches", "Матчи")}</h3>
           {matches.length === 0 ? (
-            <EmptyState>No matches added.</EmptyState>
+            <EmptyState>
+              {t("No matches added.", "Матчей пока нет.")}
+            </EmptyState>
           ) : (
             <div className="adminTableScroll">
               <table className="adminTable">
                 <thead>
                   <tr>
-                    <th>Match</th>
-                    <th>Stage</th>
-                    <th>Teams</th>
-                    <th>Score</th>
-                    <th>Scheduled</th>
-                    <th>Status</th>
+                    <th>{t("Match", "Матч")}</th>
+                    <th>{t("Stage", "Этап")}</th>
+                    <th>{t("Teams", "Команды")}</th>
+                    <th>{t("Score", "Счёт")}</th>
+                    <th>{t("Scheduled", "Время")}</th>
+                    <th>{t("Status", "Статус")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -193,7 +215,7 @@ export function AdminTournamentData({
                       <td>
                         {match.score_a ?? "—"} : {match.score_b ?? "—"}
                       </td>
-                      <td>{formatAdminDateTime(match.scheduled_at)}</td>
+                      <td>{formatAdminDateTime(match.scheduled_at, locale)}</td>
                       <td>{match.status}</td>
                     </tr>
                   ))}

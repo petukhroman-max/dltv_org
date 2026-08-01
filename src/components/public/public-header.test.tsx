@@ -13,14 +13,16 @@ describe("PublicHeader", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "DLTV Organizer Portal" }),
-    ).toHaveAttribute("href", "/");
+    ).toHaveAttribute("href", "/en");
     expect(
       screen.getByRole("link", { name: "Browse tournaments" }),
-    ).toHaveAttribute("href", "/tournaments");
+    ).toHaveAttribute("href", "/en/tournaments");
     expect(
       screen.getByRole("link", { name: "Submit a tournament" }),
-    ).toHaveAttribute("href", "/submit-tournament");
-    expect(screen.queryByRole("link", { current: "page" })).toBeNull();
+    ).toHaveAttribute("href", "/en/submit-tournament");
+    expect(
+      screen.getByRole("link", { name: "EN", current: "page" }),
+    ).toBeInTheDocument();
   });
 
   it.each([

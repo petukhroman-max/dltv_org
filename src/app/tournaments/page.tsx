@@ -3,6 +3,9 @@ import Link from "next/link";
 
 import { PublicHeader } from "@/components/public/public-header";
 import { TournamentCard } from "@/components/public/tournament-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { localizePath, type Locale } from "@/i18n/config";
+import { getRequestDictionary, getRequestLocale } from "@/i18n/get-dictionary";
 import { absolutePublicUrl } from "@/lib/public-tournaments/seo";
 import { listPublishedTournaments } from "@/lib/public-tournaments/public-tournaments.repository";
 import type { TournamentLifecycle } from "@/lib/public-tournaments/public-tournaments.types";
@@ -10,24 +13,42 @@ import type { TournamentLifecycle } from "@/lib/public-tournaments/public-tourna
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export const metadata: Metadata = {
-  title: "Deadlock tournaments | DLTV",
-  description:
-    "Browse upcoming, ongoing, and completed Deadlock tournaments published by DLTV.",
-  alternates: { canonical: absolutePublicUrl("/tournaments") },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const [locale, dictionary] = await Promise.all([
+    getRequestLocale(),
+    getRequestDictionary(),
+  ]);
+  const path = localizePath(locale, "/tournaments");
+  return {
+    title: `${dictionary.catalog.title} | DLTV`,
+    description: dictionary.catalog.description,
+    alternates: {
+      canonical: absolutePublicUrl(path),
+      languages: {
+        en: absolutePublicUrl("/en/tournaments"),
+        ru: absolutePublicUrl("/ru/tournaments"),
+      },
+    },
+  };
+}
 
 function firstString(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function catalogHref(lifecycle: string, region: string, page?: number) {
+function catalogHref(
+  locale: Locale,
+  lifecycle: string,
+  region: string,
+  page?: number,
+) {
   const params = new URLSearchParams();
   if (lifecycle !== "all") params.set("lifecycle", lifecycle);
   if (region) params.set("region", region);
   if (page && page > 1) params.set("page", String(page));
   const query = params.toString();
-  return query ? `/tournaments?${query}` : "/tournaments";
+  const path = localizePath(locale, "/tournaments");
+  return query ? `${path}?${query}` : path;
 }
 
 export default async function TournamentsPage({
@@ -36,6 +57,11 @@ export default async function TournamentsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
+  const [locale, dictionary] = await Promise.all([
+    getRequestLocale(),
+    getRequestDictionary(),
+  ]);
+  const copy = dictionary.catalog;
   const requestedLifecycle = firstString(params.lifecycle);
   const lifecycle: TournamentLifecycle | "all" = [
     "upcoming",
@@ -59,10 +85,11 @@ export default async function TournamentsPage({
   } catch {
     return (
       <>
-        <PublicHeader active="tournaments" />
+        <PublicHeader active="tournaments" locale={locale} />
         <main className="catalogShell">
+          <h1>{copy.title}</h1>
           <p className="formError" role="alert">
-            Tournaments are temporarily unavailable. Please try again later.
+            {copy.unavailable}
           </p>
         </main>
       </>
@@ -71,29 +98,29 @@ export default async function TournamentsPage({
 
   return (
     <>
-      <PublicHeader active="tournaments" />
+      <PublicHeader active="tournaments" locale={locale} />
       <main className="catalogShell">
         <header className="catalogHeader">
-          <p className="eyebrow">DLTV public catalog</p>
-          <h1>Deadlock tournaments</h1>
-          <p className="description">
-            Discover upcoming events, follow tournaments in progress, and browse
-            recently completed competitions.
-          </p>
+          <p className="eyebrow">{copy.eyebrow}</p>
+          <h1>{copy.title}</h1>
+          <p className="description">{copy.description}</p>
           <div className="contextualActions">
-            <Link className="secondaryButton" href="/submit-tournament">
-              Submit a tournament
+            <Link
+              className="secondaryButton"
+              href={localizePath(locale, "/submit-tournament")}
+            >
+              {dictionary.nav.submit}
             </Link>
           </div>
         </header>
-        <nav className="lifecycleFilters" aria-label="Tournament lifecycle">
+        <nav className="lifecycleFilters" aria-label={copy.lifecycle}>
           {["all", "upcoming", "ongoing", "completed"].map((value) => (
             <Link
               key={value}
-              href={catalogHref(value, region)}
+              href={catalogHref(locale, value, region)}
               aria-current={lifecycle === value ? "page" : undefined}
             >
-              {value[0].toUpperCase() + value.slice(1)}
+              {copy[value as "all" | TournamentLifecycle]}
             </Link>
           ))}
         </nav>
@@ -101,7 +128,7 @@ export default async function TournamentsPage({
           {lifecycle !== "all" ? (
             <input type="hidden" name="lifecycle" value={lifecycle} />
           ) : null}
-          <label htmlFor="region">Region</label>
+          <label htmlFor="region">{copy.region}</label>
           <input
             id="region"
             name="region"
@@ -110,16 +137,22 @@ export default async function TournamentsPage({
             defaultValue={region}
           />
           <button className="secondaryButton" type="submit">
-            Apply
+            {dictionary.common.apply}
           </button>
           {region ? (
-            <Link className="textLink" href={catalogHref(lifecycle, "")}>
-              Clear region
+            <Link
+              className="textLink"
+              href={catalogHref(locale, lifecycle, "")}
+            >
+              {copy.clearRegion}
             </Link>
           ) : null}
         </form>
         {result.tournaments.length === 0 ? (
-          <p className="adminEmpty">No tournaments have been published yet.</p>
+          <EmptyState
+            title={copy.emptyTitle}
+            description={copy.emptyDescription}
+          />
         ) : (
           <section
             className="tournamentGrid"
@@ -130,33 +163,36 @@ export default async function TournamentsPage({
                 key={tournament.id}
                 tournament={tournament}
                 today={today}
+                locale={locale}
               />
             ))}
           </section>
         )}
         {result.totalPages > 1 ? (
-          <nav className="adminPagination" aria-label="Tournament pages">
+          <nav className="adminPagination" aria-label={copy.pagination}>
             {result.page > 1 ? (
               <Link
                 className="secondaryButton"
                 rel="prev"
-                href={catalogHref(lifecycle, region, result.page - 1)}
+                href={catalogHref(locale, lifecycle, region, result.page - 1)}
               >
-                Previous
+                {dictionary.common.previous}
               </Link>
             ) : (
               <span />
             )}
             <span>
-              Page {result.page} of {result.totalPages}
+              {copy.page
+                .replace("{page}", String(result.page))
+                .replace("{total}", String(result.totalPages))}
             </span>
             {result.page < result.totalPages ? (
               <Link
                 className="secondaryButton"
                 rel="next"
-                href={catalogHref(lifecycle, region, result.page + 1)}
+                href={catalogHref(locale, lifecycle, region, result.page + 1)}
               >
-                Next
+                {dictionary.common.next}
               </Link>
             ) : null}
           </nav>

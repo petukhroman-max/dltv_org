@@ -1,3 +1,6 @@
+import type { Locale } from "@/i18n/config";
+import type { DictionaryShape } from "@/i18n/types";
+
 export const adminCopy = {
   brand: "DLTV Organizer Portal",
   nav: {
@@ -77,3 +80,82 @@ export const adminCopy = {
     back: "Back to submissions",
   },
 } as const;
+
+export const ruAdminCopy = {
+  brand: "DLTV Organizer Portal",
+  nav: { section: "Администратор", submissions: "Заявки", logout: "Выйти" },
+  login: {
+    eyebrow: "DLTV Organizer Portal",
+    title: "Вход для администратора",
+    description:
+      "Укажите email администратора. Supabase отправит безопасную ссылку, если адрес имеет доступ.",
+    emailLabel: "Email",
+    submit: "Отправить ссылку",
+    submitting: "Отправка ссылки…",
+    invalidEmail: "Укажите корректный email.",
+    genericSuccess: "Если адрес имеет доступ, проверьте входящие сообщения.",
+    callbackError: "Не удалось завершить вход. Запросите новую ссылку.",
+  },
+  unauthorized: {
+    title: "Доступ запрещён",
+    description: "У этой учётной записи нет доступа к администрированию.",
+    back: "Назад ко входу",
+  },
+  list: {
+    eyebrow: "Модерация",
+    title: "Заявки на турниры",
+    description:
+      "Проверяйте заявки организаторов и переходите к модерации и данным турнира.",
+    filters: "Фильтры",
+    status: "Статус",
+    allStatuses: "Все статусы",
+    region: "Регион",
+    startFrom: "Начало с",
+    startTo: "Начало до",
+    apply: "Применить",
+    clear: "Очистить",
+    empty: "Заявки не найдены.",
+    error: "Не удалось загрузить заявки.",
+    columns: {
+      tournament: "Турнир",
+      organizer: "Организатор",
+      region: "Регион",
+      startDate: "Дата начала",
+      status: "Статус",
+      submittedAt: "Отправлена",
+      updatedAt: "Обновлена",
+      view: "Открыть",
+    },
+    previous: "Предыдущая страница",
+    next: "Следующая страница",
+  },
+  details: {
+    back: "Назад к заявкам",
+    tournament: "Турнир",
+    organizer: "Организатор",
+    links: "Ссылки",
+    audit: "История изменений",
+    noEvents: "Событий пока нет.",
+    notAvailable: "Не указано",
+    online: "Онлайн",
+    offline: "Офлайн",
+    consentToPublish: "Согласие на публикацию",
+    consentVersion: "Версия согласия",
+    unknownMetadata: "Дополнительные данные",
+    moderation: "Модерация",
+  },
+  error: {
+    title: "Админ-раздел недоступен",
+    description: "Не удалось загрузить данные. Повторите попытку.",
+    retry: "Повторить",
+  },
+  notFound: {
+    title: "Заявка не найдена",
+    description: "Запрошенная заявка не существует.",
+    back: "Назад к заявкам",
+  },
+} as const satisfies DictionaryShape<typeof adminCopy>;
+
+export function getAdminCopy(locale: Locale) {
+  return locale === "ru" ? ruAdminCopy : adminCopy;
+}

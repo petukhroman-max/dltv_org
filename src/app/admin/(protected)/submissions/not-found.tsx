@@ -1,8 +1,12 @@
 import Link from "next/link";
 
-import { adminCopy } from "@/lib/admin/copy";
+import { localizePath } from "@/i18n/config";
+import { getRequestLocale } from "@/i18n/get-dictionary";
+import { getAdminCopy } from "@/lib/admin/copy";
 
-export default function AdminSubmissionNotFound() {
+export default async function AdminSubmissionNotFound() {
+  const locale = await getRequestLocale();
+  const adminCopy = getAdminCopy(locale);
   return (
     <main className="adminMain">
       <section className="adminPanel">
@@ -10,7 +14,7 @@ export default function AdminSubmissionNotFound() {
         <p className="description">{adminCopy.notFound.description}</p>
         <Link
           className="primaryButton adminStandaloneAction"
-          href="/admin/submissions"
+          href={localizePath(locale, "/admin/submissions")}
         >
           {adminCopy.notFound.back}
         </Link>

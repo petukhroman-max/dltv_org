@@ -22,12 +22,12 @@ describe("SubmissionSuccessPage", () => {
         .getAllByRole("link", {
           name: publicSubmissionCopy.success.another,
         })
-        .every((link) => link.getAttribute("href") === "/submit-tournament"),
+        .every((link) => link.getAttribute("href") === "/en/submit-tournament"),
     ).toBe(true);
     expect(
       screen
         .getAllByRole("link", { name: "Browse tournaments" })
-        .every((link) => link.getAttribute("href") === "/tournaments"),
+        .every((link) => link.getAttribute("href") === "/en/tournaments"),
     ).toBe(true);
     expect(
       screen.getByRole("link", {

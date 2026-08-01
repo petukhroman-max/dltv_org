@@ -4,9 +4,10 @@ import { useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 
 import { resubmitTournamentAction } from "@/app/edit-submission/[token]/actions";
+import type { Locale } from "@/i18n/config";
 import {
+  getPublicSubmissionCopy,
   popularTimezones,
-  publicSubmissionCopy,
 } from "@/lib/submissions/public-submission.copy";
 import {
   organizerEditFieldNames,
@@ -16,12 +17,18 @@ import {
   type OrganizerEditValues,
 } from "@/lib/organizer-edit/organizer-edit.types";
 
-function SubmitButton() {
+function SubmitButton({ locale }: { locale: Locale }) {
   const { pending } = useFormStatus();
   return (
     <button className="primaryButton" type="submit" disabled={pending}>
       <span aria-live="polite">
-        {pending ? "Submitting changes…" : "Resubmit tournament"}
+        {pending
+          ? locale === "ru"
+            ? "Отправка изменений…"
+            : "Submitting changes…"
+          : locale === "ru"
+            ? "Повторно отправить турнир"
+            : "Resubmit tournament"}
       </span>
     </button>
   );
@@ -127,9 +134,11 @@ function initialValues(submission: EditableSubmission): OrganizerEditValues {
 export function OrganizerEditForm({
   token,
   submission,
+  locale = "en",
 }: {
   token: string;
   submission: EditableSubmission;
+  locale?: Locale;
 }) {
   const startingState: OrganizerEditActionState = {
     status: "idle",
@@ -140,9 +149,22 @@ export function OrganizerEditForm({
     resubmitTournamentAction.bind(null, token),
     startingState,
   );
-  const { fields } = publicSubmissionCopy.form;
+  const copy = getPublicSubmissionCopy(locale);
+  const { fields } = copy.form;
   const values = state.values;
-  const errors = state.fieldErrors;
+  const errors =
+    locale === "ru"
+      ? (Object.fromEntries(
+          Object.keys(state.fieldErrors).map((field) => [
+            field,
+            field === "confirmed"
+              ? copy.errors.consent
+              : (copy.errors.invalid[
+                  field as keyof typeof copy.errors.invalid
+                ] ?? copy.errors.generic),
+          ]),
+        ) as OrganizerEditActionState["fieldErrors"])
+      : state.fieldErrors;
 
   useEffect(() => {
     const first = organizerEditFieldNames.find((name) => errors[name]);
@@ -151,19 +173,26 @@ export function OrganizerEditForm({
 
   return (
     <form className="submissionForm" action={action} noValidate>
+      <input type="hidden" name="locale" value={locale} />
       {state.formError ? (
         <div className="formError" role="alert">
-          {state.formError}
+          {locale === "ru" ? copy.errors.generic : state.formError}
         </div>
       ) : null}
       {submission.reviewer_notes ? (
         <section className="formSection" aria-labelledby="changes-requested">
-          <h2 id="changes-requested">Changes requested by DLTV</h2>
+          <h2 id="changes-requested">
+            {locale === "ru"
+              ? "Изменения, запрошенные DLTV"
+              : "Changes requested by DLTV"}
+          </h2>
           <p className="supportingText">{submission.reviewer_notes}</p>
         </section>
       ) : null}
       <fieldset className="formSection">
-        <legend>Tournament details</legend>
+        <legend>
+          {locale === "ru" ? "Сведения о турнире" : "Tournament details"}
+        </legend>
         <div className="fieldGrid">
           <Field
             name="tournament_name"
@@ -266,7 +295,11 @@ export function OrganizerEditForm({
         </div>
       </fieldset>
       <fieldset className="formSection">
-        <legend>Links and organizer notes</legend>
+        <legend>
+          {locale === "ru"
+            ? "Ссылки и примечания организатора"
+            : "Links and organizer notes"}
+        </legend>
         <div className="fieldGrid">
           {(
             [
@@ -306,7 +339,9 @@ export function OrganizerEditForm({
             aria-invalid={Boolean(errors.confirmed)}
           />
           <span>
-            I confirm that the updated tournament information is accurate.
+            {locale === "ru"
+              ? "Подтверждаю правильность обновлённых сведений о турнире."
+              : "I confirm that the updated tournament information is accurate."}
           </span>
         </label>
         {errors.confirmed ? (
@@ -314,7 +349,7 @@ export function OrganizerEditForm({
         ) : null}
       </div>
       <div className="formActions">
-        <SubmitButton />
+        <SubmitButton locale={locale} />
       </div>
     </form>
   );

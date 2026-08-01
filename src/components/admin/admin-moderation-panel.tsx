@@ -9,7 +9,8 @@ import {
   rejectSubmissionAction,
   requestChangesAction,
 } from "@/app/admin/(protected)/submissions/[id]/actions";
-import { adminCopy } from "@/lib/admin/copy";
+import type { Locale } from "@/i18n/config";
+import { getAdminCopy } from "@/lib/admin/copy";
 import type { SubmissionStatus } from "@/lib/domain/submission";
 import {
   initialModerationActionState,
@@ -119,8 +120,10 @@ function SubmitButton({
 
 export function ModerationActionFeedback({
   state,
+  locale = "en",
 }: {
   state: ModerationActionState;
+  locale?: Locale;
 }) {
   if (!state.message) {
     return null;
@@ -130,7 +133,11 @@ export function ModerationActionFeedback({
       className={state.status === "success" ? "adminNotice" : "formError"}
       role={state.status === "success" ? "status" : "alert"}
     >
-      {state.message}
+      {locale === "ru"
+        ? state.status === "success"
+          ? "Действие выполнено."
+          : "Не удалось выполнить действие. Повторите попытку."
+        : state.message}
     </p>
   );
 }
@@ -139,11 +146,61 @@ function ModerationForm({
   config,
   submissionId,
   expectedStatus,
+  locale,
 }: {
   config: ActionConfiguration;
   submissionId: string;
   expectedStatus: SubmissionStatus;
+  locale: Locale;
 }) {
+  const ru = locale === "ru";
+  const localized = ru
+    ? (
+        {
+          approve: [
+            "Одобрить",
+            "Отметить заявку как одобренную.",
+            "Подтвердить одобрение",
+            "Одобрение…",
+            "Я подтверждаю готовность заявки к одобрению.",
+          ],
+          "request-changes": [
+            "Запросить изменения",
+            "Вернуть заявку организатору с обязательным пояснением.",
+            "Отправить запрос",
+            "Отправка…",
+            undefined,
+          ],
+          reject: [
+            "Отклонить",
+            "Отклонить заявку с обязательным пояснением.",
+            "Подтвердить отклонение",
+            "Отклонение…",
+            "Я подтверждаю, что заявку следует отклонить.",
+          ],
+          publish: [
+            "Опубликовать",
+            "Опубликовать одобренный турнир.",
+            "Опубликовать турнир",
+            "Публикация…",
+            "Я подтверждаю готовность турнира к публикации.",
+          ],
+        } satisfies Record<
+          string,
+          readonly [string, string, string, string, string?]
+        >
+      )[config.id]
+    : undefined;
+  const display = localized
+    ? {
+        ...config,
+        title: localized[0]!,
+        description: localized[1]!,
+        submitLabel: localized[2]!,
+        pendingLabel: localized[3]!,
+        confirmationLabel: localized[4],
+      }
+    : config;
   const [state, action] = useActionState(
     config.action,
     initialModerationActionState,
@@ -160,12 +217,19 @@ function ModerationForm({
       <input type="hidden" name="submission_id" value={submissionId} />
       <input type="hidden" name="expected_status" value={expectedStatus} />
       <div>
-        <h3>{config.title}</h3>
-        <p className="supportingText">{config.description}</p>
+        <h3>{display.title}</h3>
+        <p className="supportingText">{display.description}</p>
       </div>
       <label className="field">
         <span>
-          Reviewer note{config.noteRequired ? " (required)" : " (optional)"}
+          {ru ? "Примечание модератора" : "Reviewer note"}
+          {config.noteRequired
+            ? ru
+              ? " (обязательно)"
+              : " (required)"
+            : ru
+              ? " (необязательно)"
+              : " (optional)"}
         </span>
         <textarea
           name="reviewer_note"
@@ -180,7 +244,7 @@ function ModerationForm({
           </span>
         ) : null}
       </label>
-      {config.confirmationLabel ? (
+      {display.confirmationLabel ? (
         <div>
           <label className="checkboxLabel">
             <input
@@ -190,7 +254,7 @@ function ModerationForm({
               aria-invalid={Boolean(confirmationErrorId)}
               aria-describedby={confirmationErrorId}
             />
-            <span>{config.confirmationLabel}</span>
+            <span>{display.confirmationLabel}</span>
           </label>
           {state.fieldErrors?.confirmed ? (
             <p className="fieldError" id={confirmationErrorId} role="alert">
@@ -199,10 +263,10 @@ function ModerationForm({
           ) : null}
         </div>
       ) : null}
-      <ModerationActionFeedback state={state} />
+      <ModerationActionFeedback state={state} locale={locale} />
       <SubmitButton
-        label={config.submitLabel}
-        pendingLabel={config.pendingLabel}
+        label={display.submitLabel}
+        pendingLabel={display.pendingLabel}
       />
     </form>
   );
@@ -211,25 +275,37 @@ function ModerationForm({
 export function AdminModerationPanel({
   submissionId,
   status,
+  locale = "en",
 }: {
   submissionId: string;
   status: SubmissionStatus;
+  locale?: Locale;
 }) {
+  const adminCopy = getAdminCopy(locale);
+  const ru = locale === "ru";
   const actions = actionsByStatus[status] ?? [];
   const readOnlyMessage =
     status === "needs_changes"
-      ? "Waiting for organizer changes."
+      ? ru
+        ? "Ожидаются изменения от организатора."
+        : "Waiting for organizer changes."
       : status === "rejected"
-        ? "This submission was rejected."
+        ? ru
+          ? "Заявка отклонена."
+          : "This submission was rejected."
         : status === "draft"
-          ? "Draft submissions cannot be moderated."
+          ? ru
+            ? "Черновик нельзя модерировать."
+            : "Draft submissions cannot be moderated."
           : null;
 
   return (
     <section className="adminPanel" aria-labelledby="moderation-heading">
       <h2 id="moderation-heading">{adminCopy.details.moderation}</h2>
       <p className="adminWarning">
-        Organizer notifications are not enabled yet.
+        {ru
+          ? "Уведомления организатора пока не подключены."
+          : "Organizer notifications are not enabled yet."}
       </p>
       {readOnlyMessage ? (
         <p className="supportingText">{readOnlyMessage}</p>
@@ -242,6 +318,7 @@ export function AdminModerationPanel({
               config={config}
               submissionId={submissionId}
               expectedStatus={status}
+              locale={locale}
             />
           ))}
         </div>

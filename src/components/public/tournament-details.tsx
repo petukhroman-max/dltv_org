@@ -3,24 +3,28 @@ import {
   formatPublicDateTime,
   safePublicUrl,
 } from "@/lib/public-tournaments/presentation";
+import type { Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/get-dictionary";
 import { getTournamentLifecycle } from "@/lib/public-tournaments/lifecycle";
 import type { PublishedTournament } from "@/lib/public-tournaments/public-tournaments.types";
-
-const links = [
-  ["Register", "registration_url"],
-  ["Bracket", "bracket_url"],
-  ["Discord", "discord_url"],
-  ["Watch stream", "stream_url"],
-  ["Rules", "rules_url"],
-] as const;
 
 export function TournamentDetails({
   tournament,
   today,
+  locale = "en",
 }: {
   tournament: PublishedTournament;
   today: string;
+  locale?: Locale;
 }) {
+  const copy = getDictionary(locale).catalog;
+  const links = [
+    [copy.register, "registration_url"],
+    [copy.bracket, "bracket_url"],
+    [copy.discord, "discord_url"],
+    [copy.stream, "stream_url"],
+    [copy.rules, "rules_url"],
+  ] as const;
   const lifecycle = getTournamentLifecycle(
     tournament.start_date,
     tournament.end_date,
@@ -29,74 +33,79 @@ export function TournamentDetails({
   return (
     <article className="publicTournamentDetails">
       <header className="pageHeader">
-        <p className="eyebrow">Deadlock tournament</p>
+        <p className="eyebrow">{copy.eventEyebrow}</p>
         <h1>{tournament.tournament_name}</h1>
-        <p className="description">Organized by {tournament.organizer_name}</p>
+        <p className="description">
+          {copy.organizedBy} {tournament.organizer_name}
+        </p>
         <span className="lifecycleBadge" data-lifecycle={lifecycle}>
-          {lifecycle}
+          {copy[lifecycle]}
         </span>
       </header>
       <section className="formSection" aria-labelledby="details-heading">
-        <h2 id="details-heading">Tournament details</h2>
+        <h2 id="details-heading">{copy.details}</h2>
         <dl className="tournamentDetailGrid">
           <div>
-            <dt>Region</dt>
+            <dt>{copy.region}</dt>
             <dd>{tournament.region}</dd>
           </div>
           {tournament.language ? (
             <div>
-              <dt>Language</dt>
+              <dt>{copy.language}</dt>
               <dd>{tournament.language}</dd>
             </div>
           ) : null}
           <div>
-            <dt>Starts</dt>
+            <dt>{copy.starts}</dt>
             <dd>
               <time dateTime={tournament.start_date}>
-                {formatPublicDate(tournament.start_date)}
+                {formatPublicDate(tournament.start_date, locale)}
               </time>
             </dd>
           </div>
           <div>
-            <dt>Ends</dt>
+            <dt>{copy.ends}</dt>
             <dd>
               <time dateTime={tournament.end_date}>
-                {formatPublicDate(tournament.end_date)}
+                {formatPublicDate(tournament.end_date, locale)}
               </time>
             </dd>
           </div>
           <div>
-            <dt>Timezone</dt>
+            <dt>{copy.timezone}</dt>
             <dd>{tournament.timezone}</dd>
           </div>
           <div>
-            <dt>Location</dt>
-            <dd>{tournament.is_online ? "Online" : "Offline"}</dd>
+            <dt>{copy.location}</dt>
+            <dd>{tournament.is_online ? copy.online : copy.offline}</dd>
           </div>
           {tournament.format ? (
             <div>
-              <dt>Format</dt>
+              <dt>{copy.format}</dt>
               <dd>{tournament.format}</dd>
             </div>
           ) : null}
           {tournament.prize_pool_text ? (
             <div>
-              <dt>Prize pool</dt>
+              <dt>{copy.prizePool}</dt>
               <dd>{tournament.prize_pool_text}</dd>
             </div>
           ) : null}
           {tournament.max_teams ? (
             <div>
-              <dt>Maximum teams</dt>
+              <dt>{copy.maximumTeams}</dt>
               <dd>{tournament.max_teams}</dd>
             </div>
           ) : null}
           {tournament.registration_deadline ? (
             <div>
-              <dt>Registration deadline</dt>
+              <dt>{copy.registrationDeadline}</dt>
               <dd>
                 <time dateTime={tournament.registration_deadline}>
-                  {formatPublicDateTime(tournament.registration_deadline)}
+                  {formatPublicDateTime(
+                    tournament.registration_deadline,
+                    locale,
+                  )}
                 </time>
               </dd>
             </div>
@@ -104,13 +113,13 @@ export function TournamentDetails({
         </dl>
         {tournament.description ? (
           <div className="tournamentDescription">
-            <h2>About</h2>
+            <h2>{copy.about}</h2>
             <p>{tournament.description}</p>
           </div>
         ) : null}
       </section>
       <section className="formSection" aria-labelledby="links-heading">
-        <h2 id="links-heading">Tournament links</h2>
+        <h2 id="links-heading">{copy.links}</h2>
         <div className="publicLinkGrid">
           {links.map(([label, field]) => {
             const url = safePublicUrl(tournament[field]);
@@ -129,12 +138,12 @@ export function TournamentDetails({
         </div>
       </section>
       <footer className="provenance">
-        <p>Information provided by the tournament organizer.</p>
-        <p>Published by DLTV / Deadlock One.</p>
+        <p>{copy.providedBy}</p>
+        <p>{copy.publishedBy}</p>
         <p>
-          Last updated:{" "}
+          {copy.lastUpdated}:{" "}
           <time dateTime={tournament.source_updated_at}>
-            {formatPublicDateTime(tournament.source_updated_at)}
+            {formatPublicDateTime(tournament.source_updated_at, locale)}
           </time>
         </p>
       </footer>
