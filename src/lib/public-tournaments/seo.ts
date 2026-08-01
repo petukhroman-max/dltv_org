@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { localizePath, type Locale } from "@/i18n/config";
 import { env } from "@/lib/env";
 import { publicDescription } from "@/lib/public-tournaments/presentation";
-import type { PublishedTournament } from "@/lib/public-tournaments/public-tournaments.types";
+import type { PublicTournamentOverview } from "@/lib/public-tournaments/public-operational.types";
 
 export function absolutePublicUrl(path: string): string {
   return new URL(
@@ -13,7 +13,7 @@ export function absolutePublicUrl(path: string): string {
 }
 
 export function tournamentMetadata(
-  tournament: PublishedTournament,
+  tournament: PublicTournamentOverview,
   locale: Locale = "en",
 ): Metadata {
   const title = `${tournament.tournament_name} | Deadlock tournaments`;
@@ -35,7 +35,7 @@ export function tournamentMetadata(
 }
 
 export function sportsEventJsonLd(
-  tournament: PublishedTournament,
+  tournament: PublicTournamentOverview,
   locale: Locale = "en",
 ) {
   return {

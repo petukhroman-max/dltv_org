@@ -6,14 +6,14 @@ import {
 import type { Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { getTournamentLifecycle } from "@/lib/public-tournaments/lifecycle";
-import type { PublishedTournament } from "@/lib/public-tournaments/public-tournaments.types";
+import type { PublicTournamentOverview } from "@/lib/public-tournaments/public-operational.types";
 
 export function TournamentDetails({
   tournament,
   today,
   locale = "en",
 }: {
-  tournament: PublishedTournament;
+  tournament: PublicTournamentOverview;
   today: string;
   locale?: Locale;
 }) {

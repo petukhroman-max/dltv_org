@@ -1,4 +1,3 @@
-import type { PublishedTournament } from "@/lib/public-tournaments/public-tournaments.types";
 import type { Locale } from "@/i18n/config";
 
 const localeTags: Record<Locale, string> = { en: "en-US", ru: "ru-RU" };
@@ -34,7 +33,11 @@ export function safePublicUrl(value: string | null): string | null {
   }
 }
 
-export function publicDescription(tournament: PublishedTournament): string {
+export function publicDescription(tournament: {
+  description: string | null;
+  tournament_name: string;
+  organizer_name: string;
+}): string {
   const description = tournament.description?.trim();
   return description
     ? description.slice(0, 155)

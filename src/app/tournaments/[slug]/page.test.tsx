@@ -2,17 +2,17 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/public-tournaments/load", () => ({
-  loadPublishedTournament: vi.fn(),
+  loadPublicTournamentProjection: vi.fn(),
 }));
 
 import TournamentPage from "@/app/tournaments/[slug]/page";
-import { loadPublishedTournament } from "@/lib/public-tournaments/load";
-import { publishedTournamentFixture } from "@/test/public-tournament-fixture";
+import { loadPublicTournamentProjection } from "@/lib/public-tournaments/load";
+import { publicTournamentProjectionFixture } from "@/test/public-operational-fixture";
 
 describe("TournamentPage navigation", () => {
   it("keeps catalog navigation active and offers contextual destinations", async () => {
-    vi.mocked(loadPublishedTournament).mockResolvedValue(
-      publishedTournamentFixture,
+    vi.mocked(loadPublicTournamentProjection).mockResolvedValue(
+      publicTournamentProjectionFixture,
     );
 
     render(await TournamentPage({ params: Promise.resolve({ slug: "test" }) }));

@@ -3,17 +3,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { TournamentDetails } from "@/components/public/tournament-details";
+import { PublicTournamentOperational } from "@/components/public/public-tournament-operational";
 import { PublicHeader } from "@/components/public/public-header";
 import { localizePath } from "@/i18n/config";
 import { getRequestDictionary, getRequestLocale } from "@/i18n/get-dictionary";
-import { loadPublishedTournament } from "@/lib/public-tournaments/load";
+import { loadPublicTournamentProjection } from "@/lib/public-tournaments/load";
 import {
   sportsEventJsonLd,
   tournamentMetadata,
 } from "@/lib/public-tournaments/seo";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export async function generateMetadata({
   params,
@@ -23,9 +23,9 @@ export async function generateMetadata({
   const { slug } = await params;
   const locale = await getRequestLocale();
   try {
-    const tournament = await loadPublishedTournament(slug);
-    return tournament
-      ? tournamentMetadata(tournament, locale)
+    const projection = await loadPublicTournamentProjection(slug, locale);
+    return projection
+      ? tournamentMetadata(projection.tournament, locale)
       : { title: "Tournament not found" };
   } catch {
     return { title: "Tournament unavailable" };
@@ -42,9 +42,9 @@ export default async function TournamentPage({
     getRequestLocale(),
     getRequestDictionary(),
   ]);
-  let tournament;
+  let projection;
   try {
-    tournament = await loadPublishedTournament(slug);
+    projection = await loadPublicTournamentProjection(slug, locale);
   } catch {
     return (
       <>
@@ -57,8 +57,8 @@ export default async function TournamentPage({
       </>
     );
   }
-  if (!tournament) notFound();
-  const jsonLd = sportsEventJsonLd(tournament, locale);
+  if (!projection) notFound();
+  const jsonLd = sportsEventJsonLd(projection.tournament, locale);
   const today = new Date().toISOString().slice(0, 10);
   return (
     <>
@@ -79,10 +79,11 @@ export default async function TournamentPage({
           </Link>
         </nav>
         <TournamentDetails
-          tournament={tournament}
+          tournament={projection.tournament}
           today={today}
           locale={locale}
         />
+        <PublicTournamentOperational projection={projection} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

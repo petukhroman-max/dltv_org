@@ -1613,6 +1613,244 @@ h1 {
   margin: 0.25rem 0;
 }
 
+.publicOperational {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.publicSectionNav {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(11, 16, 24, 0.96);
+}
+
+.publicSectionNav a {
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  color: var(--muted);
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.publicSectionNav a:hover,
+.publicSectionNav a:focus-visible {
+  background: var(--surface-elevated);
+  color: var(--text);
+}
+
+.publicOperationalSection {
+  scroll-margin-top: 5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.publicOperationalSection > h2 {
+  margin-top: 0;
+}
+
+.publicSummaryGrid,
+.publicStageGrid,
+.publicTeamGrid,
+.publicMatchGrid,
+.publicHighlights {
+  display: grid;
+  gap: 1rem;
+}
+
+.publicSummaryGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+}
+
+.publicSummaryGrid div,
+.publicStageCard,
+.publicTeamCard,
+.publicMatchCard {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+}
+
+.publicSummaryGrid dt,
+.publicStageCard dt,
+.teamFacts dt {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.publicSummaryGrid dd {
+  margin: 0.4rem 0 0;
+  font-size: 1.75rem;
+  font-weight: 900;
+}
+
+.publicHighlights {
+  margin-top: 1.5rem;
+}
+
+.publicHighlights h3,
+.publicMatchGroup h3 {
+  margin: 1rem 0 0.75rem;
+}
+
+.publicStageGrid,
+.publicTeamGrid,
+.publicMatchGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.publicStageCard header,
+.publicTeamCard header,
+.publicMatchCard header,
+.matchTeams > div,
+.matchMeta,
+.matchLinks {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.publicStageCard h3,
+.publicTeamCard h3,
+.publicMatchCard h4,
+.publicTeamCard p,
+.matchContext {
+  margin: 0;
+}
+
+.publicStageCard dl,
+.teamFacts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+}
+
+.publicStageCard dd,
+.teamFacts dd {
+  margin: 0.25rem 0 0;
+}
+
+.publicMatchCard {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.matchContext,
+.matchMeta,
+.matchLinks,
+.publicTeamCard p,
+.publicEmptyState {
+  color: var(--muted);
+}
+
+.matchStatus {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.matchStatus[data-status="live"] {
+  border-color: rgba(114, 241, 184, 0.5);
+  background: rgba(114, 241, 184, 0.1);
+  color: var(--accent);
+}
+
+.matchStatus[data-status="cancelled"] {
+  color: var(--danger);
+}
+
+.matchTeams {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 1rem;
+}
+
+.matchTeams strong {
+  font-size: 1.35rem;
+}
+
+.matchWinner {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.matchTbd {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.matchMeta,
+.matchLinks {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+}
+
+.matchLinks a {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.publicTeamCard header {
+  justify-content: flex-start;
+}
+
+.publicTeamCard img,
+.teamMonogram {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 3rem;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: #0b1018;
+  object-fit: contain;
+  font-weight: 900;
+}
+
+.publicRoster {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.publicRoster li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.publicRoster small {
+  color: var(--muted);
+}
+
 @media (max-width: 42rem) {
   .publicHeaderActions {
     width: 100%;
@@ -1700,7 +1938,20 @@ h1 {
 
   .tournamentGrid,
   .tournamentFacts,
-  .tournamentDetailGrid {
+  .tournamentDetailGrid,
+  .publicSummaryGrid,
+  .publicStageGrid,
+  .publicTeamGrid,
+  .publicMatchGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .publicOperationalSection {
+    padding: 1rem;
+  }
+
+  .publicStageCard dl,
+  .teamFacts {
     grid-template-columns: 1fr;
   }
 
