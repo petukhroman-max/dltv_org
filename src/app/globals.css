@@ -17,6 +17,16 @@
   gap: 1.25rem;
 }
 
+.rosterTeam {
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1.25rem;
+}
+
+.rosterTeam > h3 {
+  margin-bottom: 0.75rem;
+}
+
 .operationalCards {
   display: grid;
   gap: 1rem;
@@ -38,6 +48,18 @@
 
 .operationalCardHeader p {
   margin: 0.25rem 0 0;
+}
+
+.operationalCardHeader strong {
+  overflow-wrap: anywhere;
+}
+
+.rosterRoleGroup {
+  margin-top: 1rem;
+}
+
+.rosterRoleGroup h4 {
+  margin-bottom: 0.5rem;
 }
 
 .operationalFacts {

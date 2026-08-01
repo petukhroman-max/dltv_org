@@ -8,27 +8,36 @@ import { AdminModerationPanel } from "@/components/admin/admin-moderation-panel"
 import { AdminEditLinkPanel } from "@/components/admin/admin-edit-link-panel";
 import { AdminWorkspaceLinkPanel } from "@/components/admin/admin-workspace-link-panel";
 import { StagesTeamsWorkspace } from "@/components/operational/stages-teams-workspace";
+import { RosterWorkspace } from "@/components/operational/roster-workspace";
 import {
+  addAdminExistingPlayerAction,
+  createAdminPlayerAndRosterAction,
   createAdminStageAction,
   createAdminTeamAction,
   deleteAdminStageAction,
   deleteAdminTeamAction,
+  removeAdminRosterAction,
+  restoreAdminRosterAction,
+  searchAdminPlayersAction,
+  updateAdminPlayerAction,
+  updateAdminRosterAction,
   updateAdminStageAction,
   updateAdminTeamAction,
 } from "@/app/admin/(protected)/submissions/[id]/operational-actions";
 import { adminCopy } from "@/lib/admin/copy";
 import { loadAdminSubmissionDetails } from "@/lib/admin/details";
+import { requireAdmin } from "@/lib/admin/require-admin";
 import { getTournamentSubmissionDetails } from "@/lib/repositories/submission-details";
 import {
   getTournamentOperationalSummary,
   listTournamentMatches,
-  listTournamentRosters,
   listTournamentStages,
   listTournamentTeams,
 } from "@/lib/repositories/tournament-operational-data";
 import { submissionStatusSchema } from "@/lib/domain/submission";
 import { getSubmissionEditTokenStatus } from "@/lib/organizer-edit/organizer-edit.service";
 import { getWorkspaceTokenStatus } from "@/lib/organizer-workspace/workspace-token.service";
+import { listTeamRoster } from "@/lib/operational-workspace/roster.service";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -53,11 +62,12 @@ export default async function AdminSubmissionDetailsPage({
   const workspaceTokenStatus = await getWorkspaceTokenStatus(
     details.submission.id,
   );
-  const [stages, teams, rosters, matches, operationalSummary] =
+  const identity = await requireAdmin();
+  const [stages, teams, rosterMembers, matches, operationalSummary] =
     await Promise.all([
       listTournamentStages(details.submission.id),
       listTournamentTeams(details.submission.id),
-      listTournamentRosters(details.submission.id),
+      listTeamRoster(details.submission.id, { kind: "admin", identity }),
       listTournamentMatches(details.submission.id),
       getTournamentOperationalSummary(details.submission.id),
     ]);
@@ -73,6 +83,18 @@ export default async function AdminSubmissionDetailsPage({
     createTeam: createAdminTeamAction.bind(null, details.submission.id),
     updateTeam: updateAdminTeamAction.bind(null, details.submission.id),
     deleteTeam: deleteAdminTeamAction.bind(null, details.submission.id),
+  };
+  const rosterActions = {
+    createPlayer: createAdminPlayerAndRosterAction.bind(
+      null,
+      details.submission.id,
+    ),
+    addExisting: addAdminExistingPlayerAction.bind(null, details.submission.id),
+    updatePlayer: updateAdminPlayerAction.bind(null, details.submission.id),
+    updateMembership: updateAdminRosterAction.bind(null, details.submission.id),
+    remove: removeAdminRosterAction.bind(null, details.submission.id),
+    restore: restoreAdminRosterAction.bind(null, details.submission.id),
+    search: searchAdminPlayersAction.bind(null, details.submission.id),
   };
 
   return (
@@ -107,19 +129,27 @@ export default async function AdminSubmissionDetailsPage({
         />
         <AdminSubmissionDetails details={details} />
         {canManageOperationalData ? (
-          <StagesTeamsWorkspace
-            stages={stages}
-            teams={teams}
-            actions={operationalActions}
-          />
+          <>
+            <StagesTeamsWorkspace
+              stages={stages}
+              teams={teams}
+              actions={operationalActions}
+            />
+            <RosterWorkspace
+              teams={teams}
+              members={rosterMembers}
+              actions={rosterActions}
+            />
+          </>
         ) : null}
         <AdminTournamentData
           stages={stages}
           teams={teams}
-          rosters={rosters}
+          rosters={[]}
           matches={matches}
           summary={operationalSummary}
           showStagesAndTeams={!canManageOperationalData}
+          showRosters={!canManageOperationalData}
         />
       </div>
     </main>

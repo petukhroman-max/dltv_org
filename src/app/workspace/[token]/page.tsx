@@ -1,16 +1,25 @@
 import { unstable_noStore as noStore } from "next/cache";
 
 import {
+  addWorkspaceExistingPlayerAction,
+  createWorkspacePlayerAndRosterAction,
   createWorkspaceStageAction,
   createWorkspaceTeamAction,
   deleteWorkspaceStageAction,
   deleteWorkspaceTeamAction,
+  removeWorkspaceRosterAction,
+  restoreWorkspaceRosterAction,
+  searchWorkspacePlayersAction,
+  updateWorkspacePlayerAction,
+  updateWorkspaceRosterAction,
   updateWorkspaceStageAction,
   updateWorkspaceTeamAction,
 } from "@/app/workspace/[token]/actions";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { StagesTeamsWorkspace } from "@/components/operational/stages-teams-workspace";
+import { RosterWorkspace } from "@/components/operational/roster-workspace";
 import { validateWorkspaceAccess } from "@/lib/organizer-workspace/workspace-token.service";
+import { listTeamRoster } from "@/lib/operational-workspace/roster.service";
 import {
   listTournamentStages,
   listTournamentTeams,
@@ -37,9 +46,15 @@ export default async function OrganizerWorkspacePage({
       </main>
     );
   }
-  const [stages, teams] = await Promise.all([
+  const context = {
+    kind: "organizer_workspace" as const,
+    submissionId: access.submission.id,
+    tokenId: access.tokenId,
+  };
+  const [stages, teams, rosterMembers] = await Promise.all([
     listTournamentStages(access.submission.id),
     listTournamentTeams(access.submission.id),
+    listTeamRoster(access.submission.id, context),
   ]);
   const actions = {
     createStage: createWorkspaceStageAction.bind(null, token),
@@ -48,6 +63,15 @@ export default async function OrganizerWorkspacePage({
     createTeam: createWorkspaceTeamAction.bind(null, token),
     updateTeam: updateWorkspaceTeamAction.bind(null, token),
     deleteTeam: deleteWorkspaceTeamAction.bind(null, token),
+  };
+  const rosterActions = {
+    createPlayer: createWorkspacePlayerAndRosterAction.bind(null, token),
+    addExisting: addWorkspaceExistingPlayerAction.bind(null, token),
+    updatePlayer: updateWorkspacePlayerAction.bind(null, token),
+    updateMembership: updateWorkspaceRosterAction.bind(null, token),
+    remove: removeWorkspaceRosterAction.bind(null, token),
+    restore: restoreWorkspaceRosterAction.bind(null, token),
+    search: searchWorkspacePlayersAction.bind(null, token),
   };
   return (
     <main className="adminMain">
@@ -87,6 +111,11 @@ export default async function OrganizerWorkspacePage({
         </p>
       </section>
       <StagesTeamsWorkspace stages={stages} teams={teams} actions={actions} />
+      <RosterWorkspace
+        teams={teams}
+        members={rosterMembers}
+        actions={rosterActions}
+      />
     </main>
   );
 }

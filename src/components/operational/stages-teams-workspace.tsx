@@ -527,7 +527,7 @@ export function StagesTeamsWorkspace({
           <div>
             <h2 id="workspace-teams">Teams</h2>
             <p className="supportingText">
-              Roster management will be added next.
+              Open the Rosters section below to manage each team lineup.
             </p>
           </div>
           <CreateTeamForm action={actions.createTeam} />

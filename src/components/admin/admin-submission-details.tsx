@@ -31,6 +31,13 @@ const moderationEventLabels: Record<string, string> = {
   team_created: "Team created",
   team_updated: "Team updated",
   team_deleted: "Team deleted",
+  player_created: "Player created",
+  player_profile_updated: "Player profile updated",
+  roster_member_added: "Added to roster",
+  roster_member_updated: "Roster membership updated",
+  roster_member_removed: "Removed from roster",
+  roster_member_restored: "Restored to roster",
+  roster_captain_changed: "Team captain changed",
 };
 
 function Value({
