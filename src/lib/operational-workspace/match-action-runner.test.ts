@@ -79,6 +79,59 @@ describe("match action runner", () => {
     expect(payload).not.toHaveProperty("source");
   });
 
+  it("creates a draft with null stage and teams through the action boundary", async () => {
+    const form = new FormData();
+    form.set("intent", "draft");
+    form.set("locale", "ru");
+    form.set("submission_id", "79fc64c9-fe4f-486d-a959-1fe31d546ef0");
+
+    const result = await runMatchMutation(
+      "create",
+      submissionId,
+      context,
+      form,
+    );
+
+    expect(result.status).toBe("success");
+    expect(repository.executeCreateMatchRpc).toHaveBeenCalledWith(
+      expect.objectContaining({
+        p_submission_id: submissionId,
+        p_workspace_token_id: context.tokenId,
+        p_payload: expect.objectContaining({
+          stage_id: null,
+          team_a_id: null,
+          team_b_id: null,
+          status: "draft",
+        }),
+      }),
+    );
+  });
+
+  it("creates a scheduled match with one TBD team through the action boundary", async () => {
+    const form = createForm("schedule");
+    form.delete("team_b_id");
+
+    const result = await runMatchMutation(
+      "create",
+      submissionId,
+      context,
+      form,
+    );
+
+    expect(result.status).toBe("success");
+    expect(repository.executeCreateMatchRpc).toHaveBeenCalledWith(
+      expect.objectContaining({
+        p_submission_id: submissionId,
+        p_payload: expect.objectContaining({
+          stage_id: stageId,
+          team_a_id: teamAId,
+          team_b_id: null,
+          status: "scheduled",
+        }),
+      }),
+    );
+  });
+
   it("returns field validation for an invalid IANA timezone", async () => {
     const form = createForm("schedule");
     form.set("timezone", "Mars/Olympus");

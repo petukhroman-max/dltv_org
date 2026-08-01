@@ -81,4 +81,20 @@ describe("roster action runner", () => {
       }),
     );
   });
+
+  it("ignores locale and stale browser submission fields for authority", async () => {
+    repository.executeCreatePlayerAndAddRpc.mockResolvedValue({});
+    const form = newPlayerForm();
+    form.set("locale", "ru");
+    form.set("submission_id", "79fc64c9-fe4f-486d-a959-1fe31d546ef0");
+
+    await runRosterMutation("create_player", submissionId, context, form);
+
+    expect(repository.executeCreatePlayerAndAddRpc).toHaveBeenCalledWith(
+      expect.objectContaining({
+        p_submission_id: submissionId,
+        p_workspace_token_id: context.tokenId,
+      }),
+    );
+  });
 });
