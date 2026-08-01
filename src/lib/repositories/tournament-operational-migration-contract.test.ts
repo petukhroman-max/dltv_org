@@ -65,6 +65,14 @@ describe("tournament operational migration contract", () => {
     expect(sql).toContain(
       "references public.tournament_stages(id) on delete set null",
     );
+    expect(
+      sql.match(
+        /references public\.tournament_teams\(id\) on delete set null/g,
+      ),
+    ).toHaveLength(3);
+    expect(sql).toContain(
+      "references public.tournament_teams(id) on delete cascade",
+    );
     for (const trigger of [
       "tournament_stages_set_updated_at",
       "tournament_teams_set_updated_at",
@@ -93,6 +101,24 @@ describe("tournament operational migration contract", () => {
     ]) {
       expect(sql).toContain(index);
     }
+  });
+
+  it("defines database-level match integrity constraints", () => {
+    expect(sql).toContain("tournament_matches_distinct_teams");
+    expect(sql).toContain("team_a_id <> team_b_id");
+    expect(sql).toContain("tournament_matches_best_of_positive_odd");
+    expect(sql).toContain("best_of > 0 and best_of % 2 = 1");
+    expect(sql).toContain("tournament_matches_score_a_nonnegative");
+    expect(sql).toContain("tournament_matches_score_b_nonnegative");
+    expect(sql).toContain("score_a is null or score_a >= 0");
+    expect(sql).toContain("score_b is null or score_b >= 0");
+    expect(sql).toContain("tournament_matches_winner_is_participant");
+    expect(sql).toContain(
+      "team_a_id is not null and winner_team_id = team_a_id",
+    );
+    expect(sql).toContain(
+      "team_b_id is not null and winner_team_id = team_b_id",
+    );
   });
 
   it("contains no destructive or deferred-scope schema", () => {
