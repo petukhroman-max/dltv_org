@@ -19,10 +19,12 @@
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.111.0",
+    "exceljs": "^4.4.0",
     "next": "15.5.22",
     "react": "19.1.1",
     "react-dom": "19.1.1",
     "server-only": "^0.0.1",
+    "yauzl": "^3.4.0",
     "zod": "4.1.12"
   },
   "devDependencies": {
@@ -32,6 +34,7 @@
     "@types/node": "24.10.1",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
+    "@types/yauzl": "^3.4.0",
     "@vitejs/plugin-react": "5.1.1",
     "eslint": "9.39.5",
     "eslint-config-next": "15.5.22",

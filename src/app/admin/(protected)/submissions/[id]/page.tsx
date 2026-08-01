@@ -158,6 +158,9 @@ export default async function AdminSubmissionDetailsPage({
         <a href="#overview">{dictionary.nav.overview}</a>
         <a href="#moderation">{dictionary.nav.moderation}</a>
         <a href="#tournament-data">{dictionary.nav.tournamentData}</a>
+        <a href={`/admin/submissions/${details.submission.id}/import`}>
+          {dictionary.nav.importData}
+        </a>
         <a href="#access">{dictionary.nav.access}</a>
         <a href="#history">{dictionary.nav.history}</a>
       </nav>
