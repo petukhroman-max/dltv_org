@@ -12,6 +12,7 @@ export type AdminTournamentDataProps = {
   matches: AdminTournamentMatch[];
   summary: TournamentOperationalSummary;
   showStagesAndTeams?: boolean;
+  showRosters?: boolean;
 };
 
 function EmptyState({ children }: { children: React.ReactNode }) {
@@ -25,6 +26,7 @@ export function AdminTournamentData({
   matches,
   summary,
   showStagesAndTeams = true,
+  showRosters = true,
 }: AdminTournamentDataProps) {
   return (
     <section className="adminPanel" aria-labelledby="tournament-data-heading">
@@ -130,35 +132,37 @@ export function AdminTournamentData({
           </section>
         ) : null}
 
-        <section aria-labelledby="rosters-heading">
-          <h3 id="rosters-heading">Rosters</h3>
-          {rosters.length === 0 ? (
-            <EmptyState>No roster members added.</EmptyState>
-          ) : (
-            <div className="adminTableScroll">
-              <table className="adminTable">
-                <thead>
-                  <tr>
-                    <th>Team</th>
-                    <th>Player</th>
-                    <th>Role</th>
-                    <th>Active</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rosters.map((member) => (
-                    <tr key={member.id}>
-                      <td>{member.team.name}</td>
-                      <th scope="row">{member.player.display_name}</th>
-                      <td>{member.role}</td>
-                      <td>{member.is_active ? "Yes" : "No"}</td>
+        {showRosters ? (
+          <section aria-labelledby="rosters-heading">
+            <h3 id="rosters-heading">Rosters</h3>
+            {rosters.length === 0 ? (
+              <EmptyState>No roster members added.</EmptyState>
+            ) : (
+              <div className="adminTableScroll">
+                <table className="adminTable">
+                  <thead>
+                    <tr>
+                      <th>Team</th>
+                      <th>Player</th>
+                      <th>Role</th>
+                      <th>Active</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+                  </thead>
+                  <tbody>
+                    {rosters.map((member) => (
+                      <tr key={member.id}>
+                        <td>{member.team.name}</td>
+                        <th scope="row">{member.player.display_name}</th>
+                        <td>{member.role}</td>
+                        <td>{member.is_active ? "Yes" : "No"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        ) : null}
 
         <section aria-labelledby="matches-heading">
           <h3 id="matches-heading">Matches</h3>

@@ -7,6 +7,15 @@ import { revalidatePath } from "next/cache";
 import type { OperationalActionState } from "@/lib/operational-workspace/action-state";
 import { runOperationalMutation } from "@/lib/operational-workspace/operational-action-runner";
 import { validateWorkspaceAccess } from "@/lib/organizer-workspace/workspace-token.service";
+import type {
+  RosterActionState,
+  RosterSearchState,
+} from "@/lib/operational-workspace/roster-action-state";
+import {
+  runRosterMutation,
+  runRosterSearch,
+  type RosterOperation,
+} from "@/lib/operational-workspace/roster-action-runner";
 
 async function run(
   entity: "stage" | "team",
@@ -82,4 +91,103 @@ export async function deleteWorkspaceTeamAction(
   formData: FormData,
 ) {
   return run("team", "delete", rawToken, formData);
+}
+
+async function workspaceContext(rawToken: string) {
+  const access = await validateWorkspaceAccess(rawToken);
+  return access
+    ? {
+        submissionId: access.submission.id,
+        context: {
+          kind: "organizer_workspace" as const,
+          submissionId: access.submission.id,
+          tokenId: access.tokenId,
+        },
+      }
+    : null;
+}
+
+async function runWorkspaceRoster(
+  operation: RosterOperation,
+  rawToken: string,
+  formData: FormData,
+): Promise<RosterActionState> {
+  const access = await workspaceContext(rawToken);
+  if (!access)
+    return {
+      status: "error",
+      message: "This workspace link is invalid or no longer available.",
+      fieldErrors: {},
+      values: {},
+    };
+  const result = await runRosterMutation(
+    operation,
+    access.submissionId,
+    access.context,
+    formData,
+  );
+  if (result.status === "success") {
+    revalidatePath(`/workspace/${rawToken}`);
+    revalidatePath(`/admin/submissions/${access.submissionId}`);
+  }
+  return result;
+}
+
+export async function createWorkspacePlayerAndRosterAction(
+  rawToken: string,
+  _state: RosterActionState,
+  formData: FormData,
+) {
+  return runWorkspaceRoster("create_player", rawToken, formData);
+}
+export async function addWorkspaceExistingPlayerAction(
+  rawToken: string,
+  _state: RosterActionState,
+  formData: FormData,
+) {
+  return runWorkspaceRoster("add_existing", rawToken, formData);
+}
+export async function updateWorkspacePlayerAction(
+  rawToken: string,
+  _state: RosterActionState,
+  formData: FormData,
+) {
+  return runWorkspaceRoster("update_player", rawToken, formData);
+}
+export async function updateWorkspaceRosterAction(
+  rawToken: string,
+  _state: RosterActionState,
+  formData: FormData,
+) {
+  return runWorkspaceRoster("update_membership", rawToken, formData);
+}
+export async function removeWorkspaceRosterAction(
+  rawToken: string,
+  _state: RosterActionState,
+  formData: FormData,
+) {
+  return runWorkspaceRoster("remove", rawToken, formData);
+}
+export async function restoreWorkspaceRosterAction(
+  rawToken: string,
+  _state: RosterActionState,
+  formData: FormData,
+) {
+  return runWorkspaceRoster("restore", rawToken, formData);
+}
+export async function searchWorkspacePlayersAction(
+  rawToken: string,
+  _state: RosterSearchState,
+  formData: FormData,
+): Promise<RosterSearchState> {
+  const access = await workspaceContext(rawToken);
+  if (!access)
+    return {
+      status: "error",
+      message: "This workspace link is invalid or no longer available.",
+      fieldErrors: {},
+      values: {},
+      results: [],
+    };
+  return runRosterSearch(access.submissionId, access.context, formData);
 }

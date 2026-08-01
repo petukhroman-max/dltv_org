@@ -172,3 +172,6 @@ the future Organizer Workspace.
 [docs/organizer-workspace-stages-teams.md](docs/organizer-workspace-stages-teams.md)
 documents secure workspace links, shared stage/team CRUD, concurrency,
 deletion rules, audit events, and the manual verification flow.
+[docs/organizer-workspace-rosters.md](docs/organizer-workspace-rosters.md)
+documents player identity privacy, duplicate handling, roster lifecycle,
+captain guarantees, and shared admin/organizer roster management.

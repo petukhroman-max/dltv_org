@@ -571,6 +571,76 @@ export type Database = {
         };
         Returns: Json;
       };
+      search_players_for_roster: {
+        Args: {
+          p_submission_id: string;
+          p_query: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      create_player_and_add_to_roster: {
+        Args: {
+          p_submission_id: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      add_existing_player_to_roster: {
+        Args: {
+          p_submission_id: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      update_player_profile: {
+        Args: {
+          p_submission_id: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      update_roster_membership: {
+        Args: {
+          p_submission_id: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      remove_roster_member: {
+        Args: {
+          p_submission_id: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      restore_roster_member: {
+        Args: {
+          p_submission_id: string;
+          p_payload: Json;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
       resubmit_tournament_submission: {
         Args: { p_token_hash: string; p_submission: Json };
         Returns: Json;
