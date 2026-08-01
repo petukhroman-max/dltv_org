@@ -124,6 +124,7 @@ export function makeMatch(
     is_public: true,
     created_at: "2026-08-01T00:00:00Z",
     updated_at: "2026-08-01T00:00:00Z",
+    timezone: "UTC",
     stage: { id: stageId, name: "Qualifier", sequence_number: 1 },
     team_a: { id: teamAId, name: "Team Alpha" },
     team_b: { id: teamBId, name: "Team Beta" },

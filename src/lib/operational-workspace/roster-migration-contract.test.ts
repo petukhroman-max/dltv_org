@@ -24,6 +24,10 @@ const workspaceSql = readFileSync(
   ),
   "utf8",
 ).replaceAll("\r\n", "\n");
+const repository = readFileSync(
+  join(process.cwd(), "src/lib/operational-workspace/roster.repository.ts"),
+  "utf8",
+).replaceAll("\r\n", "\n");
 
 describe("players and roster migration contract", () => {
   it("adds only missing constraints and RPCs without recreating operational tables", () => {
@@ -146,5 +150,31 @@ describe("players and roster migration contract", () => {
     expect(sql).toContain(
       "m.tournament_team_id=(p_payload->>'tournament_team_id')::uuid and not m.is_active",
     );
+  });
+
+  it("keeps TypeScript RPC names and argument contracts aligned with SQL", () => {
+    for (const name of [
+      "create_player_and_add_to_roster",
+      "add_existing_player_to_roster",
+      "update_player_profile",
+      "update_roster_membership",
+      "remove_roster_member",
+      "restore_roster_member",
+      "search_players_for_roster",
+    ]) {
+      expect(repository).toContain(`"${name}"`);
+      expect(sql).toContain(`function public.${name}(`);
+    }
+    for (const argument of [
+      "p_submission_id",
+      "p_actor_type",
+      "p_actor_id",
+      "p_workspace_token_id",
+    ]) {
+      expect(repository).toContain(argument);
+      expect(sql).toContain(argument);
+    }
+    expect(repository).toContain("p_payload");
+    expect(repository).toContain("p_query");
   });
 });

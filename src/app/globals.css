@@ -181,6 +181,123 @@
   max-width: 44rem;
 }
 
+.matchCreatePanel,
+.matchManagementPanel,
+.matchDetailStack,
+.matchGroups,
+.matchList,
+.matchForm {
+  display: grid;
+  gap: 1rem;
+}
+
+.matchCreatePanel > summary {
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.matchCreatePanel[open] > summary {
+  margin-bottom: 1rem;
+}
+
+.matchFormGrid,
+.matchResultGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.matchFormGrid label,
+.matchResultGrid label {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+
+.matchFormGrid input,
+.matchFormGrid select,
+.matchResultGrid input,
+.matchResultGrid select {
+  min-width: 0;
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.matchFormWide {
+  grid-column: 1 / -1;
+}
+
+.matchFormGrid .checkboxLabel {
+  display: flex;
+  align-items: center;
+}
+
+.matchGroup > h2 {
+  margin: 0 0 0.75rem;
+  font-size: var(--text-lg);
+}
+
+.matchList {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+}
+
+.matchCard {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.matchCardMeta,
+.matchTeams,
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.matchCardMeta {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.matchTeams {
+  margin: 1.25rem 0 0.5rem;
+}
+
+.matchTeams strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.matchCard .contextualActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dangerZone {
+  border-color: rgba(255, 139, 139, 0.3);
+}
+
+.statusBadge[data-status="live"] {
+  border-color: rgba(255, 139, 139, 0.5);
+  color: #ffc5c5;
+}
+
+.statusBadge[data-status="postponed"],
+.statusBadge[data-status="cancelled"] {
+  border-color: rgba(255, 210, 120, 0.45);
+  color: var(--warning);
+}
+
 @media (max-width: 420px) {
   .operationalFormGrid {
     grid-template-columns: minmax(0, 1fr);
@@ -190,6 +307,15 @@
   .workspaceLinkControls form {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .matchFormGrid,
+  .matchResultGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .matchFormWide {
+    grid-column: auto;
   }
 }
 

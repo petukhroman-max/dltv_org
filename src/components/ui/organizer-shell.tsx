@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
 import { LocaleSwitcher } from "@/components/ui/locale-switcher";
@@ -19,12 +20,26 @@ export function OrganizerShell({
   tournamentName: string;
   children: ReactNode;
 }) {
-  const [activeSection, setActiveSection] = useState("overview");
+  const pathname = usePathname() ?? "/";
+  const workspaceRoot =
+    pathname.match(/^\/(?:en|ru)\/workspace\/[^/]+/)?.[0] ?? pathname;
+  const isMatchesRoute = pathname.startsWith(`${workspaceRoot}/matches`);
+  const [activeSection, setActiveSection] = useState(
+    isMatchesRoute ? "matches" : "overview",
+  );
   const sections = [
-    ["overview", dictionary.nav.overview],
-    ["workspace-stages", dictionary.nav.stages],
-    ["workspace-teams", dictionary.nav.teams],
-    ["workspace-rosters", dictionary.nav.rosters],
+    ["overview", dictionary.nav.overview, `${workspaceRoot}#overview`],
+    [
+      "workspace-stages",
+      dictionary.nav.stages,
+      `${workspaceRoot}#workspace-stages`,
+    ],
+    [
+      "workspace-teams",
+      dictionary.nav.teams,
+      `${workspaceRoot}#workspace-teams`,
+    ],
+    ["matches", dictionary.nav.matches, `${workspaceRoot}/matches`],
   ] as const;
   return (
     <div className="workspaceShell">
@@ -34,15 +49,15 @@ export function OrganizerShell({
         </Link>
         <p className="workspaceTournamentName">{tournamentName}</p>
         <nav aria-label={dictionary.a11y.sectionNavigation}>
-          {sections.map(([anchor, label]) => (
-            <a
+          {sections.map(([anchor, label, href]) => (
+            <Link
               key={anchor}
-              href={`#${anchor}`}
+              href={href}
               aria-current={activeSection === anchor ? "page" : undefined}
               onClick={() => setActiveSection(anchor)}
             >
               {label}
-            </a>
+            </Link>
           ))}
         </nav>
       </aside>
@@ -51,15 +66,15 @@ export function OrganizerShell({
           <details className="mobileSectionMenu">
             <summary>{dictionary.nav.menu}</summary>
             <nav aria-label={dictionary.a11y.sectionNavigation}>
-              {sections.map(([anchor, label]) => (
-                <a
+              {sections.map(([anchor, label, href]) => (
+                <Link
                   key={anchor}
-                  href={`#${anchor}`}
+                  href={href}
                   aria-current={activeSection === anchor ? "page" : undefined}
                   onClick={() => setActiveSection(anchor)}
                 >
                   {label}
-                </a>
+                </Link>
               ))}
             </nav>
           </details>

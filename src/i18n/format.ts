@@ -11,13 +11,17 @@ export function formatDate(value: string | Date, locale: Locale): string {
   }).format(new Date(value));
 }
 
-export function formatDateTime(value: string | Date, locale: Locale): string {
+export function formatDateTime(
+  value: string | Date,
+  locale: Locale,
+  timeZone = "UTC",
+): string {
   return new Intl.DateTimeFormat(localeTags[locale], {
     day: "numeric",
     month: "short",
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
-    timeZone: "UTC",
+    timeZone,
   }).format(new Date(value));
 }

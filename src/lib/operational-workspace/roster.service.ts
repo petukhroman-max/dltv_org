@@ -29,6 +29,7 @@ import {
   executeUpdatePlayerRpc,
 } from "@/lib/operational-workspace/roster.repository";
 import type { Json } from "@/lib/supabase/database.types";
+import { logOperationalMutationFailure } from "@/lib/operational-workspace/operational-diagnostics";
 
 const envelopeSchema = z.object({
   submissionId: z.string().uuid(),
@@ -99,24 +100,63 @@ function code(error: unknown) {
     ? String(error.code)
     : "";
 }
-function mapError(error: unknown): never {
+function safeEntityIds(value: unknown) {
+  if (!value || typeof value !== "object") return {};
+  const record = value as Record<string, unknown>;
+  return Object.fromEntries(
+    ["tournament_team_id", "player_id", "membership_id"]
+      .filter((key) => typeof record[key] === "string")
+      .map((key) => [key, String(record[key])]),
+  );
+}
+
+function stableErrorCode(error: unknown) {
   const detail = message(error);
-  if (code(error) === "40001") throw new RosterConflictError();
+  if (code(error) === "40001") return "ROSTER_STALE_UPDATE";
   if (code(error) === "42501" || detail.includes("access_denied"))
-    throw new RosterAuthorizationError();
+    return "ROSTER_ACCESS_DENIED";
   if (detail.includes("platform_id_conflict"))
-    throw new RosterDuplicateIdentityError("platform_id");
+    return "ROSTER_PLATFORM_ID_CONFLICT";
   if (detail.includes("membership_conflict"))
+    return "ROSTER_MEMBERSHIP_CONFLICT";
+  if (detail.includes("same_name_confirmation_required"))
+    return "ROSTER_DISPLAY_NAME_CONFIRMATION_REQUIRED";
+  if (detail.includes("captain_role_invalid"))
+    return "ROSTER_CAPTAIN_ROLE_INVALID";
+  if (["42883", "PGRST202"].includes(code(error)))
+    return "ROSTER_RPC_CONTRACT_MISMATCH";
+  return "ROSTER_MUTATION_FAILED";
+}
+
+function mapError(
+  error: unknown,
+  diagnostic: {
+    operation: string;
+    submissionId: string;
+    entityIds?: Record<string, string>;
+  },
+): never {
+  const stableCode = stableErrorCode(error);
+  logOperationalMutationFailure({
+    ...diagnostic,
+    stableCode,
+    databaseCode: code(error),
+  });
+  if (stableCode === "ROSTER_STALE_UPDATE") throw new RosterConflictError();
+  if (stableCode === "ROSTER_ACCESS_DENIED")
+    throw new RosterAuthorizationError();
+  if (stableCode === "ROSTER_PLATFORM_ID_CONFLICT")
+    throw new RosterDuplicateIdentityError("platform_id");
+  if (stableCode === "ROSTER_MEMBERSHIP_CONFLICT")
     throw new RosterValidationError({
       player_id: "This player already has this role on the selected team.",
     });
-  if (detail.includes("same_name_confirmation_required"))
+  if (stableCode === "ROSTER_DISPLAY_NAME_CONFIRMATION_REQUIRED")
     throw new RosterDuplicateIdentityError("display_name");
-  if (detail.includes("captain_role_invalid"))
+  if (stableCode === "ROSTER_CAPTAIN_ROLE_INVALID")
     throw new RosterValidationError({
       is_captain: "Only a player can be assigned as captain.",
     });
-  if (code(error) === "23505") throw new RosterMutationError();
   throw new RosterMutationError();
 }
 function payload(value: unknown): Json {
@@ -124,6 +164,7 @@ function payload(value: unknown): Json {
 }
 
 async function mutate(
+  operation: string,
   input: unknown,
   context: OperationalAccessContext,
   schema: z.ZodType,
@@ -140,7 +181,11 @@ async function mutate(
       ...access,
     });
   } catch (error) {
-    mapError(error);
+    mapError(error, {
+      operation,
+      submissionId: envelope.submissionId,
+      entityIds: safeEntityIds(values),
+    });
   }
 }
 
@@ -161,7 +206,10 @@ export async function searchPlayersForRoster(
     );
   } catch (error) {
     if (error instanceof z.ZodError) throw new RosterMutationError();
-    mapError(error);
+    mapError(error, {
+      operation: "search_players_for_roster",
+      submissionId,
+    });
   }
 }
 
@@ -172,6 +220,7 @@ export async function createPlayerAndAddToRoster(
   const { envelope } = prepare(input, context);
   const raw = parse(createPlayerAndAddToRosterSchema, envelope.values);
   return mutate(
+    "create_player_and_add_to_roster",
     {
       submissionId: envelope.submissionId,
       values: {
@@ -194,6 +243,7 @@ export async function addExistingPlayerToRoster(
   context: OperationalAccessContext,
 ) {
   return mutate(
+    "add_existing_player_to_roster",
     input,
     context,
     addExistingPlayerToRosterSchema,
@@ -207,6 +257,7 @@ export async function updateTournamentPlayerProfile(
   const { envelope } = prepare(input, context);
   const raw = parse(updatePlayerSchema, envelope.values);
   return mutate(
+    "update_player_profile",
     {
       submissionId: envelope.submissionId,
       values: {
@@ -224,6 +275,7 @@ export async function updateRosterMembership(
   context: OperationalAccessContext,
 ) {
   return mutate(
+    "update_roster_membership",
     input,
     context,
     updateRosterMembershipSchema,
@@ -235,6 +287,7 @@ export async function removeRosterMember(
   context: OperationalAccessContext,
 ) {
   return mutate(
+    "remove_roster_member",
     input,
     context,
     removeRosterMemberSchema,
@@ -246,6 +299,7 @@ export async function restoreRosterMember(
   context: OperationalAccessContext,
 ) {
   return mutate(
+    "restore_roster_member",
     input,
     context,
     restoreRosterMemberSchema,

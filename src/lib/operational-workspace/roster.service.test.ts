@@ -19,6 +19,7 @@ import {
   addExistingPlayerToRoster,
   createPlayerAndAddToRoster,
   listTeamRoster,
+  RosterAuthorizationError,
   RosterConflictError,
   searchPlayersForRoster,
   updateRosterMembership,
@@ -127,6 +128,59 @@ describe("roster service", () => {
     );
   });
 
+  it("creates a player with trusted admin identity", async () => {
+    await createPlayerAndAddToRoster(
+      {
+        submissionId,
+        values: {
+          tournament_team_id: teamAId,
+          role: "player",
+          is_captain: false,
+          new_player: { display_name: "Admin Player" },
+          confirm_same_name: false,
+        },
+      },
+      {
+        kind: "admin",
+        identity: {
+          userId: "1ada7551-3958-41c6-9da4-47ca541e9fca",
+          email: "admin@example.com",
+        },
+      },
+    );
+    expect(repository.executeCreatePlayerAndAddRpc).toHaveBeenCalledWith(
+      expect.objectContaining({
+        p_submission_id: submissionId,
+        p_actor_type: "admin",
+        p_actor_id: "1ada7551-3958-41c6-9da4-47ca541e9fca",
+        p_workspace_token_id: null,
+      }),
+    );
+  });
+
+  it("adds an existing player with trusted workspace identity", async () => {
+    await addExistingPlayerToRoster(
+      {
+        submissionId,
+        values: {
+          tournament_team_id: teamAId,
+          player_id: playerId,
+          role: "player",
+          is_captain: false,
+        },
+      },
+      context,
+    );
+    expect(repository.executeAddExistingPlayerRpc).toHaveBeenCalledWith(
+      expect.objectContaining({
+        p_submission_id: submissionId,
+        p_actor_type: "organizer_workspace",
+        p_actor_id: null,
+        p_workspace_token_id: context.tokenId,
+      }),
+    );
+  });
+
   it("returns deterministic safe search and roster models without real_name", async () => {
     const [search, roster] = await Promise.all([
       searchPlayersForRoster("Ace", submissionId, context),
@@ -185,5 +239,44 @@ describe("roster service", () => {
         player_id: "This player already has this role on the selected team.",
       },
     });
+  });
+
+  it("logs only stable roster diagnostics for cross-submission RPC rejection", async () => {
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    repository.executeAddExistingPlayerRpc.mockRejectedValue({
+      code: "42501",
+      message: "access_denied secret-token admin@example.com steam-platform-id",
+    });
+
+    await expect(
+      addExistingPlayerToRoster(
+        {
+          submissionId,
+          values: {
+            tournament_team_id: teamAId,
+            player_id: playerId,
+            role: "player",
+            is_captain: false,
+          },
+        },
+        context,
+      ),
+    ).rejects.toBeInstanceOf(RosterAuthorizationError);
+    expect(consoleError).toHaveBeenCalledWith(
+      "operational_mutation_failed",
+      expect.objectContaining({
+        operation: "add_existing_player_to_roster",
+        submissionId,
+        databaseCode: "42501",
+        stableCode: "ROSTER_ACCESS_DENIED",
+      }),
+    );
+    const serialized = JSON.stringify(consoleError.mock.calls);
+    expect(serialized).not.toContain("secret-token");
+    expect(serialized).not.toContain("admin@example.com");
+    expect(serialized).not.toContain("steam-platform-id");
+    consoleError.mockRestore();
   });
 });

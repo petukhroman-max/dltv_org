@@ -22,8 +22,10 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { LocaleSwitcher } from "@/components/ui/locale-switcher";
 import { OrganizerShell } from "@/components/ui/organizer-shell";
 import { getRequestDictionary, getRequestLocale } from "@/i18n/get-dictionary";
+import { localizePath } from "@/i18n/config";
 import { validateWorkspaceAccess } from "@/lib/organizer-workspace/workspace-token.service";
 import { listTeamRoster } from "@/lib/operational-workspace/roster.service";
+import { listTournamentMatches as listManagedMatches } from "@/lib/operational-workspace/match.service";
 import {
   listTournamentStages,
   listTournamentTeams,
@@ -60,10 +62,11 @@ export default async function OrganizerWorkspacePage({
     submissionId: access.submission.id,
     tokenId: access.tokenId,
   };
-  const [stages, teams, rosterMembers] = await Promise.all([
+  const [stages, teams, rosterMembers, matches] = await Promise.all([
     listTournamentStages(access.submission.id),
     listTournamentTeams(access.submission.id),
     listTeamRoster(access.submission.id, context),
+    listManagedMatches(access.submission.id, context),
   ]);
   const actions = {
     createStage: createWorkspaceStageAction.bind(null, token),
@@ -95,6 +98,12 @@ export default async function OrganizerWorkspacePage({
       : null,
     teams.length > teamsWithRoster.size
       ? [dictionary.workspace.completeRosters, "#workspace-rosters"]
+      : null,
+    stages.length > 0 && teams.length > 0 && matches.length === 0
+      ? [
+          dictionary.workspace.addMatches,
+          localizePath(locale, `/workspace/${token}/matches`),
+        ]
       : null,
   ].filter((item): item is [string, string] => item !== null);
   return (
@@ -138,6 +147,10 @@ export default async function OrganizerWorkspacePage({
             <div>
               <dt>{dictionary.workspace.rosterCount}</dt>
               <dd>{activeRoster.length}</dd>
+            </div>
+            <div>
+              <dt>{dictionary.workspace.matchesCount}</dt>
+              <dd>{matches.length}</dd>
             </div>
             <div>
               <dt>{dictionary.workspace.emptyTeams}</dt>
