@@ -150,6 +150,7 @@ export type PublicRosterRow = {
 
 export type PublicMatchRow = {
   id: string;
+  public_id: string;
   submission_id: string;
   stage_id: string | null;
   match_number: number | null;

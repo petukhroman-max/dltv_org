@@ -24,7 +24,8 @@ export async function listPublicTournamentStages(
     .eq("submission_id", submissionId)
     .eq("is_public", true)
     .order("sequence_number", { ascending: true })
-    .order("slug", { ascending: true });
+    .order("slug", { ascending: true })
+    .abortSignal(AbortSignal.timeout(8_000));
   if (error) queryFailed();
   return (data ?? []) as PublicStageRow[];
 }
@@ -40,7 +41,8 @@ export async function listPublicTournamentTeams(
     .eq("submission_id", submissionId)
     .eq("is_public", true)
     .order("seed", { ascending: true, nullsFirst: false })
-    .order("name", { ascending: true });
+    .order("name", { ascending: true })
+    .abortSignal(AbortSignal.timeout(8_000));
   if (error) queryFailed();
   return (data ?? []) as PublicTeamRow[];
 }
@@ -56,7 +58,8 @@ export async function listPublicTournamentRosters(
     .eq("is_active", true)
     .eq("team.submission_id", submissionId)
     .eq("team.is_public", true)
-    .eq("player.is_public", true);
+    .eq("player.is_public", true)
+    .abortSignal(AbortSignal.timeout(8_000));
   if (error) queryFailed();
   return (data ?? []) as unknown as PublicRosterRow[];
 }
@@ -67,7 +70,7 @@ export async function listPublicTournamentMatches(
   const { data, error } = await createSupabaseAdminClient()
     .from("tournament_matches")
     .select(
-      "id, submission_id, stage_id, match_number, round_name, group_name, bracket_section, bracket_round, bracket_position, scheduled_at, best_of, team_a_id, team_b_id, score_a, score_b, winner_team_id, status, deadlock_match_id, stream_url, vod_url, duration_seconds, is_public",
+      "id, public_id, submission_id, stage_id, match_number, round_name, group_name, bracket_section, bracket_round, bracket_position, scheduled_at, best_of, team_a_id, team_b_id, score_a, score_b, winner_team_id, status, deadlock_match_id, stream_url, vod_url, duration_seconds, is_public",
     )
     .eq("submission_id", submissionId)
     .eq("is_public", true)
@@ -78,7 +81,8 @@ export async function listPublicTournamentMatches(
       "postponed",
       "cancelled",
       "walkover",
-    ]);
+    ])
+    .abortSignal(AbortSignal.timeout(8_000));
   if (error) queryFailed();
   return (data ?? []) as PublicMatchRow[];
 }
@@ -91,14 +95,17 @@ export async function listPublicTournamentStructures(
   const { data: bracketLinks, error } = await client
     .from("tournament_bracket_links")
     .select("stage_id, source_match_id, outcome, target_match_id, target_slot")
-    .eq("submission_id", submissionId);
+    .eq("submission_id", submissionId)
+    .abortSignal(AbortSignal.timeout(8_000));
   if (error) queryFailed();
   const standingsEntries = await Promise.all(
     stageIds.map(async (stageId) => {
-      const { data, error: standingsError } = await client.rpc(
-        "get_tournament_stage_standings",
-        { p_submission_id: submissionId, p_stage_id: stageId },
-      );
+      const { data, error: standingsError } = await client
+        .rpc("get_tournament_stage_standings", {
+          p_submission_id: submissionId,
+          p_stage_id: stageId,
+        })
+        .abortSignal(AbortSignal.timeout(8_000));
       if (standingsError) queryFailed();
       return [stageId, data ?? []] as const;
     }),

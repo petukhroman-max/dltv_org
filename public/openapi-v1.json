@@ -1,0 +1,343 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "DLTV Public API",
+    "version": "1.0.0",
+    "description": "Authenticated read-only access to published tournament data. Data provided by DLTV.",
+    "termsOfService": "https://deadlock.one/en/api-terms"
+  },
+  "servers": [{ "url": "https://deadlock.one/api/v1" }],
+  "security": [{ "bearerApiKey": [] }],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "API health and version",
+        "security": [],
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      }
+    },
+    "/tournaments": {
+      "get": {
+        "summary": "List published tournaments",
+        "parameters": [
+          { "$ref": "#/components/parameters/Limit" },
+          { "$ref": "#/components/parameters/Cursor" },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["upcoming", "ongoing", "completed"]
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "schema": { "type": "string", "maxLength": 100 }
+          }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/SuccessList" },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" },
+          "429": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/tournaments/{slug}": {
+      "get": {
+        "summary": "Get a published tournament",
+        "parameters": [{ "$ref": "#/components/parameters/Slug" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/tournaments/{slug}/stages": {
+      "get": {
+        "summary": "List public stages",
+        "parameters": [{ "$ref": "#/components/parameters/Slug" }],
+        "responses": { "200": { "$ref": "#/components/responses/SuccessList" } }
+      }
+    },
+    "/tournaments/{slug}/teams": {
+      "get": {
+        "summary": "List public teams and safe rosters",
+        "parameters": [{ "$ref": "#/components/parameters/Slug" }],
+        "responses": { "200": { "$ref": "#/components/responses/SuccessList" } }
+      }
+    },
+    "/tournaments/{slug}/matches": {
+      "get": {
+        "summary": "List public matches",
+        "parameters": [
+          { "$ref": "#/components/parameters/Slug" },
+          { "$ref": "#/components/parameters/Limit" },
+          { "$ref": "#/components/parameters/Cursor" },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "scheduled",
+                "live",
+                "completed",
+                "postponed",
+                "cancelled",
+                "walkover"
+              ]
+            }
+          },
+          { "name": "stage", "in": "query", "schema": { "type": "string" } },
+          { "name": "team", "in": "query", "schema": { "type": "string" } },
+          {
+            "name": "date_from",
+            "in": "query",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/SuccessList" },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/tournaments/{slug}/bracket": {
+      "get": {
+        "summary": "Get public bracket data",
+        "parameters": [{ "$ref": "#/components/parameters/Slug" }],
+        "responses": { "200": { "$ref": "#/components/responses/SuccessList" } }
+      }
+    },
+    "/tournaments/{slug}/standings": {
+      "get": {
+        "summary": "Get public standings",
+        "parameters": [{ "$ref": "#/components/parameters/Slug" }],
+        "responses": { "200": { "$ref": "#/components/responses/SuccessList" } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerApiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "dltv_live_<secret>"
+      }
+    },
+    "parameters": {
+      "Slug": {
+        "name": "slug",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50
+        }
+      },
+      "Cursor": {
+        "name": "cursor",
+        "in": "query",
+        "description": "Opaque signed cursor returned by the previous response.",
+        "schema": { "type": "string" }
+      }
+    },
+    "headers": {
+      "RequestId": { "schema": { "type": "string", "format": "uuid" } },
+      "RateLimit": { "schema": { "type": "integer" } }
+    },
+    "responses": {
+      "Success": {
+        "description": "Successful response with attribution metadata.",
+        "headers": {
+          "X-Request-ID": { "$ref": "#/components/headers/RequestId" },
+          "X-Data-Provider": {
+            "schema": { "type": "string", "const": "DLTV" }
+          },
+          "X-Attribution-Required": {
+            "schema": { "type": "string", "const": "true" }
+          },
+          "X-API-Version": { "schema": { "type": "string", "const": "v1" } },
+          "X-RateLimit-Limit": { "$ref": "#/components/headers/RateLimit" },
+          "X-RateLimit-Remaining": { "$ref": "#/components/headers/RateLimit" },
+          "X-RateLimit-Reset": { "$ref": "#/components/headers/RateLimit" }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/SuccessEnvelope" }
+          }
+        }
+      },
+      "SuccessList": {
+        "description": "Paginated list response.",
+        "headers": {
+          "X-Request-ID": { "$ref": "#/components/headers/RequestId" },
+          "X-Data-Provider": {
+            "schema": { "type": "string", "const": "DLTV" }
+          },
+          "X-Attribution-Required": {
+            "schema": { "type": "string", "const": "true" }
+          },
+          "X-API-Version": { "schema": { "type": "string", "const": "v1" } },
+          "X-RateLimit-Limit": { "$ref": "#/components/headers/RateLimit" },
+          "X-RateLimit-Remaining": { "$ref": "#/components/headers/RateLimit" },
+          "X-RateLimit-Reset": { "$ref": "#/components/headers/RateLimit" }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                { "$ref": "#/components/schemas/SuccessEnvelope" },
+                {
+                  "type": "object",
+                  "required": ["pagination"],
+                  "properties": {
+                    "data": { "type": "array", "items": {} },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "Error": {
+        "description": "Safe error response; 429 also includes Retry-After.",
+        "headers": {
+          "X-Request-ID": { "$ref": "#/components/headers/RequestId" },
+          "Retry-After": { "$ref": "#/components/headers/RateLimit" }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorEnvelope" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "SuccessEnvelope": {
+        "type": "object",
+        "required": ["data", "meta"],
+        "example": {
+          "data": {},
+          "meta": {
+            "api_version": "v1",
+            "provider": "DLTV",
+            "provider_url": "https://deadlock.one",
+            "attribution_required": true,
+            "attribution_text": "Data provided by DLTV",
+            "terms_version": "2026-08-v1",
+            "request_id": "10000000-0000-4000-8000-000000000001",
+            "generated_at": "2026-08-02T07:00:00Z"
+          }
+        },
+        "properties": {
+          "data": {},
+          "meta": { "$ref": "#/components/schemas/Meta" }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "required": ["next_cursor", "has_more", "limit"],
+        "example": { "next_cursor": null, "has_more": false, "limit": 50 },
+        "properties": {
+          "next_cursor": { "type": ["string", "null"] },
+          "has_more": { "type": "boolean" },
+          "limit": { "type": "integer" }
+        }
+      },
+      "Meta": {
+        "type": "object",
+        "required": [
+          "api_version",
+          "provider",
+          "provider_url",
+          "attribution_required",
+          "attribution_text",
+          "terms_version",
+          "request_id",
+          "generated_at"
+        ],
+        "properties": {
+          "api_version": { "type": "string", "const": "v1" },
+          "provider": { "type": "string", "const": "DLTV" },
+          "provider_url": { "type": "string", "const": "https://deadlock.one" },
+          "attribution_required": { "type": "boolean", "const": true },
+          "attribution_text": {
+            "type": "string",
+            "const": "Data provided by DLTV"
+          },
+          "terms_version": { "type": "string", "const": "2026-08-v1" },
+          "request_id": { "type": "string", "format": "uuid" },
+          "generated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "required": ["error"],
+        "example": {
+          "error": {
+            "code": "INVALID_API_KEY",
+            "message": "The API key is invalid or inactive.",
+            "request_id": "10000000-0000-4000-8000-000000000001"
+          }
+        },
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message", "request_id"],
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "API_KEY_REQUIRED",
+                  "INVALID_API_KEY",
+                  "API_KEY_EXPIRED",
+                  "API_KEY_REVOKED",
+                  "API_KEY_SUSPENDED",
+                  "API_CLIENT_SUSPENDED",
+                  "ENDPOINT_NOT_ALLOWED",
+                  "RATE_LIMIT_EXCEEDED",
+                  "INVALID_CURSOR",
+                  "INVALID_FILTER",
+                  "TOURNAMENT_NOT_FOUND",
+                  "RESOURCE_NOT_FOUND",
+                  "METHOD_NOT_ALLOWED",
+                  "CORS_PREFLIGHT_DENIED",
+                  "RESPONSE_TOO_LARGE",
+                  "INTERNAL_API_ERROR"
+                ]
+              },
+              "message": { "type": "string" },
+              "request_id": { "type": "string", "format": "uuid" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

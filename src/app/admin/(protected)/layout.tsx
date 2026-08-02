@@ -8,6 +8,7 @@ import { localizePath } from "@/i18n/config";
 import { getRequestLocale } from "@/i18n/get-dictionary";
 import { getAdminCopy } from "@/lib/admin/copy";
 import { requireAdmin } from "@/lib/admin/require-admin";
+import { getApiAdminCopy } from "@/lib/public-api/admin-copy";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -20,6 +21,7 @@ export default async function ProtectedAdminLayout({
   noStore();
   const locale = await getRequestLocale();
   const adminCopy = getAdminCopy(locale);
+  const apiCopy = getApiAdminCopy(locale);
   const admin = await requireAdmin();
 
   return (
@@ -31,6 +33,18 @@ export default async function ProtectedAdminLayout({
             href={localizePath(locale, "/admin/submissions")}
           >
             {adminCopy.brand}
+          </Link>
+          <Link
+            className="adminNavLink"
+            href={localizePath(locale, "/admin/api-access")}
+          >
+            {apiCopy.requests}
+          </Link>
+          <Link
+            className="adminNavLink"
+            href={localizePath(locale, "/admin/api-clients")}
+          >
+            {apiCopy.clients}
           </Link>
           <span className="adminSectionLabel">{adminCopy.nav.section}</span>
         </div>

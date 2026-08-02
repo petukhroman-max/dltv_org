@@ -102,20 +102,10 @@ export function toPublicTeam(
   };
 }
 
-function matchPublicId(row: PublicMatchRow, ordinal: number) {
-  const context = row.group_name ?? row.round_name;
-  if (context && row.match_number)
-    return `${context} · Match ${row.match_number}`;
-  if (row.match_number) return `Match ${row.match_number}`;
-  if (context) return context;
-  return `Match ${ordinal + 1}`;
-}
-
 export function toPublicMatch(
   row: PublicMatchRow,
   stages: PublicStageRow[],
   teams: PublicTeamRow[],
-  ordinal: number,
   tournamentTimezone: string,
   onWarning?: ProjectionWarning,
 ): PublicMatch {
@@ -150,7 +140,7 @@ export function toPublicMatch(
     row.status,
   );
   return {
-    public_id: matchPublicId(row, ordinal),
+    public_id: row.public_id,
     stage: stage
       ? {
           name: stage.name,
@@ -199,6 +189,11 @@ export function groupPublicMatches(matches: PublicMatch[]): PublicMatchGroups {
       (b.match_number ?? Number.MAX_SAFE_INTEGER) ||
     a.public_id.localeCompare(b.public_id);
   const live = matches.filter((match) => match.status === "live").sort(stable);
+  const upcomingStatusOrder: Record<string, number> = {
+    scheduled: 0,
+    postponed: 1,
+    cancelled: 2,
+  };
   const upcoming = matches
     .filter(
       (match) =>
@@ -208,7 +203,10 @@ export function groupPublicMatches(matches: PublicMatch[]): PublicMatchGroups {
     .sort(
       (a, b) =>
         time(a.scheduled_at, Number.MAX_SAFE_INTEGER) -
-          time(b.scheduled_at, Number.MAX_SAFE_INTEGER) || stable(a, b),
+          time(b.scheduled_at, Number.MAX_SAFE_INTEGER) ||
+        (upcomingStatusOrder[a.status] ?? 99) -
+          (upcomingStatusOrder[b.status] ?? 99) ||
+        stable(a, b),
     );
   const results = matches
     .filter((match) => ["completed", "walkover"].includes(match.status))
@@ -341,7 +339,7 @@ export function toPublicTournamentProjection(input: {
     }
     return true;
   });
-  const publicMatches = visibleRows.map((row, ordinal) =>
+  const publicMatches = visibleRows.map((row) =>
     toPublicMatch(
       row,
       input.stageRows.filter(
@@ -350,7 +348,6 @@ export function toPublicTournamentProjection(input: {
           stage.submission_id === input.tournament.submission_id,
       ),
       publicTeamRows,
-      ordinal,
       input.tournament.timezone,
       input.onWarning,
     ),

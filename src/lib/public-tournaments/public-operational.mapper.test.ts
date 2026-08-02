@@ -63,6 +63,7 @@ function match(
 ): PublicMatchRow {
   return {
     id,
+    public_id: `mt_${id.replaceAll("-", "").slice(0, 32)}`,
     submission_id: submissionId,
     stage_id: stageId,
     match_number: 1,
