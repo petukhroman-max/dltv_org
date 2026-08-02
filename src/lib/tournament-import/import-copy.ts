@@ -62,6 +62,8 @@ const en = {
   back: "Back to tournament workspace",
   errorPrefix: "Import could not continue",
   resolvedSuccess: "Conflict resolved. The preview has been refreshed.",
+  revalidatedSuccess: "The import was revalidated from current database state.",
+  retryValidation: "Reload and validate again",
   blockingSeverity: "Blocking",
   warningSeverity: "Review",
 } as const;
@@ -130,6 +132,9 @@ const ru: ImportCopy = {
   back: "Назад в кабинет турнира",
   errorPrefix: "Не удалось продолжить импорт",
   resolvedSuccess: "Конфликт разрешён. Предпросмотр обновлён.",
+  revalidatedSuccess:
+    "Импорт повторно проверен по актуальному состоянию базы данных.",
+  retryValidation: "Обновить и проверить снова",
   blockingSeverity: "Блокирует импорт",
   warningSeverity: "Требует внимания",
 };
@@ -249,6 +254,10 @@ const issueMessages: Record<string, { en: string; ru: string }> = {
     en: "The import could not be applied. Reload the preview and try again.",
     ru: "Не удалось применить импорт. Обновите предпросмотр и повторите попытку.",
   },
+  import_revalidation_failed: {
+    en: "The import could not be revalidated. Reload the page and try again.",
+    ru: "Не удалось повторно проверить импорт. Обновите страницу и повторите попытку.",
+  },
 };
 
 export function getImportIssueMessage(locale: Locale, code: string): string {
@@ -257,6 +266,33 @@ export function getImportIssueMessage(locale: Locale, code: string): string {
     return locale === "ru"
       ? `Остался блокирующий объект ${entity} в ${sheet}, строка ${row}.`
       : `A blocking ${entity} remains in ${sheet}, row ${row}.`;
+  }
+  if (kind === "import_apply_row") {
+    const [, failedEntity, failedSheet, failedRow, action, step, reason] =
+      code.split("|");
+    const reasonText =
+      reason === "import_reference_unresolved"
+        ? locale === "ru"
+          ? "не удалось определить связанную сущность"
+          : "a referenced entity could not be resolved"
+        : reason === "import_database_function_missing"
+          ? locale === "ru"
+            ? "недоступна необходимая функция базы данных"
+            : "a required database function is unavailable"
+          : reason === "import_unique_constraint"
+            ? locale === "ru"
+              ? "запись нарушает ограничение уникальности"
+              : "the row violates a uniqueness constraint"
+            : reason === "import_check_constraint"
+              ? locale === "ru"
+                ? "запись не соответствует правилам данных"
+                : "the row violates a data constraint"
+              : locale === "ru"
+                ? "база данных отклонила запись"
+                : "the database rejected the row";
+    return locale === "ru"
+      ? `Импорт остановлен при действии ${action} для ${failedEntity} из «${failedSheet}», строка ${failedRow} (шаг ${step}): ${reasonText}. Все изменения отменены.`
+      : `Import failed while performing ${action} for ${failedEntity} from “${failedSheet}”, row ${failedRow} (step ${step}): ${reasonText}. All changes were rolled back.`;
   }
   return (
     issueMessages[code]?.[locale] ??

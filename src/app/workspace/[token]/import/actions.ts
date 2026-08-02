@@ -15,6 +15,7 @@ import {
   createCustomMappedImportSession,
   createXlsxImportSession,
   resolveTournamentImportConflict,
+  revalidateTournamentImportSession,
   TournamentImportError,
 } from "@/lib/tournament-import/import.service";
 import { importMappingFromFormData } from "@/lib/tournament-import/mapping-form";
@@ -187,6 +188,33 @@ export async function applyWorkspaceImportAction(
   revalidatePath(`/workspace/${rawToken}/import`);
   revalidatePath(`/admin/submissions/${resolved.access.submission.id}`);
   redirect(`/workspace/${rawToken}/import?session=${sessionId}`);
+}
+
+export async function revalidateWorkspaceImportAction(
+  rawToken: string,
+  formData: FormData,
+): Promise<void> {
+  const resolved = await context(rawToken);
+  if (!resolved)
+    redirect(`/workspace/${rawToken}/import?error=workspace_access_invalid`);
+  const sessionId = String(formData.get("sessionId") ?? "");
+  try {
+    await revalidateTournamentImportSession(
+      sessionId,
+      resolved.access.submission.id,
+      resolved.context,
+    );
+  } catch (error) {
+    const code =
+      error instanceof TournamentImportError
+        ? error.code
+        : "import_revalidation_failed";
+    redirect(
+      `/workspace/${rawToken}/import?session=${sessionId}&error=${encodeURIComponent(code)}`,
+    );
+  }
+  revalidatePath(`/workspace/${rawToken}/import`);
+  redirect(`/workspace/${rawToken}/import?session=${sessionId}&revalidated=1`);
 }
 
 export async function cancelWorkspaceImportAction(

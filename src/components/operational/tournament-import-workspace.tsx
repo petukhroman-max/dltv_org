@@ -57,6 +57,24 @@ function sourceReferences(value: Json): Array<{ sheet: string; row: number }> {
   });
 }
 
+function persistedApplyFailureCode(value: Json): string | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const failure = value.failure;
+  if (!failure || typeof failure !== "object" || Array.isArray(failure))
+    return null;
+  return [
+    "import_apply_row",
+    failure.entity_type,
+    failure.source_sheet,
+    failure.source_row_number,
+    failure.proposed_action,
+    failure.import_step,
+    failure.failure_code,
+  ]
+    .map((part) => String(part ?? "unknown"))
+    .join("|");
+}
+
 export function TournamentImportWorkspace({
   locale,
   session,
@@ -66,6 +84,7 @@ export function TournamentImportWorkspace({
   confirmTimezoneAction,
   mappingAction,
   applyAction,
+  retryAction,
   cancelAction,
 }: {
   locale: Locale;
@@ -76,6 +95,7 @@ export function TournamentImportWorkspace({
   confirmTimezoneAction: FormAction;
   mappingAction: FormAction;
   applyAction: FormAction;
+  retryAction: FormAction;
   cancelAction: FormAction;
 }) {
   const copy = getImportCopy(locale);
@@ -104,6 +124,9 @@ export function TournamentImportWorkspace({
         session.session.status,
       )
     : false;
+  const persistedFailure = session
+    ? persistedApplyFailureCode(session.session.import_summary)
+    : null;
   return (
     <section className="importWorkspace" aria-labelledby="import-title">
       <header className="workspacePageHeader">
@@ -188,6 +211,11 @@ export function TournamentImportWorkspace({
               </div>
             ))}
           </section>
+          {persistedFailure ? (
+            <p className="fieldError importTopError" role="alert">
+              {getImportIssueMessage(locale, persistedFailure)}
+            </p>
+          ) : null}
           {session.session.timezone_confirmation_required && !locked ? (
             <section className="adminPanel importTimezonePanel">
               <div>
@@ -429,7 +457,20 @@ export function TournamentImportWorkspace({
               {blocking ? (
                 <p className="fieldError importBlocking">{copy.blocked}</p>
               ) : null}
-              {!locked ? (
+              {session.session.status === "failed" ? (
+                <div className="importConfirmation">
+                  <form action={retryAction}>
+                    <input
+                      type="hidden"
+                      name="sessionId"
+                      value={session.session.id}
+                    />
+                    <button className="primaryButton" type="submit">
+                      {copy.retryValidation}
+                    </button>
+                  </form>
+                </div>
+              ) : !locked ? (
                 <div className="importConfirmation">
                   <form action={applyAction}>
                     <input

@@ -132,4 +132,18 @@ describe("import server action contract", () => {
       "A blocking ${entity} remains in ${sheet}, row ${row}.",
     );
   });
+
+  it("provides a real failed-session revalidation path and persisted diagnostics", () => {
+    expect(organizer).toContain(
+      "export async function revalidateWorkspaceImportAction",
+    );
+    expect(admin).toContain(
+      "export async function revalidateAdminImportAction",
+    );
+    expect(service).toContain("revalidateTournamentImportSession");
+    expect(workspace).toContain('session.session.status === "failed"');
+    expect(workspace).toContain("persistedApplyFailureCode");
+    expect(workspace).toContain("retryAction");
+    expect(copy).toContain('retryValidation: "Reload and validate again"');
+  });
 });

@@ -33,4 +33,14 @@ describe("import issue copy", () => {
       "Остался блокирующий объект match в QD2 Match Info, строка 19.",
     );
   });
+
+  it("explains the safe atomic apply failure without raw SQL", () => {
+    const code =
+      "import_apply_row|stage|LAN|1|create|stage_slug|import_database_function_missing";
+    expect(getImportIssueMessage("en", code)).toBe(
+      "Import failed while performing create for stage from “LAN”, row 1 (step stage_slug): a required database function is unavailable. All changes were rolled back.",
+    );
+    expect(getImportIssueMessage("ru", code)).toContain("«LAN», строка 1");
+    expect(getImportIssueMessage("en", code)).not.toContain("digest(");
+  });
 });

@@ -396,7 +396,33 @@ export async function applyTournamentImportSession(
     }
     throw new TournamentImportError("import_session_not_ready");
   }
-  return executeApplyImportRpc(sessionId, submissionId, access);
+  try {
+    return await executeApplyImportRpc(sessionId, submissionId, access);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (message.startsWith("import_apply_row|")) {
+      throw new TournamentImportError(message);
+    }
+    throw new TournamentImportError("import_apply_failed");
+  }
+}
+
+export async function revalidateTournamentImportSession(
+  sessionId: string,
+  submissionId: string,
+  context: OperationalAccessContext,
+) {
+  const loaded = await loadTournamentImportSession(
+    sessionId,
+    submissionId,
+    context,
+  );
+  if (!loaded) throw new TournamentImportError("import_session_not_found");
+  return recomputeImportReadinessRpc(
+    sessionId,
+    submissionId,
+    toOperationalRpcAccess(context, submissionId),
+  );
 }
 
 export async function cancelTournamentImportSession(

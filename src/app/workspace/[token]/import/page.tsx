@@ -5,6 +5,7 @@ import {
   cancelWorkspaceImportAction,
   confirmWorkspaceImportTimezoneAction,
   resolveWorkspaceImportAction,
+  revalidateWorkspaceImportAction,
   mapWorkspaceImportAction,
   uploadWorkspaceImportAction,
 } from "./actions";
@@ -31,6 +32,7 @@ export default async function WorkspaceImportPage({
     filter?: string;
     error?: string;
     resolved?: string;
+    revalidated?: string;
   }>;
 }) {
   noStore();
@@ -81,6 +83,11 @@ export default async function WorkspaceImportPage({
             {importCopy.resolvedSuccess}
           </p>
         ) : null}
+        {query.revalidated === "1" ? (
+          <p className="successMessage" role="status">
+            {importCopy.revalidatedSuccess}
+          </p>
+        ) : null}
         <TournamentImportWorkspace
           locale={locale}
           session={session}
@@ -93,6 +100,7 @@ export default async function WorkspaceImportPage({
           )}
           mappingAction={mapWorkspaceImportAction.bind(null, token)}
           applyAction={applyWorkspaceImportAction.bind(null, token)}
+          retryAction={revalidateWorkspaceImportAction.bind(null, token)}
           cancelAction={cancelWorkspaceImportAction.bind(null, token)}
         />
       </main>

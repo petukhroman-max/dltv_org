@@ -8,6 +8,7 @@ import {
   confirmAdminImportTimezoneAction,
   mapAdminImportAction,
   resolveAdminImportAction,
+  revalidateAdminImportAction,
   uploadAdminImportAction,
 } from "./actions";
 import { TournamentImportWorkspace } from "@/components/operational/tournament-import-workspace";
@@ -33,6 +34,7 @@ export default async function AdminImportPage({
     filter?: string;
     error?: string;
     resolved?: string;
+    revalidated?: string;
   }>;
 }) {
   noStore();
@@ -66,6 +68,11 @@ export default async function AdminImportPage({
           {importCopy.resolvedSuccess}
         </p>
       ) : null}
+      {query.revalidated === "1" ? (
+        <p className="successMessage" role="status">
+          {importCopy.revalidatedSuccess}
+        </p>
+      ) : null}
       <TournamentImportWorkspace
         locale={locale}
         session={session}
@@ -75,6 +82,7 @@ export default async function AdminImportPage({
         resolveAction={resolveAdminImportAction.bind(null, id)}
         confirmTimezoneAction={confirmAdminImportTimezoneAction.bind(null, id)}
         applyAction={applyAdminImportAction.bind(null, id)}
+        retryAction={revalidateAdminImportAction.bind(null, id)}
         cancelAction={cancelAdminImportAction.bind(null, id)}
       />
     </main>

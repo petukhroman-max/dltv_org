@@ -30,6 +30,13 @@ const migration =
       "supabase/migrations/20260802203000_fix_import_apply_readiness.sql",
     ),
     "utf8",
+  ) +
+  fs.readFileSync(
+    path.join(
+      process.cwd(),
+      "supabase/migrations/20260802220000_fix_atomic_import_apply_diagnostics.sql",
+    ),
+    "utf8",
   );
 
 describe("tournament import migration contract", () => {
@@ -62,7 +69,9 @@ describe("tournament import migration contract", () => {
     expect(migration).toMatch(
       /when 'stage' then 1[\s\S]*when 'team' then 2[\s\S]*when 'player' then 3/,
     );
-    expect(migration).not.toContain("exception when others");
+    expect(migration).toMatch(
+      /exception when others then[\s\S]*get stacked diagnostics[\s\S]*status='failed'/,
+    );
   });
 
   it("audits safe metadata and removes temporary normalized rows on completion/cancel", () => {
@@ -155,6 +164,38 @@ describe("tournament import migration contract", () => {
     expect(migration).toContain("'source_sheet',v_blocker.source_sheet");
     expect(migration).toContain(
       "'source_row_number',v_blocker.source_row_number",
+    );
+  });
+
+  it("qualifies pgcrypto and reports the exact row after an atomic rollback", () => {
+    expect(migration).toContain("extensions.digest(v_row.source_key,'sha256')");
+    expect(migration).toContain("exception when others then");
+    expect(migration).toContain("get stacked diagnostics");
+    expect(migration).toContain("v_sqlstate=returned_sqlstate");
+    expect(migration).toContain("'entity_type',v_row.entity_type");
+    expect(migration).toContain("'source_sheet',v_row.source_sheet");
+    expect(migration).toContain("'source_row_number',v_row.source_row_number");
+    expect(migration).toContain("'import_step',v_step");
+    expect(migration).toContain("'batch_index',v_batch_index");
+    expect(migration).toContain("when v_sqlstate='42883'");
+    expect(migration).toContain("then 'import_database_function_missing'");
+    expect(migration).toContain(
+      "when v_row.entity_type in ('player','roster_member') then '[redacted]'",
+    );
+    expect(migration).toMatch(
+      /exception when others then[\s\S]*status='failed'[\s\S]*return jsonb_build_object\('success',false/,
+    );
+  });
+
+  it("keeps apply ordering, retries and double apply idempotent", () => {
+    expect(migration).toMatch(
+      /when 'stage' then 1[\s\S]*when 'team' then 2[\s\S]*when 'player' then 3[\s\S]*when 'roster_member' then 4[\s\S]*when 'match' then 5[\s\S]*when 'standings_group_assignment' then 6[\s\S]*when 'bracket_link' then 8/,
+    );
+    expect(migration).toContain("if v_session.status='completed' then");
+    expect(migration).toContain("'idempotent',true");
+    expect(migration).toContain("'success',true,'idempotent',false");
+    expect(migration).toContain(
+      "v_session.status in ('applying','completed','cancelled','expired')",
     );
   });
 });

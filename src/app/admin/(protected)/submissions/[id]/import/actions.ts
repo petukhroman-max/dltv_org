@@ -16,6 +16,7 @@ import {
   createCustomMappedImportSession,
   createXlsxImportSession,
   resolveTournamentImportConflict,
+  revalidateTournamentImportSession,
   TournamentImportError,
 } from "@/lib/tournament-import/import.service";
 import { importMappingFromFormData } from "@/lib/tournament-import/mapping-form";
@@ -179,6 +180,33 @@ export async function applyAdminImportAction(
   revalidatePath(`/admin/submissions/${submissionId}`);
   revalidatePath(`/admin/submissions/${submissionId}/import`);
   redirect(`/admin/submissions/${submissionId}/import?session=${sessionId}`);
+}
+
+export async function revalidateAdminImportAction(
+  submissionId: string,
+  formData: FormData,
+): Promise<void> {
+  const resolved = await context(submissionId);
+  const sessionId = String(formData.get("sessionId") ?? "");
+  try {
+    await revalidateTournamentImportSession(
+      sessionId,
+      submissionId,
+      resolved.context,
+    );
+  } catch (error) {
+    const code =
+      error instanceof TournamentImportError
+        ? error.code
+        : "import_revalidation_failed";
+    redirect(
+      `/admin/submissions/${submissionId}/import?session=${sessionId}&error=${encodeURIComponent(code)}`,
+    );
+  }
+  revalidatePath(`/admin/submissions/${submissionId}/import`);
+  redirect(
+    `/admin/submissions/${submissionId}/import?session=${sessionId}&revalidated=1`,
+  );
 }
 
 export async function cancelAdminImportAction(

@@ -79,7 +79,7 @@ beforeEach(() => {
 });
 
 describe("import apply readiness", () => {
-  it("applies after a resolved three-source canonical conflict", async () => {
+  it("applies all 388 create rows after a resolved canonical conflict", async () => {
     repository.recomputeImportReadinessRpc.mockResolvedValue({
       ready: true,
       status: "ready",
@@ -87,11 +87,21 @@ describe("import apply readiness", () => {
       unresolved_conflict_count: 0,
       blocker: null,
     });
-    repository.executeApplyImportRpc.mockResolvedValue({ created: 0 });
+    repository.executeApplyImportRpc.mockResolvedValue({
+      success: true,
+      created: 388,
+      skipped: 4,
+      failed_rows: 0,
+    });
 
     await expect(
       applyTournamentImportSession(sessionId, submissionId, context),
-    ).resolves.toEqual({ created: 0 });
+    ).resolves.toEqual({
+      success: true,
+      created: 388,
+      skipped: 4,
+      failed_rows: 0,
+    });
     expect(repository.recomputeImportReadinessRpc).toHaveBeenCalledBefore(
       repository.executeApplyImportRpc,
     );
@@ -128,5 +138,19 @@ describe("import apply readiness", () => {
       new TournamentImportError("import_blocking_row|match|QD2 Match Info|19"),
     );
     expect(repository.executeApplyImportRpc).not.toHaveBeenCalled();
+  });
+
+  it("preserves safe row diagnostics returned by atomic apply", async () => {
+    repository.recomputeImportReadinessRpc.mockResolvedValue({ ready: true });
+    repository.executeApplyImportRpc.mockRejectedValue(
+      new Error(
+        "import_apply_row|stage|LAN|1|create|stage_slug|import_database_function_missing",
+      ),
+    );
+    await expect(
+      applyTournamentImportSession(sessionId, submissionId, context),
+    ).rejects.toMatchObject({
+      code: "import_apply_row|stage|LAN|1|create|stage_slug|import_database_function_missing",
+    });
   });
 });

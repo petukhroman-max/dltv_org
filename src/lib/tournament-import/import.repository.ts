@@ -278,7 +278,49 @@ export async function executeApplyImportRpc(
     "apply_tournament_import_session",
     args,
   );
-  if (!error) return data;
+  if (!error) {
+    if (
+      data &&
+      typeof data === "object" &&
+      !Array.isArray(data) &&
+      data.success === false &&
+      data.failure &&
+      typeof data.failure === "object" &&
+      !Array.isArray(data.failure)
+    ) {
+      const failure = data.failure;
+      const diagnostic = {
+        session_id: sessionId,
+        submission_id: submissionId,
+        entity_type: String(failure.entity_type ?? "row"),
+        source_sheet: String(failure.source_sheet ?? "unknown"),
+        source_row_number: String(failure.source_row_number ?? "?"),
+        source_key: String(failure.source_key ?? "[unavailable]"),
+        proposed_action: String(failure.proposed_action ?? "unknown"),
+        import_step: String(failure.import_step ?? "apply"),
+        database_code: String(failure.database_code ?? "unknown"),
+        constraint_name: String(failure.constraint_name ?? "none"),
+        function_name: String(
+          failure.function_name ?? "apply_tournament_import_session",
+        ),
+        batch_index: String(failure.batch_index ?? "?"),
+        failure_code: String(failure.failure_code ?? "import_database_error"),
+      };
+      console.error("tournament_import_apply_failed", diagnostic);
+      throw new Error(
+        [
+          "import_apply_row",
+          diagnostic.entity_type,
+          diagnostic.source_sheet,
+          diagnostic.source_row_number,
+          diagnostic.proposed_action,
+          diagnostic.import_step,
+          diagnostic.failure_code,
+        ].join("|"),
+      );
+    }
+    return data;
+  }
   await client.rpc("mark_tournament_import_failed", {
     ...args,
     p_error_code: error.message.slice(0, 80),
