@@ -33,6 +33,7 @@ export const ru = {
     stages: "Этапы",
     teams: "Команды",
     matches: "Матчи",
+    importData: "Импорт",
     rosters: "Составы",
     submissions: "Заявки",
     moderation: "Модерация",

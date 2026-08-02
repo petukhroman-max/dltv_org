@@ -265,6 +265,50 @@ type TournamentStandingAdjustmentRow = {
   updated_at: string;
 };
 
+type TournamentImportSessionRow = {
+  id: string;
+  submission_id: string;
+  source_type: string;
+  source_filename: string;
+  source_url_safe: string | null;
+  source_fingerprint: string;
+  template_type: string;
+  status: string;
+  detected_sheets: Json;
+  mapping_config: Json;
+  validation_summary: Json;
+  import_summary: Json;
+  fallback_timezone: string;
+  timezone_confirmation_required: boolean;
+  timezone_confirmed_at: string | null;
+  created_by_actor_type: string;
+  created_by_actor_id: string | null;
+  created_by_workspace_token_id: string | null;
+  created_at: string;
+  updated_at: string;
+  expires_at: string;
+  applied_at: string | null;
+};
+
+type TournamentImportRow = {
+  id: string;
+  session_id: string;
+  entity_type: string;
+  source_sheet: string;
+  source_row_number: number;
+  source_key: string;
+  source_references: Json;
+  normalized_payload: Json;
+  validation_status: string;
+  validation_errors: Json;
+  warnings: Json;
+  proposed_action: string;
+  existing_entity_id: string | null;
+  resolution: Json | null;
+  resolution_status: string;
+  created_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -583,9 +627,141 @@ export type Database = {
         >;
         Relationships: [];
       };
+      tournament_import_sessions: {
+        Row: TournamentImportSessionRow;
+        Insert: Pick<
+          TournamentImportSessionRow,
+          | "submission_id"
+          | "source_type"
+          | "source_filename"
+          | "source_fingerprint"
+          | "template_type"
+          | "created_by_actor_type"
+        > &
+          Partial<
+            Omit<
+              TournamentImportSessionRow,
+              | "submission_id"
+              | "source_type"
+              | "source_filename"
+              | "source_fingerprint"
+              | "template_type"
+              | "created_by_actor_type"
+            >
+          >;
+        Update: Partial<
+          Omit<
+            TournamentImportSessionRow,
+            "id" | "submission_id" | "created_at"
+          >
+        >;
+        Relationships: [];
+      };
+      tournament_import_rows: {
+        Row: TournamentImportRow;
+        Insert: Pick<
+          TournamentImportRow,
+          | "session_id"
+          | "entity_type"
+          | "source_sheet"
+          | "source_row_number"
+          | "source_key"
+          | "normalized_payload"
+          | "validation_status"
+          | "proposed_action"
+        > &
+          Partial<
+            Omit<
+              TournamentImportRow,
+              | "session_id"
+              | "entity_type"
+              | "source_sheet"
+              | "source_row_number"
+              | "source_key"
+              | "normalized_payload"
+              | "validation_status"
+              | "proposed_action"
+            >
+          >;
+        Update: Partial<
+          Omit<TournamentImportRow, "id" | "session_id" | "created_at">
+        >;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
+      expire_tournament_import_sessions: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
+      };
+      confirm_tournament_import_timezone: {
+        Args: {
+          p_session_id: string;
+          p_submission_id: string;
+          p_timezone: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      resolve_tournament_import_conflict: {
+        Args: {
+          p_session_id: string;
+          p_submission_id: string;
+          p_row_id: string;
+          p_decision: string;
+          p_existing_entity_id: string | null;
+          p_confirmed_completed_result_overwrite: boolean;
+          p_expected_session_updated_at: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      recompute_tournament_import_readiness: {
+        Args: {
+          p_session_id: string;
+          p_submission_id: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      apply_tournament_import_session: {
+        Args: {
+          p_session_id: string;
+          p_submission_id: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      cancel_tournament_import_session: {
+        Args: {
+          p_session_id: string;
+          p_submission_id: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      mark_tournament_import_failed: {
+        Args: {
+          p_session_id: string;
+          p_submission_id: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+          p_error_code: string;
+        };
+        Returns: undefined;
+      };
       create_tournament_submission_with_organizer: {
         Args: {
           p_organizer: Json;

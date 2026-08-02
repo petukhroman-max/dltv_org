@@ -32,6 +32,7 @@ export const en = {
     stages: "Stages",
     teams: "Teams",
     matches: "Matches",
+    importData: "Import",
     rosters: "Rosters",
     submissions: "Submissions",
     moderation: "Moderation",

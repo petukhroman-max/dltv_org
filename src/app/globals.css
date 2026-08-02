@@ -3249,3 +3249,159 @@ button {
     transition-duration: 0.01ms !important;
   }
 }
+
+.importWorkspace {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.importSteps {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(7rem, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  list-style: none;
+}
+
+.importSteps li,
+.importFilters a {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  background: var(--surface);
+  white-space: nowrap;
+}
+
+.importSourceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.importSourceCard,
+.importResolutionForm,
+.importMappingForm,
+.importTimezonePanel form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.importTimezonePanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.75fr);
+  gap: 1rem;
+  align-items: end;
+}
+
+.importMappingForm fieldset {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+}
+
+.importSourceGrid > .adminWarning {
+  grid-column: 1 / -1;
+}
+
+.importSummary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.importSummary div {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.importSummary span {
+  overflow-wrap: anywhere;
+}
+
+.importFilters {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+}
+
+.importFilters a[aria-current="page"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.importRows {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.importRow {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-left: 0.3rem solid var(--border-strong);
+  border-radius: 0.8rem;
+  background: var(--surface);
+}
+
+.importRow-conflict,
+.importRow-invalid {
+  border-left-color: var(--danger);
+}
+
+.importRow-create {
+  border-left-color: var(--success);
+}
+
+.importRow > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.importJson {
+  max-width: 100%;
+  padding: 0.75rem;
+  overflow: auto;
+  border-radius: 0.5rem;
+  background: var(--background);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.importConfirmation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.importBlocking,
+.importTopError {
+  padding: 0.9rem;
+  border: 1px solid currentColor;
+  border-radius: 0.65rem;
+}
+
+@media (max-width: 40rem) {
+  .importSourceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .importTimezonePanel {
+    grid-template-columns: 1fr;
+  }
+
+  .importSteps {
+    grid-template-columns: repeat(8, minmax(8rem, 1fr));
+  }
+
+  .importConfirmation,
+  .importConfirmation form,
+  .importConfirmation button {
+    width: 100%;
+  }
+}

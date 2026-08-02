@@ -24,8 +24,9 @@ export function OrganizerShell({
   const workspaceRoot =
     pathname.match(/^\/(?:en|ru)\/workspace\/[^/]+/)?.[0] ?? pathname;
   const isMatchesRoute = pathname.startsWith(`${workspaceRoot}/matches`);
+  const isImportRoute = pathname.startsWith(`${workspaceRoot}/import`);
   const [activeSection, setActiveSection] = useState(
-    isMatchesRoute ? "matches" : "overview",
+    isImportRoute ? "import" : isMatchesRoute ? "matches" : "overview",
   );
   const sections = [
     ["overview", dictionary.nav.overview, `${workspaceRoot}#overview`],
@@ -40,6 +41,7 @@ export function OrganizerShell({
       `${workspaceRoot}#workspace-teams`,
     ],
     ["matches", dictionary.nav.matches, `${workspaceRoot}/matches`],
+    ["import", dictionary.nav.importData, `${workspaceRoot}/import`],
   ] as const;
   return (
     <div className="workspaceShell">
