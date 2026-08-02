@@ -103,6 +103,7 @@ export function makeMatch(
 ): AdminTournamentMatch {
   return {
     id: "a360741a-9af4-44b3-9a1b-4781a0bc190c",
+    public_id: "mt_a360741a9af444b39a1b4781a0bc190c",
     submission_id: submissionId,
     stage_id: stageId,
     match_number: 1,

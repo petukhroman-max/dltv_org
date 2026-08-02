@@ -6,12 +6,16 @@ import {
   localizePath,
   stripLocale,
 } from "@/i18n/config";
+import { apiError } from "@/lib/public-api/response";
 import { refreshSupabaseSession } from "@/lib/supabase/middleware";
 
 const LOCALIZED_ROOTS = [
   "/",
   "/submit-tournament",
   "/tournaments",
+  "/api-access",
+  "/api-terms",
+  "/api-docs",
   "/admin",
   "/edit-submission",
   "/workspace",
@@ -44,6 +48,15 @@ function applyPrivateHeaders(response: NextResponse) {
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  if (
+    (pathname === "/api/v1" || pathname.startsWith("/api/v1/")) &&
+    !["GET", "OPTIONS"].includes(request.method)
+  ) {
+    const requestId = crypto.randomUUID();
+    const response = apiError("METHOD_NOT_ALLOWED", 405, requestId);
+    response.headers.set("Allow", "GET, OPTIONS");
+    return response;
+  }
   const firstSegment = pathname.split("/")[1];
   const locale = isLocale(firstSegment) ? firstSegment : null;
   const isInternalLocaleRewrite =

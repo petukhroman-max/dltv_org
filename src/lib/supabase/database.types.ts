@@ -188,6 +188,7 @@ type TournamentRosterMemberRow = {
 
 type TournamentMatchRow = {
   id: string;
+  public_id: string;
   submission_id: string;
   stage_id: string | null;
   match_number: number | null;
@@ -306,6 +307,97 @@ type TournamentImportRow = {
   existing_entity_id: string | null;
   resolution: Json | null;
   resolution_status: string;
+  created_at: string;
+};
+
+type ApiAccessRequestRow = {
+  id: string;
+  organization_name: string;
+  contact_name: string;
+  contact_email: string;
+  website_url: string;
+  intended_use: string;
+  expected_request_volume: string | null;
+  requested_endpoints: string[] | null;
+  attribution_accepted: boolean;
+  terms_accepted: boolean;
+  terms_version: string;
+  status: string;
+  admin_note: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type ApiClientRow = {
+  id: string;
+  access_request_id: string | null;
+  organization_name: string;
+  client_slug: string;
+  website_url: string;
+  status: string;
+  attribution_status: string;
+  attribution_checked_at: string | null;
+  attribution_check_note: string | null;
+  default_rate_limit_per_minute: number;
+  default_rate_limit_per_day: number;
+  allowed_origins: string[] | null;
+  allowed_endpoints: string[] | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type ApiKeyRow = {
+  id: string;
+  client_id: string;
+  key_prefix: string;
+  key_hash: string;
+  label: string | null;
+  status: string;
+  last_used_at: string | null;
+  expires_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+  created_by: string | null;
+  updated_at: string;
+};
+
+type ApiUsageLogRow = {
+  id: number;
+  client_id: string;
+  api_key_id: string;
+  request_id: string;
+  api_version: string;
+  endpoint: string;
+  method: string;
+  response_status: number;
+  duration_ms: number;
+  response_bytes: number | null;
+  rate_limit_bucket: string | null;
+  user_agent_safe: string | null;
+  origin_safe: string | null;
+  created_at: string;
+};
+
+type ApiRateLimitBucketRow = {
+  client_id: string;
+  api_key_id: string | null;
+  scope_type: string;
+  scope_id: string;
+  bucket_kind: string;
+  bucket_start: string;
+  request_count: number;
+};
+
+type ApiAuditEventRow = {
+  id: number;
+  event_type: string;
+  actor_id: string | null;
+  access_request_id: string | null;
+  client_id: string | null;
+  api_key_id: string | null;
+  metadata: Json;
   created_at: string;
 };
 
@@ -688,9 +780,152 @@ export type Database = {
         >;
         Relationships: [];
       };
+      api_access_requests: {
+        Row: ApiAccessRequestRow;
+        Insert: Omit<
+          ApiAccessRequestRow,
+          "id" | "created_at" | "updated_at"
+        > & { id?: string; created_at?: string; updated_at?: string };
+        Update: Partial<Omit<ApiAccessRequestRow, "id" | "created_at">>;
+        Relationships: [];
+      };
+      api_clients: {
+        Row: ApiClientRow;
+        Insert: Omit<ApiClientRow, "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<ApiClientRow, "id" | "created_at">>;
+        Relationships: [];
+      };
+      api_keys: {
+        Row: ApiKeyRow;
+        Insert: Omit<ApiKeyRow, "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<ApiKeyRow, "id" | "created_at">>;
+        Relationships: [];
+      };
+      api_usage_logs: {
+        Row: ApiUsageLogRow;
+        Insert: Omit<ApiUsageLogRow, "id" | "created_at"> & {
+          id?: number;
+          created_at?: string;
+        };
+        Update: Partial<Omit<ApiUsageLogRow, "id" | "created_at">>;
+        Relationships: [];
+      };
+      api_rate_limit_buckets: {
+        Row: ApiRateLimitBucketRow;
+        Insert: ApiRateLimitBucketRow;
+        Update: Partial<ApiRateLimitBucketRow>;
+        Relationships: [];
+      };
+      api_audit_events: {
+        Row: ApiAuditEventRow;
+        Insert: Omit<ApiAuditEventRow, "id" | "created_at"> & {
+          id?: number;
+          created_at?: string;
+        };
+        Update: Partial<Omit<ApiAuditEventRow, "id" | "created_at">>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
+      submit_api_access_request: {
+        Args: {
+          p_organization_name: string;
+          p_contact_name: string;
+          p_contact_email: string;
+          p_website_url: string;
+          p_intended_use: string;
+          p_expected_request_volume: string;
+          p_requested_endpoints: string[];
+          p_attribution_accepted: boolean;
+          p_terms_accepted: boolean;
+        };
+        Returns: string;
+      };
+      approve_api_access_request: {
+        Args: {
+          p_request_id: string;
+          p_reviewer_id: string;
+          p_client_slug: string;
+          p_rate_limit_per_minute: number;
+          p_rate_limit_per_day: number;
+          p_allowed_endpoints: string[];
+          p_allowed_origins: string[];
+          p_admin_note: string;
+        };
+        Returns: Json;
+      };
+      reject_api_access_request: {
+        Args: {
+          p_request_id: string;
+          p_reviewer_id: string;
+          p_admin_note: string;
+        };
+        Returns: Json;
+      };
+      create_api_key: {
+        Args: {
+          p_client_id: string;
+          p_key_prefix: string;
+          p_key_hash: string;
+          p_label: string;
+          p_expires_at: string | null;
+          p_actor_id: string;
+        };
+        Returns: string;
+      };
+      update_api_key_status: {
+        Args: {
+          p_client_id: string;
+          p_key_id: string;
+          p_status: string;
+          p_actor_id: string;
+        };
+        Returns: Json;
+      };
+      update_api_client_settings: {
+        Args: {
+          p_client_id: string;
+          p_status: string;
+          p_attribution_status: string;
+          p_attribution_note: string;
+          p_limit_per_minute: number;
+          p_limit_per_day: number;
+          p_allowed_endpoints: string[];
+          p_allowed_origins: string[];
+          p_actor_id: string;
+        };
+        Returns: Json;
+      };
+      consume_api_rate_limit: {
+        Args: {
+          p_client_id: string;
+          p_api_key_id: string;
+          p_limit_per_minute: number;
+          p_limit_per_day: number;
+        };
+        Returns: Json;
+      };
+      rotate_api_key: {
+        Args: {
+          p_client_id: string;
+          p_old_key_id: string;
+          p_key_prefix: string;
+          p_key_hash: string;
+          p_label: string;
+          p_expires_at: string | null;
+          p_actor_id: string;
+        };
+        Returns: string;
+      };
       expire_tournament_import_sessions: {
         Args: Record<PropertyKey, never>;
         Returns: number;

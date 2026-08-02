@@ -52,6 +52,25 @@
   --text-xl: clamp(2rem, 4vw, 2.5rem);
 }
 
+.apiDocs pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.apiDocs code,
+.contentPanel code {
+  overflow-wrap: anywhere;
+}
+
+.apiTableScroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.apiTableScroll table {
+  min-width: 42rem;
+}
+
 .stageStructureNav ul,
 .structureList {
   display: grid;

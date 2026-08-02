@@ -23,6 +23,11 @@ export const serverEnvSchema = publicEnvSchema
       z.string().min(1).optional(),
     ),
     ADMIN_EMAILS: adminEmailsSchema.default([]),
+    API_KEY_PEPPER: z.preprocess(
+      (value) =>
+        typeof value === "string" && value.trim() === "" ? undefined : value,
+      z.string().min(32).optional(),
+    ),
   })
   .superRefine((value, context) => {
     if (value.NODE_ENV !== "production") {
@@ -47,6 +52,7 @@ export const serverEnv: ServerEnv = serverEnvSchema.parse({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   ADMIN_EMAILS: process.env.ADMIN_EMAILS,
+  API_KEY_PEPPER: process.env.API_KEY_PEPPER,
 });
 
 export function requireSupabaseAdminEnv() {

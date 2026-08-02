@@ -1,5 +1,7 @@
 # DLTV Organizer Portal
 
+Authenticated Public API v1 documentation: [docs/public-api-v1.md](docs/public-api-v1.md).
+
 Standalone Next.js portal for receiving tournament organizer submissions.
 Supabase provides the PostgreSQL database layer.
 
