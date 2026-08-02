@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { PublicFooter } from "@/components/public/public-footer";
 import { PublicHeader } from "@/components/public/public-header";
 import { TournamentCard } from "@/components/public/tournament-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -92,6 +93,7 @@ export default async function TournamentsPage({
             {copy.unavailable}
           </p>
         </main>
+        <PublicFooter locale={locale} />
       </>
     );
   }
@@ -198,6 +200,7 @@ export default async function TournamentsPage({
           </nav>
         ) : null}
       </main>
+      <PublicFooter locale={locale} />
     </>
   );
 }

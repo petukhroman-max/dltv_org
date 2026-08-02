@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { PublicFooter } from "@/components/public/public-footer";
+import { PublicHeader } from "@/components/public/public-header";
 import { localizePath } from "@/i18n/config";
 import { getRequestLocale } from "@/i18n/get-dictionary";
 
@@ -44,8 +46,10 @@ export default async function ApiDocsPage() {
           "Errors have stable English code/message fields and a request_id. A 429 response includes Retry-After.",
       };
   return (
-    <main className="publicPage">
-      <article className="contentPanel apiDocs">
+    <>
+      <PublicHeader locale={locale} />
+      <main className="publicPage">
+        <article className="contentPanel apiDocs">
         <h1>{text.title}</h1>
         <p>{text.intro}</p>
         <h2>{text.access}</h2>
@@ -97,7 +101,9 @@ export default async function ApiDocsPage() {
             ? "Для отзыва доступа или изменения интеграции свяжитесь с DLTV."
             : "Contact DLTV to revoke access or report a material integration change."}
         </p>
-      </article>
-    </main>
+        </article>
+      </main>
+      <PublicFooter locale={locale} />
+    </>
   );
 }

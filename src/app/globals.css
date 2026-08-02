@@ -1,30 +1,41 @@
 :root {
   color-scheme: dark;
-  --background: #0d1117;
-  --surface: #161b22;
-  --surface-raised: #1b222c;
-  --surface-elevated: #1b222c;
-  --surface-sunken: #0a0e13;
-  --text: #e6edf3;
-  --text-secondary: #b4bec9;
-  --muted: #8b949e;
-  --border: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.13);
+  /* Фоны — атмосфера Deadlock: мрачные переулки, глубокий тёмно-синий. */
+  --background: #0b0f14;
+  --surface: #111820;
+  --surface-raised: #1a2330;
+  --surface-elevated: #15202b;
+  --surface-sunken: #070a0e;
+  /* Текст */
+  --text: #f0f4f8;
+  --text-secondary: #a7b6c8;
+  --muted: #8a9bb0;
+  --text-muted: #4a5a6e;
+  /* Границы */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --border-active: rgba(46, 204, 113, 0.3);
+  /* Акценты — зелёные свечи и тёплые фонари. */
   --accent: #2ecc71;
-  --accent-strong: #26b864;
-  --accent-soft: rgba(46, 204, 113, 0.1);
+  --accent-strong: #3ddb7f;
+  --accent-soft: rgba(46, 204, 113, 0.15);
+  --accent-glow: rgba(46, 204, 113, 0.4);
   --gold: #e8a838;
-  --gold-soft: rgba(232, 168, 56, 0.1);
+  --gold-soft: rgba(232, 168, 56, 0.15);
+  --gold-glow: rgba(232, 168, 56, 0.4);
   --danger: #e74c3c;
-  --danger-soft: rgba(231, 76, 60, 0.1);
+  --danger-soft: rgba(231, 76, 60, 0.15);
   --success: #2ecc71;
   --warning: #e8a838;
   --error: #e74c3c;
+  --info: #3498db;
   --focus: #65e89c;
-  --font-display:
-    "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
-  --font-body: "Segoe UI Variable Text", "Inter", system-ui, sans-serif;
-  --font-data: "Cascadia Code", "JetBrains Mono", ui-monospace, monospace;
+  --font-display: var(--font-space-grotesk), "Space Grotesk", system-ui,
+    sans-serif;
+  --font-body: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-data: var(--font-jetbrains-mono), "JetBrains Mono", ui-monospace,
+    monospace;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -3422,5 +3433,1168 @@ button {
   .importConfirmation form,
   .importConfirmation button {
     width: 100%;
+  }
+}
+
+/* ==========================================================================
+   DLTV — визуальный слой (design system)
+   Применяется к публичным страницам. Админку и кабинет организатора
+   этот слой не переопределяет структурно, только наследует токены.
+   ========================================================================== */
+
+/* --- Базовая типографика ------------------------------------------------- */
+
+html {
+  background: var(--background);
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  color: var(--text);
+}
+
+/* Hero H1 — 52px на десктопе, 36px на мобильном (по спецификации). */
+h1 {
+  font-size: clamp(2.25rem, 5vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+/* H2 секций — 36px. */
+h2 {
+  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+/* H3 подсекций — 24px. */
+h3 {
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+
+/* Caption / eyebrow — 12px, uppercase. */
+.eyebrow {
+  color: var(--accent);
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.description,
+.supportingText {
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+/* --- Фокус и выделение --------------------------------------------------- */
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--background);
+}
+
+/* --- Навигация ----------------------------------------------------------- */
+
+.publicHeader {
+  position: sticky;
+  z-index: 30;
+  top: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(11, 15, 20, 0.85);
+  backdrop-filter: blur(16px);
+}
+
+.publicBrand {
+  font-family: var(--font-data);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+
+.publicBrandMark {
+  border-color: var(--border-active);
+  border-radius: 0.375rem;
+  background: var(--accent);
+  color: var(--background);
+}
+
+/* Ссылки навигации: подчёркивание акцентом снизу. */
+.publicNavLink {
+  position: relative;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.publicNavLink::after {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.35rem;
+  left: 0.75rem;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  content: "";
+  transition: transform 0.2s ease;
+}
+
+.publicNavLink:hover,
+.publicNavLink[aria-current="page"] {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+}
+
+.publicNavLink:hover::after,
+.publicNavLink[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+
+/* CTA в шапке — компактная primary-кнопка. */
+.publicNavCta,
+.publicNavCta:hover,
+.publicNavCta[aria-current="page"] {
+  padding: 0.625rem 1.25rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: var(--background);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.publicNavCta:hover {
+  background: var(--accent-strong);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.publicNavCta::after {
+  content: none;
+}
+
+.localeSwitcher a {
+  border-color: var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+}
+
+.localeSwitcher a[aria-current="page"] {
+  border-color: var(--border-active);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* --- Кнопки -------------------------------------------------------------- */
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: 0.5rem;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease;
+}
+
+.primaryButton {
+  border: 1px solid transparent;
+  background: var(--accent);
+  box-shadow: none;
+  color: var(--background);
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: var(--accent-strong);
+  box-shadow: 0 0 20px var(--accent-glow);
+  color: var(--background);
+}
+
+.secondaryButton {
+  border: 1px solid var(--border-active);
+  background: transparent;
+  color: var(--accent);
+}
+
+.secondaryButton:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* --- Поля ввода ---------------------------------------------------------- */
+
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--background);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* --- Бейджи -------------------------------------------------------------- */
+
+.lifecycleBadge,
+.statusBadge,
+.matchStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.375rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.lifecycleBadge[data-lifecycle="upcoming"] {
+  border-color: rgba(232, 168, 56, 0.2);
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+.lifecycleBadge[data-lifecycle="ongoing"] {
+  border-color: rgba(231, 76, 60, 0.2);
+  background: var(--danger-soft);
+  color: #ef7f73;
+}
+
+.lifecycleBadge[data-lifecycle="completed"] {
+  border-color: var(--border-subtle);
+  background: rgba(138, 155, 176, 0.1);
+  color: var(--text-secondary);
+}
+
+/* --- Секции лендинга ----------------------------------------------------- */
+
+.landingHero,
+.landingSection {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding-inline: 0;
+  margin-inline: 0;
+}
+
+.landingHeroInner,
+.landingSectionInner {
+  position: relative;
+  width: min(100%, var(--content-wide));
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 4vw, 3rem);
+}
+
+.landingSection {
+  padding-block: clamp(3.5rem, 7vw, 6rem);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Чередование фона создаёт визуальный ритм. */
+.landingSectionAlt {
+  background: var(--surface);
+}
+
+/* --- Hero ---------------------------------------------------------------- */
+
+.landingHero {
+  min-height: auto;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-subtle);
+  background: linear-gradient(180deg, #0b0f14 0%, #0f1620 100%);
+}
+
+/* Лёгкая шумовая текстура поверх градиента. */
+.landingHero::before {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  content: "";
+  pointer-events: none;
+}
+
+/* Мягкое зелёное свечение — «свеча» в глубине переулка. */
+.landingHero::after {
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: min(38rem, 70vw);
+  height: min(38rem, 70vw);
+  border-radius: 50%;
+  opacity: 0.5;
+  background: radial-gradient(
+    circle,
+    rgba(46, 204, 113, 0.12) 0%,
+    transparent 65%
+  );
+  content: "";
+  pointer-events: none;
+}
+
+/* Плавающие зелёные частицы (только CSS). */
+.landingHeroParticles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.landingHeroParticles span {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow);
+  opacity: 0.35;
+  animation: dltvFloat 20s ease-in-out infinite;
+}
+
+.landingHeroParticles span:nth-child(1) {
+  top: 22%;
+  left: 12%;
+}
+
+.landingHeroParticles span:nth-child(2) {
+  top: 68%;
+  left: 26%;
+  animation-duration: 26s;
+  animation-delay: -4s;
+}
+
+.landingHeroParticles span:nth-child(3) {
+  top: 34%;
+  left: 58%;
+  width: 3px;
+  height: 3px;
+  animation-duration: 23s;
+  animation-delay: -9s;
+}
+
+.landingHeroParticles span:nth-child(4) {
+  top: 78%;
+  left: 72%;
+  animation-duration: 30s;
+  animation-delay: -14s;
+}
+
+.landingHeroParticles span:nth-child(5) {
+  top: 14%;
+  left: 84%;
+  width: 3px;
+  height: 3px;
+  animation-duration: 21s;
+  animation-delay: -6s;
+}
+
+@keyframes dltvFloat {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  33% {
+    transform: translate(20px, -30px);
+  }
+  66% {
+    transform: translate(-10px, 15px);
+  }
+}
+
+.landingHeroInner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(15rem, 0.7fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: center;
+  padding-block: clamp(4rem, 10vw, 7rem);
+}
+
+.landingHeroCopy {
+  display: grid;
+  gap: 1.25rem;
+  justify-items: start;
+}
+
+.landingHeroCopy h1 {
+  max-width: 20ch;
+  margin: 0;
+  font-size: clamp(2.25rem, 5vw, 3.25rem);
+  line-height: 1.1;
+}
+
+.landingHeroCopy .description {
+  max-width: 37.5rem;
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+/* Панель данных в hero — моноширинный «служебный» блок. */
+.landingDataPreview {
+  display: grid;
+  gap: 0.875rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: var(--font-data);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+}
+
+.landingDataPreview strong {
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.landingDataLines i {
+  height: 0.3rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--accent) 0 42%,
+    rgba(255, 255, 255, 0.06) 42%
+  );
+}
+
+.landingDataLines i:nth-child(2) {
+  background: linear-gradient(
+    90deg,
+    var(--gold) 0 68%,
+    rgba(255, 255, 255, 0.06) 68%
+  );
+}
+
+.landingDataLines i:nth-child(3) {
+  background: linear-gradient(
+    90deg,
+    var(--text-muted) 0 28%,
+    rgba(255, 255, 255, 0.06) 28%
+  );
+}
+
+/* --- Заголовки секций ---------------------------------------------------- */
+
+.landingSectionHeader {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 45rem;
+}
+
+.landingSectionHeader h2,
+.landingSectionHeader p {
+  margin: 0;
+}
+
+.landingSectionHeaderCentered {
+  margin-inline: auto;
+  text-align: center;
+  justify-items: center;
+}
+
+.landingSectionHeaderRow {
+  display: flex;
+  max-width: none;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.landingSectionHeaderRow > div {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 45rem;
+}
+
+/* --- Flow «Submit → Operate → Publish» ----------------------------------- */
+
+.workflowGrid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin: 2.5rem 0 0;
+  padding: 0;
+  border: 0;
+  list-style: none;
+}
+
+.workflowGrid li {
+  position: relative;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--surface);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.workflowGrid li:hover {
+  border-color: var(--border-active);
+  box-shadow:
+    0 0 24px var(--accent-soft),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Пунктирная линия между шагами показывает поток (только десктоп). */
+.workflowGrid li:not(:last-child)::after {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  width: 1.5rem;
+  border-top: 1px dashed var(--border-strong);
+  content: "";
+}
+
+.workflowGrid span {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: var(--accent);
+  font-family: var(--font-data);
+  font-size: 0.875rem;
+  font-weight: 500;
+  opacity: 0.6;
+}
+
+.workflowGrid h3 {
+  margin: 0 0 0.5rem;
+}
+
+.workflowGrid p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* --- Секция «Organizer workspace» --------------------------------------- */
+
+.capabilityLayout,
+.publicDataLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.8fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: center;
+}
+
+.capabilityList {
+  display: grid;
+  gap: 0.875rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  list-style: none;
+}
+
+.capabilityList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0;
+  border: 0;
+  color: var(--text-secondary);
+}
+
+.capabilityList li::before {
+  position: static;
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.2rem;
+  border-radius: 0.25rem;
+  background: var(--accent-soft);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232ecc71' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 0.875rem;
+  content: "";
+}
+
+/* --- Секция «Public tournament data» ------------------------------------ */
+
+.dataSequence {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--surface);
+  font-family: var(--font-data);
+  font-size: 0.8125rem;
+}
+
+.landingSectionAlt .dataSequence {
+  background: var(--background);
+}
+
+.dataSequence span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.dataSequence span:last-child {
+  border-bottom: 0;
+}
+
+/* --- Карточки турниров -------------------------------------------------- */
+
+.tournamentGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.landingTournamentGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 2.5rem;
+}
+
+.tournamentCard {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--background);
+  box-shadow: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.landingSectionAlt .tournamentCard {
+  background: var(--background);
+}
+
+.tournamentCard:hover {
+  border-color: var(--border-active);
+  box-shadow:
+    0 0 24px var(--accent-soft),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.tournamentCardHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Второй бейдж в шапке карточки — online/offline. */
+.tournamentCardHeading > span:not([data-lifecycle]) {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.375rem;
+  background: rgba(138, 155, 176, 0.1);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tournamentCard h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+.tournamentCard .supportingText {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.tournamentFacts {
+  display: grid;
+  gap: 0.625rem;
+  margin: 0;
+}
+
+.tournamentFacts > div {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, auto) minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.tournamentFacts dt {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tournamentFacts dd {
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-data);
+  font-size: 0.8125rem;
+}
+
+/* Призовой фонд — тёплый янтарный акцент. */
+.tournamentFacts > div:has(dt + dd) dd {
+  overflow-wrap: anywhere;
+}
+
+.tournamentCard .primaryButton {
+  width: fit-content;
+  margin-top: auto;
+}
+
+/* --- Секция «Current product status» ------------------------------------ */
+
+.productStatus {
+  border-bottom: 0;
+}
+
+.productStatusCard {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 50rem;
+  margin-inline: auto;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--surface);
+}
+
+.productStatusCard .landingSectionHeader {
+  max-width: none;
+}
+
+.scopeList {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scopeList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+}
+
+.scopeList li::before {
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.2rem;
+  border-radius: 0.25rem;
+  background: var(--accent-soft);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232ecc71' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 0.875rem;
+  content: "";
+}
+
+/* Пункты вне текущего scope — менее акцентные, с иконкой часов. */
+.scopeList li[data-scope="planned"] {
+  color: var(--text-muted);
+}
+
+.scopeList li[data-scope="planned"]::before {
+  background-color: rgba(138, 155, 176, 0.1);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a5a6e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E");
+}
+
+/* --- Футер --------------------------------------------------------------- */
+
+.siteFooter {
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.siteFooterInner {
+  width: min(100%, var(--content-wide));
+  margin-inline: auto;
+  padding: clamp(2.5rem, 5vw, 3.5rem) clamp(1rem, 4vw, 3rem);
+}
+
+.siteFooterColumns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+
+.siteFooterColumn h2 {
+  margin: 0 0 1rem;
+  color: var(--text);
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.siteFooterColumn p {
+  margin: 0;
+  max-width: 32ch;
+  color: var(--text-secondary);
+}
+
+.siteFooterColumn ul {
+  display: grid;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.siteFooterColumn a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.siteFooterColumn a:hover {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.siteFooterBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+}
+
+/* Индикатор состояния API — данные берутся из реального ответа /api/v1. */
+.apiStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+}
+
+.apiStatusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.apiStatus[data-state="online"] .apiStatusDot {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+  animation: dltvPulse 2s ease-in-out infinite;
+}
+
+.apiStatus[data-state="degraded"] .apiStatusDot {
+  background: var(--warning);
+}
+
+.apiStatus[data-state="offline"] .apiStatusDot {
+  background: var(--error);
+}
+
+@keyframes dltvPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* --- Контентные страницы (API docs / terms / access) --------------------- */
+
+.publicPage {
+  width: min(100%, var(--content-reading));
+  margin-inline: auto;
+  padding: clamp(2.5rem, 6vw, 4.5rem) clamp(1rem, 4vw, 3rem);
+}
+
+.contentPanel {
+  padding: clamp(1.5rem, 3vw, 2rem);
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--surface);
+}
+
+.contentPanel h1 {
+  margin-top: 0;
+}
+
+.contentPanel h2 {
+  margin-top: 2rem;
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+}
+
+.contentPanel p,
+.contentPanel li {
+  color: var(--text-secondary);
+}
+
+.contentPanel a {
+  color: var(--accent);
+  text-underline-offset: 0.25em;
+}
+
+.contentPanel pre {
+  padding: 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.5rem;
+  background: var(--background);
+}
+
+.contentPanel code {
+  color: var(--text);
+  font-family: var(--font-data);
+  font-size: 0.8125rem;
+}
+
+.publicEmptyState {
+  padding: 2rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: 0.625rem;
+  background: var(--surface);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* --- Появление при скролле ---------------------------------------------- */
+
+@keyframes dltvFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal {
+  animation: dltvFadeInUp 0.6s ease both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    animation-timeline: view();
+    animation-range: entry 0% cover 22%;
+  }
+}
+
+/* --- Адаптив ------------------------------------------------------------- */
+
+/* Планшет: 2 карточки в ряд, feature-секции в одну колонку. */
+@media (max-width: 64rem) {
+  .landingHeroInner,
+  .capabilityLayout,
+  .publicDataLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .landingHeroCopy h1 {
+    max-width: 24ch;
+  }
+
+  .workflowGrid,
+  .tournamentGrid,
+  .landingTournamentGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workflowGrid li:not(:last-child)::after {
+    content: none;
+  }
+
+  .siteFooterColumns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Мобильный: одна колонка, компактные отступы, бургер-меню. */
+@media (max-width: 48rem) {
+  .workflowGrid,
+  .tournamentGrid,
+  .landingTournamentGrid,
+  .siteFooterColumns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .landingHeroInner,
+  .landingSectionInner,
+  .siteFooterInner {
+    padding-inline: 1rem;
+  }
+
+  .heroActions {
+    width: 100%;
+  }
+
+  .heroActions .primaryButton,
+  .heroActions .secondaryButton {
+    flex: 1 1 auto;
+  }
+
+  .landingSectionHeaderRow {
+    align-items: flex-start;
+  }
+
+  .publicMenuButton {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .publicNav {
+    position: absolute;
+    z-index: 40;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    left: 0;
+    display: none;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 0.625rem;
+    background: var(--surface-elevated);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  }
+
+  .publicNav[data-open="true"] {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .publicNavLink {
+    justify-content: flex-start;
+    padding: 0.75rem;
+  }
+
+  .publicNavCta {
+    justify-content: center;
+  }
+
+  .tournamentFacts > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.125rem;
+  }
+}
+
+/* Уважение к системной настройке уменьшения анимации. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
