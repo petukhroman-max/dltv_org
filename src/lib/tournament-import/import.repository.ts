@@ -9,6 +9,7 @@ import type {
   TournamentImportBundle,
 } from "./import-model";
 import type { ExistingImportSnapshot } from "./import-validation";
+import { importNeedsTimezoneConfirmation } from "./import-timezone";
 
 export async function selectImportSnapshot(
   submissionId: string,
@@ -102,6 +103,9 @@ export async function insertImportSession(input: CreateImportRecord) {
     "expire_tournament_import_sessions",
   );
   if (expiryError) throw expiryError;
+  const timezoneConfirmationRequired = importNeedsTimezoneConfirmation(
+    input.bundle,
+  );
   const status =
     input.bundle.templateType === "unknown" ||
     input.bundle.entities.length === 0
@@ -110,7 +114,9 @@ export async function insertImportSession(input: CreateImportRecord) {
         ? "validation_failed"
         : Number(input.summary.conflict ?? 0) > 0
           ? "validation_failed"
-          : "ready";
+          : timezoneConfirmationRequired
+            ? "validation_failed"
+            : "ready";
   const { data: session, error } = await client
     .from("tournament_import_sessions")
     .insert({
@@ -123,8 +129,13 @@ export async function insertImportSession(input: CreateImportRecord) {
       status,
       detected_sheets: input.bundle.detectedSheets,
       mapping_config: input.mappingConfig ?? {},
-      validation_summary: input.summary as Json,
+      validation_summary: {
+        ...input.summary,
+        timezoneConfirmationRequired,
+      } as Json,
       import_summary: {},
+      fallback_timezone: input.bundle.fallbackTimezone ?? "UTC",
+      timezone_confirmation_required: timezoneConfirmationRequired,
       created_by_actor_type: input.access.p_actor_type,
       created_by_actor_id: input.access.p_actor_id,
       created_by_workspace_token_id: input.access.p_workspace_token_id,
@@ -330,6 +341,25 @@ export async function executeCancelImportRpc(
     {
       p_session_id: sessionId,
       p_submission_id: submissionId,
+      ...access,
+    },
+  );
+  if (error) throw error;
+  return data;
+}
+
+export async function executeConfirmImportTimezoneRpc(
+  sessionId: string,
+  submissionId: string,
+  timezone: string,
+  access: OperationalRpcAccess,
+) {
+  const { data, error } = await createSupabaseAdminClient().rpc(
+    "confirm_tournament_import_timezone",
+    {
+      p_session_id: sessionId,
+      p_submission_id: submissionId,
+      p_timezone: timezone,
       ...access,
     },
   );

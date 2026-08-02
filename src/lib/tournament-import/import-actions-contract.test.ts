@@ -17,6 +17,17 @@ const service = fs.readFileSync(
   path.join(process.cwd(), "src/lib/tournament-import/import.service.ts"),
   "utf8",
 );
+const workspace = fs.readFileSync(
+  path.join(
+    process.cwd(),
+    "src/components/operational/tournament-import-workspace.tsx",
+  ),
+  "utf8",
+);
+const copy = fs.readFileSync(
+  path.join(process.cwd(), "src/lib/tournament-import/import-copy.ts"),
+  "utf8",
+);
 
 describe("import server action contract", () => {
   it("requires organizer/admin access and never accepts an actor or submission from form data", () => {
@@ -42,5 +53,25 @@ describe("import server action contract", () => {
       );
       expect(source.match(/export async function/g)?.length).toBeGreaterThan(0);
     }
+  });
+
+  it("exposes guarded timezone confirmation for organizer and admin sessions", () => {
+    expect(organizer).toContain(
+      "export async function confirmWorkspaceImportTimezoneAction",
+    );
+    expect(admin).toContain(
+      "export async function confirmAdminImportTimezoneAction",
+    );
+    expect(organizer).toContain('formData.get("confirmTimezone")');
+    expect(admin).toContain('formData.get("confirmTimezone")');
+    expect(service).toContain("importTimezoneSchema");
+    expect(service).toContain("executeConfirmImportTimezoneRpc");
+    expect(organizer).toContain('submission.timezone || "UTC"');
+    expect(admin).toContain('submission.timezone || "UTC"');
+    expect(workspace).toContain("timezone_confirmation_required && !locked");
+    expect(workspace).toContain('name="confirmTimezone"');
+    expect(workspace).toContain("disabled={blocking");
+    expect(copy).toContain('timezoneTitle: "Confirm import timezone"');
+    expect(copy).toContain('timezoneTitle: "Подтвердите часовой пояс импорта"');
   });
 });

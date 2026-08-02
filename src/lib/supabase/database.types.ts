@@ -278,6 +278,9 @@ type TournamentImportSessionRow = {
   mapping_config: Json;
   validation_summary: Json;
   import_summary: Json;
+  fallback_timezone: string;
+  timezone_confirmation_required: boolean;
+  timezone_confirmed_at: string | null;
   created_by_actor_type: string;
   created_by_actor_id: string | null;
   created_by_workspace_token_id: string | null;
@@ -689,6 +692,17 @@ export type Database = {
       expire_tournament_import_sessions: {
         Args: Record<PropertyKey, never>;
         Returns: number;
+      };
+      confirm_tournament_import_timezone: {
+        Args: {
+          p_session_id: string;
+          p_submission_id: string;
+          p_timezone: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
       };
       apply_tournament_import_session: {
         Args: {

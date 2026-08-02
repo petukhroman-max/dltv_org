@@ -10,6 +10,7 @@ import { revalidatePublicTournamentProjection } from "@/lib/public-tournaments/p
 import {
   applyTournamentImportSession,
   cancelTournamentImportSession,
+  confirmTournamentImportTimezone,
   createGoogleSheetsImportSession,
   createCustomMappedImportSession,
   createXlsxImportSession,
@@ -47,13 +48,13 @@ export async function uploadWorkspaceImportAction(
             submissionId: resolved.access.submission.id,
             accessContext: resolved.context,
             url: String(formData.get("googleUrl") ?? ""),
-            fallbackTimezone: resolved.access.submission.timezone,
+            fallbackTimezone: resolved.access.submission.timezone || "UTC",
           })
         : await createXlsxImportSession({
             submissionId: resolved.access.submission.id,
             accessContext: resolved.context,
             file: formData.get("workbook") as File,
-            fallbackTimezone: resolved.access.submission.timezone,
+            fallbackTimezone: resolved.access.submission.timezone || "UTC",
           });
     sessionId = session.id;
   } catch (error) {
@@ -76,7 +77,7 @@ export async function mapWorkspaceImportAction(
       submissionId: resolved.access.submission.id,
       accessContext: resolved.context,
       file: formData.get("workbook") as File,
-      fallbackTimezone: resolved.access.submission.timezone,
+      fallbackTimezone: resolved.access.submission.timezone || "UTC",
       mapping: importMappingFromFormData(formData),
     });
     redirect(`/workspace/${rawToken}/import?session=${session.id}`);
@@ -120,6 +121,36 @@ export async function resolveWorkspaceImportAction(
   redirect(
     `/workspace/${rawToken}/import?session=${sessionId}&filter=conflict`,
   );
+}
+
+export async function confirmWorkspaceImportTimezoneAction(
+  rawToken: string,
+  formData: FormData,
+): Promise<void> {
+  const resolved = await context(rawToken);
+  if (!resolved)
+    redirect(`/workspace/${rawToken}/import?error=workspace_access_invalid`);
+  const sessionId = String(formData.get("sessionId") ?? "");
+  try {
+    if (formData.get("confirmTimezone") !== "true")
+      throw new TournamentImportError("import_timezone_confirmation_required");
+    await confirmTournamentImportTimezone({
+      sessionId,
+      submissionId: resolved.access.submission.id,
+      context: resolved.context,
+      timezone: formData.get("timezone"),
+    });
+  } catch (error) {
+    const code =
+      error instanceof TournamentImportError
+        ? error.code
+        : "import_timezone_confirmation_failed";
+    redirect(
+      `/workspace/${rawToken}/import?session=${sessionId}&error=${encodeURIComponent(code)}`,
+    );
+  }
+  revalidatePath(`/workspace/${rawToken}/import`);
+  redirect(`/workspace/${rawToken}/import?session=${sessionId}`);
 }
 
 export async function applyWorkspaceImportAction(

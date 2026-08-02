@@ -3282,9 +3282,17 @@ button {
 
 .importSourceCard,
 .importResolutionForm,
-.importMappingForm {
+.importMappingForm,
+.importTimezonePanel form {
   display: grid;
   gap: 0.9rem;
+}
+
+.importTimezonePanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.75fr);
+  gap: 1rem;
+  align-items: end;
 }
 
 .importMappingForm fieldset {
@@ -3380,6 +3388,10 @@ button {
 
 @media (max-width: 40rem) {
   .importSourceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .importTimezonePanel {
     grid-template-columns: 1fr;
   }
 

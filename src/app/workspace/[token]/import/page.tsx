@@ -3,6 +3,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import {
   applyWorkspaceImportAction,
   cancelWorkspaceImportAction,
+  confirmWorkspaceImportTimezoneAction,
   resolveWorkspaceImportAction,
   mapWorkspaceImportAction,
   uploadWorkspaceImportAction,
@@ -72,6 +73,10 @@ export default async function WorkspaceImportPage({
           filter={query.filter ?? "all"}
           uploadAction={uploadWorkspaceImportAction.bind(null, token)}
           resolveAction={resolveWorkspaceImportAction.bind(null, token)}
+          confirmTimezoneAction={confirmWorkspaceImportTimezoneAction.bind(
+            null,
+            token,
+          )}
           mappingAction={mapWorkspaceImportAction.bind(null, token)}
           applyAction={applyWorkspaceImportAction.bind(null, token)}
           cancelAction={cancelWorkspaceImportAction.bind(null, token)}

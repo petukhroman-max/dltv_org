@@ -122,7 +122,7 @@ function role(
   return null;
 }
 
-function parseDate(value: string | null, fallbackTimezone: string) {
+function parseDate(value: string | null) {
   if (!value) return { value: null, warning: null };
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime()))
@@ -130,7 +130,7 @@ function parseDate(value: string | null, fallbackTimezone: string) {
   const hasOffset = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(value);
   return {
     value: parsed.toISOString(),
-    warning: hasOffset ? null : `timezone_fallback:${fallbackTimezone}`,
+    warning: hasOffset ? null : "timezone_fallback_confirmation_required",
   };
 }
 
@@ -194,7 +194,7 @@ export async function parseCustomMappedWorkbook(input: {
         name,
         stageType: "custom",
         sequenceNumber: seenStages.size,
-        timezone: input.fallbackTimezone,
+        timezone: null,
         bestOfDefault: null,
       },
       warnings: [],
@@ -304,9 +304,14 @@ export async function parseCustomMappedWorkbook(input: {
     const stageKey = addStage(stage, matchSheet.name, row);
     addTeam(teamA, matchSheet.name, row);
     addTeam(teamB, matchSheet.name, row);
+    const rowTimezone = get(
+      matchSheet,
+      row,
+      matchHeaders.map,
+      mapping.matches.timezone,
+    );
     const scheduled = parseDate(
       get(matchSheet, row, matchHeaders.map, mapping.matches.scheduledDateTime),
-      input.fallbackTimezone,
     );
     const winner = null;
     const matchNumber = positiveInteger(
@@ -376,9 +381,7 @@ export async function parseCustomMappedWorkbook(input: {
         teamAKey: teamKey(teamA),
         teamBKey: teamKey(teamB),
         scheduledAt: scheduled.value,
-        timezone:
-          get(matchSheet, row, matchHeaders.map, mapping.matches.timezone) ??
-          input.fallbackTimezone,
+        timezone: rowTimezone,
         bestOf: oddBestOf(rawBo),
         scoreA: nonnegativeInteger(rawScoreA),
         scoreB: nonnegativeInteger(rawScoreB),
@@ -389,7 +392,9 @@ export async function parseCustomMappedWorkbook(input: {
         vodUrl: httpUrl(rawVod),
       },
       warnings:
-        scheduled.warning && scheduled.warning !== "invalid_date"
+        scheduled.warning &&
+        scheduled.warning !== "invalid_date" &&
+        !rowTimezone
           ? [scheduled.warning]
           : [],
       errors,

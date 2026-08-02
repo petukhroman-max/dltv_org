@@ -82,5 +82,8 @@ describe("custom mapping adapter", () => {
     expect(
       match && match.entityType === "match" ? match.data.scheduledAt : null,
     ).toBe("2026-08-01T12:00:00.000Z");
+    expect(
+      match && match.entityType === "match" ? match.data.timezone : null,
+    ).toBeNull();
   });
 });

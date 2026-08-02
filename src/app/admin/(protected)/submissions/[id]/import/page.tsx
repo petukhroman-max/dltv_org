@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import {
   applyAdminImportAction,
   cancelAdminImportAction,
+  confirmAdminImportTimezoneAction,
   mapAdminImportAction,
   resolveAdminImportAction,
   uploadAdminImportAction,
@@ -59,6 +60,7 @@ export default async function AdminImportPage({
         uploadAction={uploadAdminImportAction.bind(null, id)}
         mappingAction={mapAdminImportAction.bind(null, id)}
         resolveAction={resolveAdminImportAction.bind(null, id)}
+        confirmTimezoneAction={confirmAdminImportTimezoneAction.bind(null, id)}
         applyAction={applyAdminImportAction.bind(null, id)}
         cancelAction={cancelAdminImportAction.bind(null, id)}
       />

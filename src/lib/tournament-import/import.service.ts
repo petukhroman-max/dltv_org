@@ -18,6 +18,7 @@ import { parseCustomMappedWorkbook } from "./custom-mapping-adapter";
 import {
   executeApplyImportRpc,
   executeCancelImportRpc,
+  executeConfirmImportTimezoneRpc,
   insertImportSession,
   insertImportAuditEvent,
   selectImportSession,
@@ -29,6 +30,10 @@ import {
   validateAndMatchImportBundle,
 } from "./import-validation";
 import { workbookLimits, WorkbookSecurityError } from "./workbook-security";
+import {
+  importTimezoneSchema,
+  prepareImportTimezoneConfirmation,
+} from "./import-timezone";
 
 const uuidSchema = z.uuid();
 
@@ -74,7 +79,10 @@ async function createFromBuffer(input: {
       input.fallbackTimezone,
     );
     const snapshot = await selectImportSnapshot(input.submissionId);
-    const bundle = validateAndMatchImportBundle(parsed.bundle, snapshot);
+    const bundle = validateAndMatchImportBundle(
+      prepareImportTimezoneConfirmation(parsed.bundle, input.fallbackTimezone),
+      snapshot,
+    );
     const summary = summarizeImport(bundle);
     return insertImportSession({
       submissionId: input.submissionId,
@@ -164,7 +172,7 @@ export async function createCustomMappedImportSession(input: {
       mapping: input.mapping,
     });
     const bundle = validateAndMatchImportBundle(
-      parsed.bundle,
+      prepareImportTimezoneConfirmation(parsed.bundle, input.fallbackTimezone),
       await selectImportSnapshot(input.submissionId),
     );
     return insertImportSession({
@@ -259,6 +267,35 @@ export async function resolveTournamentImportConflict(input: {
     parsed.data.submissionId,
     "import_conflicts_resolved",
     parsed.data.sessionId,
+    toOperationalRpcAccess(input.context, parsed.data.submissionId),
+  );
+}
+
+export async function confirmTournamentImportTimezone(input: {
+  sessionId: string;
+  submissionId: string;
+  context: OperationalAccessContext;
+  timezone: unknown;
+}) {
+  const parsed = z
+    .object({
+      sessionId: uuidSchema,
+      submissionId: uuidSchema,
+      timezone: importTimezoneSchema,
+    })
+    .safeParse(input);
+  if (!parsed.success)
+    throw new TournamentImportError("import_timezone_invalid");
+  const loaded = await loadTournamentImportSession(
+    parsed.data.sessionId,
+    parsed.data.submissionId,
+    input.context,
+  );
+  if (!loaded) throw new TournamentImportError("import_session_not_found");
+  return executeConfirmImportTimezoneRpc(
+    parsed.data.sessionId,
+    parsed.data.submissionId,
+    parsed.data.timezone,
     toOperationalRpcAccess(input.context, parsed.data.submissionId),
   );
 }

@@ -25,6 +25,13 @@ const en = {
   data: "Safe preview",
   errors: "Errors",
   warnings: "Warnings",
+  timezoneTitle: "Confirm import timezone",
+  timezoneLabel: "Timezone for rows without one",
+  timezoneWarning:
+    "Stages and matches without a timezone require a common fallback before import.",
+  timezoneConfirmation:
+    "Apply this timezone only to imported stages and matches where timezone is empty",
+  timezoneConfirm: "Confirm timezone",
   all: "All",
   create: "Create",
   update: "Update",
@@ -80,6 +87,13 @@ const ru: ImportCopy = {
   data: "Безопасный предпросмотр",
   errors: "Ошибки",
   warnings: "Предупреждения",
+  timezoneTitle: "Подтвердите часовой пояс импорта",
+  timezoneLabel: "Часовой пояс для строк без значения",
+  timezoneWarning:
+    "Для этапов и матчей без часового пояса необходимо выбрать общее резервное значение.",
+  timezoneConfirmation:
+    "Применить этот часовой пояс только к импортируемым этапам и матчам с пустым значением",
+  timezoneConfirm: "Подтвердить часовой пояс",
   all: "Все",
   create: "Создать",
   update: "Обновить",

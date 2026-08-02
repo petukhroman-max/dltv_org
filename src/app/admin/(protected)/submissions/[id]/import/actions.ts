@@ -11,6 +11,7 @@ import { getTournamentSubmissionById } from "@/lib/repositories/tournament-submi
 import {
   applyTournamentImportSession,
   cancelTournamentImportSession,
+  confirmTournamentImportTimezone,
   createGoogleSheetsImportSession,
   createCustomMappedImportSession,
   createXlsxImportSession,
@@ -45,13 +46,13 @@ export async function uploadAdminImportAction(
             submissionId,
             accessContext: resolved.context,
             url: String(formData.get("googleUrl") ?? ""),
-            fallbackTimezone: resolved.submission.timezone,
+            fallbackTimezone: resolved.submission.timezone || "UTC",
           })
         : await createXlsxImportSession({
             submissionId,
             accessContext: resolved.context,
             file: formData.get("workbook") as File,
-            fallbackTimezone: resolved.submission.timezone,
+            fallbackTimezone: resolved.submission.timezone || "UTC",
           });
     sessionId = session.id;
   } catch (error) {
@@ -74,7 +75,7 @@ export async function mapAdminImportAction(
       submissionId,
       accessContext: resolved.context,
       file: formData.get("workbook") as File,
-      fallbackTimezone: resolved.submission.timezone,
+      fallbackTimezone: resolved.submission.timezone || "UTC",
       mapping: importMappingFromFormData(formData),
     });
     redirect(`/admin/submissions/${submissionId}/import?session=${session.id}`);
@@ -118,6 +119,34 @@ export async function resolveAdminImportAction(
   redirect(
     `/admin/submissions/${submissionId}/import?session=${sessionId}&filter=conflict`,
   );
+}
+
+export async function confirmAdminImportTimezoneAction(
+  submissionId: string,
+  formData: FormData,
+): Promise<void> {
+  const resolved = await context(submissionId);
+  const sessionId = String(formData.get("sessionId") ?? "");
+  try {
+    if (formData.get("confirmTimezone") !== "true")
+      throw new TournamentImportError("import_timezone_confirmation_required");
+    await confirmTournamentImportTimezone({
+      sessionId,
+      submissionId,
+      context: resolved.context,
+      timezone: formData.get("timezone"),
+    });
+  } catch (error) {
+    const code =
+      error instanceof TournamentImportError
+        ? error.code
+        : "import_timezone_confirmation_failed";
+    redirect(
+      `/admin/submissions/${submissionId}/import?session=${sessionId}&error=${encodeURIComponent(code)}`,
+    );
+  }
+  revalidatePath(`/admin/submissions/${submissionId}/import`);
+  redirect(`/admin/submissions/${submissionId}/import?session=${sessionId}`);
 }
 
 export async function applyAdminImportAction(

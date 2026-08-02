@@ -10,6 +10,9 @@ type ImportView = {
     detected_sheets: Json;
     validation_summary: Json;
     import_summary: Json;
+    fallback_timezone: string;
+    timezone_confirmation_required: boolean;
+    timezone_confirmed_at: string | null;
   };
   rows: Array<{
     id: string;
@@ -36,6 +39,7 @@ export function TournamentImportWorkspace({
   filter,
   uploadAction,
   resolveAction,
+  confirmTimezoneAction,
   mappingAction,
   applyAction,
   cancelAction,
@@ -45,6 +49,7 @@ export function TournamentImportWorkspace({
   filter: string;
   uploadAction: FormAction;
   resolveAction: FormAction;
+  confirmTimezoneAction: FormAction;
   mappingAction: FormAction;
   applyAction: FormAction;
   cancelAction: FormAction;
@@ -61,6 +66,7 @@ export function TournamentImportWorkspace({
   >;
   const blocking =
     Number(summary.invalid ?? 0) > 0 ||
+    Boolean(session?.session.timezone_confirmation_required) ||
     session?.rows.some(
       (row) => row.proposed_action === "conflict" && !row.resolution,
     );
@@ -153,6 +159,62 @@ export function TournamentImportWorkspace({
               </div>
             ))}
           </section>
+          {session.session.timezone_confirmation_required && !locked ? (
+            <section className="adminPanel importTimezonePanel">
+              <div>
+                <h2>{copy.timezoneTitle}</h2>
+                <p className="adminWarning">{copy.timezoneWarning}</p>
+              </div>
+              <form action={confirmTimezoneAction}>
+                <input
+                  type="hidden"
+                  name="sessionId"
+                  value={session.session.id}
+                />
+                <label>
+                  {copy.timezoneLabel}
+                  <input
+                    name="timezone"
+                    list="import-timezone-options"
+                    defaultValue={session.session.fallback_timezone || "UTC"}
+                    maxLength={64}
+                    required
+                  />
+                  <datalist id="import-timezone-options">
+                    {[
+                      session.session.fallback_timezone,
+                      "UTC",
+                      "Europe/London",
+                      "Europe/Berlin",
+                      "Asia/Bangkok",
+                      "Asia/Singapore",
+                      "America/New_York",
+                      "America/Los_Angeles",
+                    ]
+                      .filter(
+                        (value, index, values) =>
+                          Boolean(value) && values.indexOf(value) === index,
+                      )
+                      .map((value) => (
+                        <option key={value} value={value} />
+                      ))}
+                  </datalist>
+                </label>
+                <label className="checkboxLabel">
+                  <input
+                    type="checkbox"
+                    name="confirmTimezone"
+                    value="true"
+                    required
+                  />
+                  {copy.timezoneConfirmation}
+                </label>
+                <button className="secondaryButton" type="submit">
+                  {copy.timezoneConfirm}
+                </button>
+              </form>
+            </section>
+          ) : null}
           {session.session.status === "mapping_required" ? (
             <section className="adminPanel">
               <p className="adminWarning">{copy.mappingRequired}</p>
@@ -292,7 +354,15 @@ export function TournamentImportWorkspace({
                     ) : null}
                     {jsonList(row.warnings).length ? (
                       <p className="adminWarning">
-                        {copy.warnings}: {jsonList(row.warnings).join(", ")}
+                        {copy.warnings}:{" "}
+                        {jsonList(row.warnings)
+                          .map((warning) =>
+                            warning ===
+                            "timezone_fallback_confirmation_required"
+                              ? copy.timezoneWarning
+                              : warning,
+                          )
+                          .join(", ")}
                       </p>
                     ) : null}
                     {row.proposed_action === "conflict" && !locked ? (
