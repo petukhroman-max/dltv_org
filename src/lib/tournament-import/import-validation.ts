@@ -90,13 +90,18 @@ function matchEntities(
       );
       if (candidates.length > 1)
         return mark(entity, "conflict", "ambiguous_stage_match");
-      if (
-        candidates.length === 0 &&
-        existing.stages.some(
+      if (candidates.length === 0) {
+        const sequenceCandidates = existing.stages.filter(
           (stage) => stage.sequence_number === entity.data.sequenceNumber,
-        )
-      )
-        return mark(entity, "conflict", "stage_sequence_conflict");
+        );
+        if (sequenceCandidates.length === 1)
+          return {
+            ...mark(entity, "conflict", "stage_sequence_conflict"),
+            existingEntityId: sequenceCandidates[0].id,
+          } as ImportedEntity;
+        if (sequenceCandidates.length > 1)
+          return mark(entity, "conflict", "ambiguous_stage_match");
+      }
       if (candidates[0]) {
         matchedStages.set(entity.source.key, candidates[0].id);
         return {

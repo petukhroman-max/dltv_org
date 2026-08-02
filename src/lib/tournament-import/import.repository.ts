@@ -3,11 +3,7 @@ import "server-only";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/database.types";
 import type { OperationalRpcAccess } from "@/lib/operational-workspace/access-context";
-import type {
-  ImportedEntity,
-  ImportResolution,
-  TournamentImportBundle,
-} from "./import-model";
+import type { ImportedEntity, TournamentImportBundle } from "./import-model";
 import type { ExistingImportSnapshot } from "./import-validation";
 import { importNeedsTimezoneConfirmation } from "./import-timezone";
 
@@ -237,78 +233,34 @@ export async function selectImportSession(
     : null;
 }
 
-export async function updateImportResolution(
+export async function executeResolveImportConflictRpc(
   sessionId: string,
   submissionId: string,
   rowId: string,
-  resolution: ImportResolution,
-) {
-  const client = createSupabaseAdminClient();
-  const { data: session, error: sessionError } = await client
-    .from("tournament_import_sessions")
-    .select("id,status")
-    .eq("id", sessionId)
-    .eq("submission_id", submissionId)
-    .maybeSingle();
-  if (sessionError) throw sessionError;
-  if (
-    !session ||
-    ["applying", "completed", "cancelled", "expired"].includes(session.status)
-  ) {
-    throw new Error("import_session_locked");
-  }
-  const { error } = await client
-    .from("tournament_import_rows")
-    .update({ resolution: resolution as Json })
-    .eq("id", rowId)
-    .eq("session_id", sessionId)
-    .eq("proposed_action", "conflict");
-  if (error) throw error;
-  const { count, error: countError } = await client
-    .from("tournament_import_rows")
-    .select("id", { count: "exact", head: true })
-    .eq("session_id", sessionId)
-    .eq("proposed_action", "conflict")
-    .is("resolution", null);
-  if (countError) throw countError;
-  const { count: invalidCount, error: invalidError } = await client
-    .from("tournament_import_rows")
-    .select("id", { count: "exact", head: true })
-    .eq("session_id", sessionId)
-    .eq("proposed_action", "invalid");
-  if (invalidError) throw invalidError;
-  await client
-    .from("tournament_import_sessions")
-    .update({
-      status: count === 0 && invalidCount === 0 ? "ready" : "validation_failed",
-    })
-    .eq("id", sessionId);
-}
-
-export async function insertImportAuditEvent(
-  submissionId: string,
-  eventType: string,
-  sessionId: string,
+  resolution: {
+    decision: string;
+    existingEntityId: string | null;
+    confirmedCompletedResultOverwrite: boolean;
+  },
+  expectedSessionUpdatedAt: string,
   access: OperationalRpcAccess,
 ) {
-  const { error } = await createSupabaseAdminClient()
-    .from("submission_events")
-    .insert({
-      submission_id: submissionId,
-      event_type: eventType,
-      from_status: null,
-      to_status: null,
-      actor_type: access.p_actor_type === "admin" ? "admin" : "organizer",
-      actor_id: access.p_actor_type === "admin" ? access.p_actor_id : null,
-      metadata: {
-        session_id: sessionId,
-        operational_version: "v1",
-        ...(access.p_actor_type === "organizer_workspace"
-          ? { access_method: "workspace_link", workspace_version: "v1" }
-          : {}),
-      },
-    });
+  const { data, error } = await createSupabaseAdminClient().rpc(
+    "resolve_tournament_import_conflict",
+    {
+      p_session_id: sessionId,
+      p_submission_id: submissionId,
+      p_row_id: rowId,
+      p_decision: resolution.decision,
+      p_existing_entity_id: resolution.existingEntityId,
+      p_confirmed_completed_result_overwrite:
+        resolution.confirmedCompletedResultOverwrite,
+      p_expected_session_updated_at: expectedSessionUpdatedAt,
+      ...access,
+    },
+  );
   if (error) throw error;
+  return data;
 }
 
 export async function executeApplyImportRpc(

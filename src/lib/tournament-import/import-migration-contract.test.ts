@@ -16,6 +16,13 @@ const migration =
       "supabase/migrations/20260802173000_add_import_timezone_confirmation.sql",
     ),
     "utf8",
+  ) +
+  fs.readFileSync(
+    path.join(
+      process.cwd(),
+      "supabase/migrations/20260802190000_fix_import_conflict_resolution.sql",
+    ),
+    "utf8",
   );
 
 describe("tournament import migration contract", () => {
@@ -91,5 +98,32 @@ describe("tournament import migration contract", () => {
       "status=case when i.status='ready' then 'validation_failed'",
     );
     expect(migration).toContain("import_timezone_confirmed");
+  });
+
+  it("atomically resolves conflicts, updates counters and rejects stale writes", () => {
+    expect(migration).toContain(
+      "function public.resolve_tournament_import_conflict(",
+    );
+    expect(migration).toContain("resolution_status text");
+    expect(migration).toContain("v_session.updated_at is distinct from");
+    expect(migration).toContain("message='import_session_stale'");
+    expect(migration).toMatch(
+      /resolution_status='resolved'[\s\S]*proposed_action=v_target_action/,
+    );
+    expect(migration).toContain(
+      "proposed_action='conflict' and resolution_status='unresolved'",
+    );
+    expect(migration).toContain("'conflict',v_unresolved");
+    expect(migration).toContain("v_existing_id:=v_row.existing_entity_id");
+    expect(migration).toContain(
+      "message='import_resolution_existing_not_found'",
+    );
+    expect(migration).toContain("v_target_action:='skip'");
+    expect(migration).toContain("v_row.resolution_status='resolved'");
+    expect(migration).toContain("'idempotent',true");
+    expect(migration).toContain(
+      "import_completed_result_confirmation_required",
+    );
+    expect(migration).toContain("import_resolution_existing_rejected");
   });
 });

@@ -102,6 +102,7 @@ export async function resolveAdminImportAction(
       rowId: String(formData.get("rowId") ?? ""),
       submissionId,
       context: resolved.context,
+      expectedSessionUpdatedAt: formData.get("sessionVersion"),
       resolution: {
         decision: formData.get("decision"),
         existingEntityId:
@@ -110,14 +111,18 @@ export async function resolveAdminImportAction(
           formData.get("confirmedCompletedResultOverwrite") === "true",
       },
     });
-  } catch {
+  } catch (error) {
+    const code =
+      error instanceof TournamentImportError
+        ? error.code
+        : "import_resolution_failed";
     redirect(
-      `/admin/submissions/${submissionId}/import?session=${sessionId}&error=import_resolution_failed`,
+      `/admin/submissions/${submissionId}/import?session=${sessionId}&error=${encodeURIComponent(code)}`,
     );
   }
   revalidatePath(`/admin/submissions/${submissionId}/import`);
   redirect(
-    `/admin/submissions/${submissionId}/import?session=${sessionId}&filter=conflict`,
+    `/admin/submissions/${submissionId}/import?session=${sessionId}&filter=conflict&resolved=1`,
   );
 }
 

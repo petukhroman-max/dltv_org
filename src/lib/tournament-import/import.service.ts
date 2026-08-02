@@ -19,11 +19,10 @@ import {
   executeApplyImportRpc,
   executeCancelImportRpc,
   executeConfirmImportTimezoneRpc,
+  executeResolveImportConflictRpc,
   insertImportSession,
-  insertImportAuditEvent,
   selectImportSession,
   selectImportSnapshot,
-  updateImportResolution,
 } from "./import.repository";
 import {
   summarizeImport,
@@ -212,8 +211,48 @@ export async function loadTournamentImportSession(
     result.session,
     toOperationalRpcAccess(context, submissionId),
   );
+  const snapshot = await selectImportSnapshot(ids.data.submissionId);
+  const rosteredPlayerIds = new Set(
+    snapshot.rosters.map((roster) => roster.player_id),
+  );
+  const stageNames = new Map(
+    snapshot.stages.map((stage) => [stage.id, stage.name]),
+  );
+  const teamNames = new Map(snapshot.teams.map((team) => [team.id, team.name]));
   return {
     session: result.session,
+    linkCandidates: [
+      ...snapshot.stages.map((stage) => ({
+        entityType: "stage",
+        id: stage.id,
+        label: stage.name,
+      })),
+      ...snapshot.teams.map((team) => ({
+        entityType: "team",
+        id: team.id,
+        label: team.name,
+      })),
+      ...snapshot.players
+        .filter((player) => rosteredPlayerIds.has(player.id))
+        .map((player) => ({
+          entityType: "player",
+          id: player.id,
+          label: player.display_name,
+        })),
+      ...snapshot.matches.map((match) => ({
+        entityType: "match",
+        id: match.id,
+        label: `${stageNames.get(match.stage_id ?? "") ?? "—"} · ${
+          teamNames.get(match.team_a_id ?? "") ?? "—"
+        } — ${teamNames.get(match.team_b_id ?? "") ?? "—"} · ${
+          match.match_number
+            ? `#${match.match_number}`
+            : match.deadlock_match_id
+              ? `ID ${match.deadlock_match_id}`
+              : "—"
+        }`,
+      })),
+    ],
     rows: result.rows.map((row) => {
       const entity = {
         entityType: row.entity_type,
@@ -242,6 +281,7 @@ export async function resolveTournamentImportConflict(input: {
   rowId: string;
   submissionId: string;
   context: OperationalAccessContext;
+  expectedSessionUpdatedAt: unknown;
   resolution: unknown;
 }) {
   const parsed = z
@@ -249,6 +289,7 @@ export async function resolveTournamentImportConflict(input: {
       sessionId: uuidSchema,
       rowId: uuidSchema,
       submissionId: uuidSchema,
+      expectedSessionUpdatedAt: z.string().datetime({ offset: true }),
     })
     .safeParse(input);
   const resolution = importResolutionSchema.safeParse(input.resolution);
@@ -260,18 +301,32 @@ export async function resolveTournamentImportConflict(input: {
     input.context,
   );
   if (!loaded) throw new TournamentImportError("import_session_not_found");
-  await updateImportResolution(
-    parsed.data.sessionId,
-    parsed.data.submissionId,
-    parsed.data.rowId,
-    resolution.data,
-  );
-  await insertImportAuditEvent(
-    parsed.data.submissionId,
-    "import_conflicts_resolved",
-    parsed.data.sessionId,
-    toOperationalRpcAccess(input.context, parsed.data.submissionId),
-  );
+  try {
+    return await executeResolveImportConflictRpc(
+      parsed.data.sessionId,
+      parsed.data.submissionId,
+      parsed.data.rowId,
+      resolution.data,
+      parsed.data.expectedSessionUpdatedAt,
+      toOperationalRpcAccess(input.context, parsed.data.submissionId),
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    const safeCodes = [
+      "import_session_stale",
+      "import_session_locked",
+      "import_session_expired",
+      "import_row_not_found",
+      "import_row_not_conflict",
+      "import_resolution_already_resolved",
+      "import_resolution_existing_not_found",
+      "import_resolution_existing_required",
+      "import_resolution_existing_rejected",
+      "import_completed_result_confirmation_required",
+    ];
+    const code = safeCodes.find((candidate) => message.includes(candidate));
+    throw new TournamentImportError(code ?? "import_resolution_failed");
+  }
 }
 
 export async function confirmTournamentImportTimezone(input: {

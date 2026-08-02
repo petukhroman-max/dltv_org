@@ -26,7 +26,12 @@ export default async function WorkspaceImportPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ session?: string; filter?: string; error?: string }>;
+  searchParams: Promise<{
+    session?: string;
+    filter?: string;
+    error?: string;
+    resolved?: string;
+  }>;
 }) {
   noStore();
   const [{ token }, query, locale, dictionary] = await Promise.all([
@@ -69,6 +74,11 @@ export default async function WorkspaceImportPage({
           <p className="fieldError importTopError" role="alert">
             {importCopy.errorPrefix}:{" "}
             {getImportIssueMessage(locale, query.error)}
+          </p>
+        ) : null}
+        {query.resolved === "1" ? (
+          <p className="successMessage" role="status">
+            {importCopy.resolvedSuccess}
           </p>
         ) : null}
         <TournamentImportWorkspace

@@ -40,12 +40,14 @@ const en = {
   invalid: "Invalid",
   skip: "Skipped",
   resolve: "Resolve conflict",
+  resolving: "Resolving…",
   keep: "Keep existing",
   useSheet: "Use spreadsheet value",
   skipRow: "Skip row",
   link: "Link to existing entity",
   createNew: "Create new entity",
-  existingId: "Existing entity UUID",
+  existingEntitySearch: "Existing entity",
+  existingEntityPlaceholder: "Search by name or match label",
   highRisk: "I explicitly confirm replacing a completed result",
   confirm: "Apply import atomically",
   cancel: "Cancel session",
@@ -59,6 +61,7 @@ const en = {
   completed: "Import completed",
   back: "Back to tournament workspace",
   errorPrefix: "Import could not continue",
+  resolvedSuccess: "Conflict resolved. The preview has been refreshed.",
   blockingSeverity: "Blocking",
   warningSeverity: "Review",
 } as const;
@@ -105,12 +108,14 @@ const ru: ImportCopy = {
   invalid: "Ошибка",
   skip: "Пропущено",
   resolve: "Разрешить конфликт",
+  resolving: "Разрешение…",
   keep: "Сохранить текущее",
   useSheet: "Использовать значение таблицы",
   skipRow: "Пропустить строку",
   link: "Связать с существующей сущностью",
   createNew: "Создать новую сущность",
-  existingId: "UUID существующей сущности",
+  existingEntitySearch: "Существующая сущность",
+  existingEntityPlaceholder: "Поиск по названию или метке матча",
   highRisk: "Я явно подтверждаю замену завершённого результата",
   confirm: "Применить импорт атомарно",
   cancel: "Отменить сессию",
@@ -124,6 +129,7 @@ const ru: ImportCopy = {
   completed: "Импорт завершён",
   back: "Назад в кабинет турнира",
   errorPrefix: "Не удалось продолжить импорт",
+  resolvedSuccess: "Конфликт разрешён. Предпросмотр обновлён.",
   blockingSeverity: "Блокирует импорт",
   warningSeverity: "Требует внимания",
 };
@@ -206,6 +212,34 @@ const issueMessages: Record<string, { en: string; ru: string }> = {
   google_sheets_download_failed: {
     en: "The spreadsheet could not be downloaded. Make sure anyone with the link can view it.",
     ru: "Не удалось скачать таблицу. Проверьте, что доступ открыт всем, у кого есть ссылка.",
+  },
+  import_session_stale: {
+    en: "The import preview changed in another request. Review the refreshed row and try again.",
+    ru: "Предпросмотр импорта изменился в другом запросе. Проверьте обновлённую строку и повторите попытку.",
+  },
+  import_resolution_existing_not_found: {
+    en: "No existing entity was matched automatically. Choose Link to existing or another resolution.",
+    ru: "Существующая сущность не была найдена автоматически. Выберите «Связать с существующей» или другое решение.",
+  },
+  import_resolution_existing_required: {
+    en: "Select an existing entity to link.",
+    ru: "Выберите существующую сущность для связывания.",
+  },
+  import_resolution_existing_rejected: {
+    en: "The selected entity is not available for this tournament.",
+    ru: "Выбранная сущность недоступна для этого турнира.",
+  },
+  import_resolution_already_resolved: {
+    en: "This conflict has already been resolved differently. Review the refreshed preview.",
+    ru: "Этот конфликт уже разрешён другим способом. Проверьте обновлённый предпросмотр.",
+  },
+  import_completed_result_confirmation_required: {
+    en: "Confirm the completed-result overwrite before using the spreadsheet value.",
+    ru: "Подтвердите замену завершённого результата перед использованием значения таблицы.",
+  },
+  import_resolution_failed: {
+    en: "The conflict could not be resolved. Refresh the preview and try again.",
+    ru: "Не удалось разрешить конфликт. Обновите предпросмотр и повторите попытку.",
   },
 };
 

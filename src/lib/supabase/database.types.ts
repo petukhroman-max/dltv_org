@@ -305,6 +305,7 @@ type TournamentImportRow = {
   proposed_action: string;
   existing_entity_id: string | null;
   resolution: Json | null;
+  resolution_status: string;
   created_at: string;
 };
 
@@ -699,6 +700,21 @@ export type Database = {
           p_session_id: string;
           p_submission_id: string;
           p_timezone: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
+      resolve_tournament_import_conflict: {
+        Args: {
+          p_session_id: string;
+          p_submission_id: string;
+          p_row_id: string;
+          p_decision: string;
+          p_existing_entity_id: string | null;
+          p_confirmed_completed_result_overwrite: boolean;
+          p_expected_session_updated_at: string;
           p_actor_type: string;
           p_actor_id: string | null;
           p_workspace_token_id: string | null;

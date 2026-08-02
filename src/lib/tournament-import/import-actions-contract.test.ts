@@ -24,6 +24,13 @@ const workspace = fs.readFileSync(
   ),
   "utf8",
 );
+const resolutionForm = fs.readFileSync(
+  path.join(
+    process.cwd(),
+    "src/components/operational/import-conflict-resolution-form.tsx",
+  ),
+  "utf8",
+);
 const copy = fs.readFileSync(
   path.join(process.cwd(), "src/lib/tournament-import/import-copy.ts"),
   "utf8",
@@ -88,5 +95,28 @@ describe("import server action contract", () => {
     expect(styles).toContain(".importJson");
     expect(styles).toContain("overflow-wrap: anywhere");
     expect(styles).toContain("@media (max-width: 40rem)");
+  });
+
+  it("refreshes resolved conflicts and keeps risky controls decision-specific", () => {
+    for (const action of [organizer, admin]) {
+      expect(action).toContain('formData.get("sessionVersion")');
+      expect(action).toContain("revalidatePath(");
+      expect(action).toContain("filter=conflict&resolved=1");
+      expect(action).toContain("error.code");
+    }
+    expect(workspace).toContain('filter !== "conflict"');
+    expect(workspace).toContain('resolution_status !== "resolved"');
+    expect(resolutionForm).toContain('decision === "link_existing"');
+    expect(resolutionForm).toContain('type="search"');
+    expect(resolutionForm).toContain('type="hidden"');
+    expect(resolutionForm).toContain(
+      'decision === "use_spreadsheet" && highRiskCompletedResult',
+    );
+    expect(resolutionForm).toContain("disabled={pending || disabled}");
+    expect(copy).toContain(
+      "Conflict resolved. The preview has been refreshed.",
+    );
+    expect(copy).toContain("Конфликт разрешён. Предпросмотр обновлён.");
+    expect(copy).toContain("import_session_stale");
   });
 });

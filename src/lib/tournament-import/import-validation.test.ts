@@ -124,8 +124,33 @@ describe("import validation and matching", () => {
       (entity) => entity.entityType === "match",
     );
     expect(match?.proposedAction).toBe("conflict");
+    expect(match?.existingEntityId).toBe(
+      "00000000-0000-4000-8000-000000000002",
+    );
     expect(match?.errors).toContain(
       "completed_match_requires_explicit_resolution",
+    );
+  });
+
+  it("retains the automatically matched stage ID for Keep existing", () => {
+    const result = validateAndMatchImportBundle(bundle, {
+      ...empty,
+      stages: [
+        {
+          id: "00000000-0000-4000-8000-000000000010",
+          name: "Different stage name",
+          sequence_number: 1,
+          stage_type: "custom",
+        },
+      ],
+    });
+    const stage = result.entities.find(
+      (entity) => entity.entityType === "stage",
+    );
+    expect(stage?.proposedAction).toBe("conflict");
+    expect(stage?.errors).toContain("stage_sequence_conflict");
+    expect(stage?.existingEntityId).toBe(
+      "00000000-0000-4000-8000-000000000010",
     );
   });
 

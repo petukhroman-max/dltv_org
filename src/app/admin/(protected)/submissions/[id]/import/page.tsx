@@ -28,7 +28,12 @@ export default async function AdminImportPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ session?: string; filter?: string; error?: string }>;
+  searchParams: Promise<{
+    session?: string;
+    filter?: string;
+    error?: string;
+    resolved?: string;
+  }>;
 }) {
   noStore();
   const [{ id }, query, locale, identity] = await Promise.all([
@@ -54,6 +59,11 @@ export default async function AdminImportPage({
       {query.error ? (
         <p className="fieldError importTopError" role="alert">
           {importCopy.errorPrefix}: {getImportIssueMessage(locale, query.error)}
+        </p>
+      ) : null}
+      {query.resolved === "1" ? (
+        <p className="successMessage" role="status">
+          {importCopy.resolvedSuccess}
         </p>
       ) : null}
       <TournamentImportWorkspace

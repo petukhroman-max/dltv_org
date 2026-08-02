@@ -1,5 +1,6 @@
 import type { Json } from "@/lib/supabase/database.types";
 import type { Locale } from "@/i18n/config";
+import { ImportConflictResolutionForm } from "./import-conflict-resolution-form";
 import {
   getImportCopy,
   getImportIssueMessage,
@@ -16,7 +17,9 @@ type ImportView = {
     fallback_timezone: string;
     timezone_confirmation_required: boolean;
     timezone_confirmed_at: string | null;
+    updated_at: string;
   };
+  linkCandidates: Array<{ entityType: string; id: string; label: string }>;
   rows: Array<{
     id: string;
     entity_type: string;
@@ -27,6 +30,8 @@ type ImportView = {
     validation_errors: Json;
     warnings: Json;
     resolution: Json | null;
+    resolution_status: string;
+    existing_entity_id: string | null;
     preview_payload: unknown;
   }>;
 };
@@ -77,7 +82,10 @@ export function TournamentImportWorkspace({
   const filters = ["all", "create", "update", "conflict", "invalid", "skip"];
   const rows =
     session?.rows.filter(
-      (row) => filter === "all" || row.proposed_action === filter,
+      (row) =>
+        filter === "all" ||
+        (row.proposed_action === filter &&
+          (filter !== "conflict" || row.resolution_status !== "resolved")),
     ) ?? [];
   const summary = (session?.session.validation_summary ?? {}) as Record<
     string,
@@ -87,7 +95,9 @@ export function TournamentImportWorkspace({
     Number(summary.invalid ?? 0) > 0 ||
     Boolean(session?.session.timezone_confirmation_required) ||
     session?.rows.some(
-      (row) => row.proposed_action === "conflict" && !row.resolution,
+      (row) =>
+        row.proposed_action === "conflict" &&
+        row.resolution_status !== "resolved",
     );
   const locked = session
     ? ["applying", "completed", "cancelled", "expired", "failed"].includes(
@@ -392,45 +402,26 @@ export function TournamentImportWorkspace({
                           .join(" ")}
                       </p>
                     ) : null}
-                    {row.proposed_action === "conflict" && !locked ? (
-                      <form
+                    {row.proposed_action === "conflict" &&
+                    row.resolution_status !== "resolved" &&
+                    !locked ? (
+                      <ImportConflictResolutionForm
                         action={resolveAction}
-                        className="importResolutionForm"
-                      >
-                        <input
-                          type="hidden"
-                          name="sessionId"
-                          value={session.session.id}
-                        />
-                        <input type="hidden" name="rowId" value={row.id} />
-                        <label>
-                          {copy.resolve}
-                          <select name="decision" defaultValue="keep_existing">
-                            <option value="keep_existing">{copy.keep}</option>
-                            <option value="use_spreadsheet">
-                              {copy.useSheet}
-                            </option>
-                            <option value="skip">{copy.skipRow}</option>
-                            <option value="link_existing">{copy.link}</option>
-                            <option value="create_new">{copy.createNew}</option>
-                          </select>
-                        </label>
-                        <label>
-                          {copy.existingId}
-                          <input name="existingEntityId" />
-                        </label>
-                        <label className="checkboxLabel">
-                          <input
-                            type="checkbox"
-                            name="confirmedCompletedResultOverwrite"
-                            value="true"
-                          />
-                          {copy.highRisk}
-                        </label>
-                        <button className="secondaryButton" type="submit">
-                          {copy.resolve}
-                        </button>
-                      </form>
+                        sessionId={session.session.id}
+                        sessionVersion={session.session.updated_at}
+                        rowId={row.id}
+                        candidates={session.linkCandidates.filter(
+                          (candidate) =>
+                            candidate.entityType === row.entity_type,
+                        )}
+                        canKeepExisting={Boolean(row.existing_entity_id)}
+                        highRiskCompletedResult={jsonList(
+                          row.validation_errors,
+                        ).includes(
+                          "completed_match_requires_explicit_resolution",
+                        )}
+                        copy={copy}
+                      />
                     ) : null}
                   </article>
                 ))}

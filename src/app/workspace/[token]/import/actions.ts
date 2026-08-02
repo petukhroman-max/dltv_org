@@ -104,6 +104,7 @@ export async function resolveWorkspaceImportAction(
       rowId: String(formData.get("rowId") ?? ""),
       submissionId: resolved.access.submission.id,
       context: resolved.context,
+      expectedSessionUpdatedAt: formData.get("sessionVersion"),
       resolution: {
         decision: formData.get("decision"),
         existingEntityId:
@@ -112,14 +113,18 @@ export async function resolveWorkspaceImportAction(
           formData.get("confirmedCompletedResultOverwrite") === "true",
       },
     });
-  } catch {
+  } catch (error) {
+    const code =
+      error instanceof TournamentImportError
+        ? error.code
+        : "import_resolution_failed";
     redirect(
-      `/workspace/${rawToken}/import?session=${sessionId}&error=import_resolution_failed`,
+      `/workspace/${rawToken}/import?session=${sessionId}&error=${encodeURIComponent(code)}`,
     );
   }
   revalidatePath(`/workspace/${rawToken}/import`);
   redirect(
-    `/workspace/${rawToken}/import?session=${sessionId}&filter=conflict`,
+    `/workspace/${rawToken}/import?session=${sessionId}&filter=conflict&resolved=1`,
   );
 }
 
