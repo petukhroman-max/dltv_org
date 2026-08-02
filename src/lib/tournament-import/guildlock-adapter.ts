@@ -170,6 +170,7 @@ type MatchCandidate = {
   isForfeit: boolean;
   matchNumber: number | null;
   group: string | null;
+  scheduledAt: string | null;
   compositeKey: string;
 };
 
@@ -202,7 +203,9 @@ function canonicalMatchKey(candidate: MatchCandidate): string {
   return [
     candidate.stageKey,
     participants,
+    candidate.scheduledAt ?? "unscheduled",
     normalizeImportName(candidate.label ?? "unlabelled"),
+    normalizeImportName(candidate.group ?? "ungrouped"),
   ].join("|");
 }
 
@@ -351,6 +354,7 @@ function parseMatchSheet(
       isForfeit,
       matchNumber: matchNumber ? Number(matchNumber) : null,
       group,
+      scheduledAt: null,
       compositeKey: "",
     };
     candidate.compositeKey = canonicalMatchKey(candidate);
