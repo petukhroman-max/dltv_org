@@ -63,7 +63,10 @@ function mark(
   return {
     ...entity,
     proposedAction: action,
-    errors: issue ? [...entity.errors, issue] : entity.errors,
+    errors:
+      issue && !entity.errors.includes(issue)
+        ? [...entity.errors, issue]
+        : entity.errors,
   } as ImportedEntity;
 }
 
@@ -170,6 +173,8 @@ function matchEntities(
       if (candidates[0]) {
         const candidate = candidates[0];
         matchedMatches.set(entity.source.key, candidate.id);
+        if (entity.proposedAction === "conflict")
+          return { ...entity, existingEntityId: candidate.id };
         if (
           candidate.status === "completed" ||
           candidate.status === "walkover"
@@ -330,7 +335,7 @@ export function validateAndMatchImportBundle(
           `${entity.data.stageKey}:${entity.data.matchNumber}`,
         ) ?? 0) > 1
       )
-        return mark(entity, "invalid", "duplicate_match_number");
+        return mark(entity, "conflict", "duplicate_match_number");
       if (!stageKeys.has(entity.data.stageKey))
         return mark(entity, "invalid", "unknown_stage_reference");
       if (entity.data.teamAKey && !teamKeys.has(entity.data.teamAKey))
@@ -345,16 +350,47 @@ export function validateAndMatchImportBundle(
           entity.data.winnerTeamKey,
         )
       ) {
-        return mark(entity, "invalid", "winner_not_participant");
+        return mark(entity, "conflict", "winner_not_participant");
       }
       if (
+        (entity.data.scoreA !== null && !entity.data.teamAKey) ||
+        (entity.data.scoreB !== null && !entity.data.teamBKey)
+      )
+        return mark(entity, "invalid", "score_without_participant");
+      if (
         entity.data.status === "completed" &&
-        (entity.data.scoreA === null ||
+        (!entity.data.teamAKey ||
+          !entity.data.teamBKey ||
+          entity.data.scoreA === null ||
           entity.data.scoreB === null ||
           !entity.data.winnerTeamKey)
       ) {
         return mark(entity, "invalid", "completed_match_result_required");
       }
+      if (
+        entity.data.status === "completed" &&
+        entity.data.scoreA !== null &&
+        entity.data.scoreB !== null &&
+        (entity.data.scoreA === entity.data.scoreB ||
+          (entity.data.scoreA > entity.data.scoreB
+            ? entity.data.winnerTeamKey !== entity.data.teamAKey
+            : entity.data.winnerTeamKey !== entity.data.teamBKey))
+      )
+        return mark(entity, "invalid", "completed_result_inconsistent");
+      if (
+        entity.data.status === "walkover" &&
+        (!entity.data.teamAKey ||
+          !entity.data.teamBKey ||
+          !entity.data.winnerTeamKey)
+      )
+        return mark(entity, "invalid", "walkover_winner_required");
+      if (
+        ["draft", "scheduled", "postponed", "cancelled"].includes(
+          entity.data.status,
+        ) &&
+        entity.data.winnerTeamKey
+      )
+        return mark(entity, "conflict", "result_status_inconsistent");
     }
     if (entity.entityType === "standings_group_assignment") {
       if (

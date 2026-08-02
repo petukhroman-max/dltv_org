@@ -25,6 +25,8 @@ describe("tournament import migration contract", () => {
     );
     expect(migration).toContain("create table public.tournament_import_rows");
     expect(migration).toContain("normalized_payload jsonb");
+    expect(migration).toContain("source_references jsonb");
+    expect(migration).toContain("jsonb_typeof(source_references)='array'");
     expect(migration).not.toMatch(
       /raw_workspace_token|raw_workbook|workbook_blob/i,
     );

@@ -1,5 +1,15 @@
 -- Explicit session-level fallback timezone confirmation for table imports.
 
+alter table public.tournament_import_rows
+  add column source_references jsonb not null default '[]'::jsonb,
+  add constraint tournament_import_source_references_array check (
+    jsonb_typeof(source_references)='array'
+  );
+
+update public.tournament_import_rows set source_references=jsonb_build_array(
+  jsonb_build_object('sheet',source_sheet,'row',source_row_number)
+) where source_references='[]'::jsonb;
+
 alter table public.tournament_import_sessions
   add column fallback_timezone text not null default 'UTC',
   add column timezone_confirmation_required boolean not null default false,

@@ -20,6 +20,7 @@ const en = {
   status: "Session status",
   sheets: "Detected sheets",
   row: "Source",
+  sourceReferences: "Source rows",
   entity: "Entity",
   action: "Proposed action",
   data: "Safe preview",
@@ -58,6 +59,8 @@ const en = {
   completed: "Import completed",
   back: "Back to tournament workspace",
   errorPrefix: "Import could not continue",
+  blockingSeverity: "Blocking",
+  warningSeverity: "Review",
 } as const;
 
 type ImportCopy = { [Key in keyof typeof en]: string };
@@ -82,6 +85,7 @@ const ru: ImportCopy = {
   status: "Статус сессии",
   sheets: "Найденные листы",
   row: "Источник",
+  sourceReferences: "Исходные строки",
   entity: "Сущность",
   action: "Предлагаемое действие",
   data: "Безопасный предпросмотр",
@@ -120,6 +124,96 @@ const ru: ImportCopy = {
   completed: "Импорт завершён",
   back: "Назад в кабинет турнира",
   errorPrefix: "Не удалось продолжить импорт",
+  blockingSeverity: "Блокирует импорт",
+  warningSeverity: "Требует внимания",
 };
 
 export const getImportCopy = (locale: Locale) => (locale === "ru" ? ru : en);
+
+const issueMessages: Record<string, { en: string; ru: string }> = {
+  timezone_fallback_confirmation_required: {
+    en: "Confirm a timezone for rows where it is missing.",
+    ru: "Подтвердите часовой пояс для строк, где он не указан.",
+  },
+  duplicate_match_number: {
+    en: "This match number is used more than once in the same stage.",
+    ru: "Этот номер матча используется в этапе несколько раз.",
+  },
+  winner_not_participant: {
+    en: "The winner does not match either participant.",
+    ru: "Победитель не совпадает ни с одной из команд матча.",
+  },
+  series_score_not_available: {
+    en: "The source contains game results but no reliable series score; the result will not be imported.",
+    ru: "Источник содержит результаты игр, но не надёжный счёт серии; результат не будет импортирован.",
+  },
+  multiple_game_rows_for_series: {
+    en: "Multiple game rows map to one series. Review the consolidated match before import.",
+    ru: "Несколько строк игр относятся к одной серии. Проверьте объединённый матч перед импортом.",
+  },
+  duplicate_match_data_conflict: {
+    en: "Duplicate match rows contain conflicting participants or results.",
+    ru: "Повторяющиеся строки матча содержат разные составы участников или результаты.",
+  },
+  completed_match_result_required: {
+    en: "A completed match requires both participants, scores and a winner.",
+    ru: "Для завершённого матча нужны оба участника, счёт и победитель.",
+  },
+  completed_result_inconsistent: {
+    en: "The winner is inconsistent with the series score.",
+    ru: "Победитель не соответствует счёту серии.",
+  },
+  result_status_inconsistent: {
+    en: "This status cannot contain a winner.",
+    ru: "При этом статусе победитель не может быть указан.",
+  },
+  score_without_participant: {
+    en: "A score cannot be assigned without the corresponding participant.",
+    ru: "Нельзя указать счёт без соответствующего участника.",
+  },
+  walkover_winner_required: {
+    en: "A walkover requires both participants and a winner.",
+    ru: "Для технической победы нужны оба участника и победитель.",
+  },
+  google_sheets_url_invalid: {
+    en: "Enter a valid public Google Sheets document URL.",
+    ru: "Укажите корректную публичную ссылку на Google Таблицу.",
+  },
+  google_sheets_host_rejected: {
+    en: "Only public docs.google.com spreadsheet links are supported.",
+    ru: "Поддерживаются только публичные ссылки docs.google.com на таблицы.",
+  },
+  google_sheets_redirect_rejected: {
+    en: "Google returned an unexpected download address.",
+    ru: "Google вернул неожиданный адрес загрузки.",
+  },
+  google_sheets_download_too_large: {
+    en: "The Google Sheets export exceeds the import size limit.",
+    ru: "Экспорт Google Таблицы превышает допустимый размер.",
+  },
+  google_sheets_download_timeout: {
+    en: "The Google Sheets export timed out. Try again.",
+    ru: "Истекло время загрузки Google Таблицы. Повторите попытку.",
+  },
+  google_sheets_content_type_rejected: {
+    en: "Google did not return an XLSX workbook.",
+    ru: "Google не вернул книгу XLSX.",
+  },
+  google_sheets_content_invalid: {
+    en: "The downloaded file is not a valid XLSX workbook.",
+    ru: "Загруженный файл не является корректной книгой XLSX.",
+  },
+  google_sheets_download_failed: {
+    en: "The spreadsheet could not be downloaded. Make sure anyone with the link can view it.",
+    ru: "Не удалось скачать таблицу. Проверьте, что доступ открыт всем, у кого есть ссылка.",
+  },
+};
+
+export function getImportIssueMessage(locale: Locale, code: string): string {
+  return (
+    issueMessages[code]?.[locale] ??
+    (locale === "ru"
+      ? "Строка требует проверки перед импортом."
+      : "This row requires review before import.")
+  );
+}

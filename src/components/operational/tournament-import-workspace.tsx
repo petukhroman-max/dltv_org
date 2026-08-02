@@ -1,6 +1,9 @@
 import type { Json } from "@/lib/supabase/database.types";
 import type { Locale } from "@/i18n/config";
-import { getImportCopy } from "@/lib/tournament-import/import-copy";
+import {
+  getImportCopy,
+  getImportIssueMessage,
+} from "@/lib/tournament-import/import-copy";
 
 type ImportView = {
   session: {
@@ -19,6 +22,7 @@ type ImportView = {
     entity_type: string;
     source_sheet: string;
     source_row_number: number;
+    source_references: Json;
     proposed_action: string;
     validation_errors: Json;
     warnings: Json;
@@ -31,6 +35,21 @@ type FormAction = (formData: FormData) => Promise<void>;
 
 function jsonList(value: Json) {
   return Array.isArray(value) ? value.map(String) : [];
+}
+
+function sourceReferences(value: Json): Array<{ sheet: string; row: number }> {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (
+      item &&
+      typeof item === "object" &&
+      !Array.isArray(item) &&
+      typeof item.sheet === "string" &&
+      typeof item.row === "number"
+    )
+      return [{ sheet: item.sheet, row: item.row }];
+    return [];
+  });
 }
 
 export function TournamentImportWorkspace({
@@ -343,26 +362,34 @@ export function TournamentImportWorkspace({
                       </span>
                       <span className="statusBadge">{row.proposed_action}</span>
                     </header>
+                    {sourceReferences(row.source_references).length > 1 ? (
+                      <p className="importSourceReferences">
+                        {copy.sourceReferences}:{" "}
+                        {sourceReferences(row.source_references)
+                          .map(
+                            ({ sheet, row: sourceRow }) =>
+                              `${sheet}:${sourceRow}`,
+                          )
+                          .join(", ")}
+                      </p>
+                    ) : null}
                     <pre className="importJson">
                       {JSON.stringify(row.preview_payload, null, 2)}
                     </pre>
                     {jsonList(row.validation_errors).length ? (
                       <p className="fieldError">
-                        {copy.errors}:{" "}
-                        {jsonList(row.validation_errors).join(", ")}
+                        <strong>{copy.blockingSeverity}:</strong>{" "}
+                        {jsonList(row.validation_errors)
+                          .map((code) => getImportIssueMessage(locale, code))
+                          .join(" ")}
                       </p>
                     ) : null}
                     {jsonList(row.warnings).length ? (
                       <p className="adminWarning">
-                        {copy.warnings}:{" "}
+                        <strong>{copy.warningSeverity}:</strong>{" "}
                         {jsonList(row.warnings)
-                          .map((warning) =>
-                            warning ===
-                            "timezone_fallback_confirmation_required"
-                              ? copy.timezoneWarning
-                              : warning,
-                          )
-                          .join(", ")}
+                          .map((code) => getImportIssueMessage(locale, code))
+                          .join(" ")}
                       </p>
                     ) : null}
                     {row.proposed_action === "conflict" && !locked ? (

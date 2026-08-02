@@ -42,6 +42,17 @@ const sourceSchema = z
     sheet: z.string().trim().min(1).max(100),
     row: z.number().int().positive().max(100_000),
     key: z.string().trim().min(1).max(200),
+    references: z
+      .array(
+        z
+          .object({
+            sheet: z.string().trim().min(1).max(100),
+            row: z.number().int().positive().max(100_000),
+          })
+          .strict(),
+      )
+      .max(500)
+      .optional(),
   })
   .strict();
 

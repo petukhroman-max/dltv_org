@@ -155,13 +155,170 @@ function parseGroupSheet(
   }
 }
 
-const matchNumberPattern = /match\s*(\d+)/i;
+const matchNumberPattern = /^match\s*(\d+)$/i;
+
+type ImportedMatch = Extract<ImportedEntity, { entityType: "match" }>;
+type MatchCandidate = {
+  sheet: string;
+  row: number;
+  stageKey: string;
+  teamA: string;
+  teamB: string;
+  label: string | null;
+  rawId: string | null;
+  winner: string | null;
+  isForfeit: boolean;
+  matchNumber: number | null;
+  group: string | null;
+  compositeKey: string;
+};
+
+function teamAliases(name: string): Set<string> {
+  const normalized = normalizeImportName(name);
+  const aliases = new Set([normalized, normalized.replace(/^the\s+/, "")]);
+  const parenthetical = normalized.match(/\(([^)]+)\)/)?.[1];
+  if (parenthetical) aliases.add(parenthetical);
+  return aliases;
+}
+
+function resolveWinner(
+  winner: string | null,
+  teamA: string,
+  teamB: string,
+): string | null | "invalid" {
+  if (!winner) return null;
+  const aliases = teamAliases(winner);
+  if ([...teamAliases(teamA)].some((alias) => aliases.has(alias)))
+    return teamKey(teamA);
+  if ([...teamAliases(teamB)].some((alias) => aliases.has(alias)))
+    return teamKey(teamB);
+  return "invalid";
+}
+
+function canonicalMatchKey(candidate: MatchCandidate): string {
+  const participants = [teamKey(candidate.teamA), teamKey(candidate.teamB)]
+    .sort()
+    .join("|");
+  return [
+    candidate.stageKey,
+    participants,
+    normalizeImportName(candidate.label ?? "unlabelled"),
+  ].join("|");
+}
+
+function canonicalizeMatches(candidates: MatchCandidate[]): ImportedMatch[] {
+  const parent = candidates.map((_, index) => index);
+  const find = (index: number): number => {
+    if (parent[index] !== index) parent[index] = find(parent[index]);
+    return parent[index];
+  };
+  const union = (left: number, right: number) => {
+    const leftRoot = find(left);
+    const rightRoot = find(right);
+    if (leftRoot !== rightRoot) parent[rightRoot] = leftRoot;
+  };
+  for (let left = 0; left < candidates.length; left += 1) {
+    for (let right = left + 1; right < candidates.length; right += 1) {
+      const sameDeadlockId =
+        candidates[left].rawId !== null &&
+        candidates[left].rawId === candidates[right].rawId;
+      if (
+        sameDeadlockId ||
+        candidates[left].compositeKey === candidates[right].compositeKey
+      )
+        union(left, right);
+    }
+  }
+  const groups = new Map<number, MatchCandidate[]>();
+  candidates.forEach((candidate, index) => {
+    const root = find(index);
+    groups.set(root, [...(groups.get(root) ?? []), candidate]);
+  });
+  return [...groups.values()].map((rows) => {
+    const first = rows[0];
+    const references = rows.map(({ sheet, row }) => ({ sheet, row }));
+    const ids = [
+      ...new Set(rows.flatMap((row) => (row.rawId ? [row.rawId] : []))),
+    ];
+    const composites = new Set(rows.map((row) => row.compositeKey));
+    const winners = rows.map((row) =>
+      resolveWinner(row.winner, row.teamA, row.teamB),
+    );
+    const invalidWinner = winners.includes("invalid");
+    const resolvedWinners = [
+      ...new Set(
+        winners.filter(
+          (winner): winner is string => winner !== null && winner !== "invalid",
+        ),
+      ),
+    ];
+    const isWalkover =
+      rows.every((row) => row.isForfeit) &&
+      !invalidWinner &&
+      resolvedWinners.length === 1;
+    const multipleGameRows = rows.length > 1 && ids.length > 1;
+    const conflictingDuplicate =
+      composites.size > 1 || resolvedWinners.length > 1;
+    const errors = [
+      ...(invalidWinner ? ["winner_not_participant"] : []),
+      ...(conflictingDuplicate ? ["duplicate_match_data_conflict"] : []),
+    ];
+    const warnings = [
+      ...(!isWalkover ? ["series_score_not_available"] : []),
+      ...(multipleGameRows ? ["multiple_game_rows_for_series"] : []),
+    ];
+    const stableKey = createHash("sha256")
+      .update(first.compositeKey)
+      .digest("hex")
+      .slice(0, 24);
+    return {
+      entityType: "match",
+      source: {
+        ...source(
+          first.sheet,
+          first.row,
+          ids.length === 1
+            ? `match:deadlock:${ids[0]}`
+            : `match:series:${stableKey}`,
+        ),
+        references,
+      },
+      data: {
+        stageKey: first.stageKey,
+        group: first.group,
+        round: first.label,
+        matchNumber: first.matchNumber,
+        teamAKey: teamKey(first.teamA),
+        teamBKey: teamKey(first.teamB),
+        scheduledAt: null,
+        timezone: null,
+        bestOf: null,
+        scoreA: null,
+        scoreB: null,
+        status: isWalkover ? "walkover" : "draft",
+        winnerTeamKey: isWalkover ? resolvedWinners[0] : null,
+        deadlockMatchId: ids.length === 1 ? ids[0] : null,
+        streamUrl: null,
+        vodUrl: null,
+      },
+      warnings,
+      errors,
+      proposedAction:
+        invalidWinner || conflictingDuplicate || multipleGameRows
+          ? "conflict"
+          : "create",
+      existingEntityId: null,
+      resolution: null,
+    };
+  });
+}
 
 function parseMatchSheet(
   sheet: Worksheet,
   stageKey: string,
-  entities: ImportedEntity[],
   seenTeams: Set<string>,
+  candidates: MatchCandidate[],
+  entities: ImportedEntity[],
 ) {
   for (let row = 3; row <= Math.min(sheet.rowCount, 500); row += 1) {
     const teamA = cellText(sheet.getCell(row, 1));
@@ -182,50 +339,22 @@ function parseMatchSheet(
     const isForfeit = rawId?.toUpperCase() === "FF";
     const matchNumber = label?.match(matchNumberPattern)?.[1];
     const group = label?.match(/group\s+([A-Za-z0-9_-]+)/i)?.[1] ?? null;
-    const warnings = ["series_score_not_available"];
-    if (winner && winner !== teamA && winner !== teamB)
-      warnings.push("winner_not_participant");
-    entities.push({
-      entityType: "match",
-      source: source(
-        sheet.name,
-        row,
-        rawId && rawId !== "FF"
-          ? `match:deadlock:${rawId}`
-          : `${stageKey}:match:${matchNumber ?? row}`,
-      ),
-      data: {
-        stageKey,
-        group,
-        round: label,
-        matchNumber: matchNumber ? Number(matchNumber) : null,
-        teamAKey: teamKey(teamA),
-        teamBKey: teamKey(teamB),
-        scheduledAt: null,
-        timezone: null,
-        bestOf: null,
-        scoreA: null,
-        scoreB: null,
-        status:
-          isForfeit && winner && (winner === teamA || winner === teamB)
-            ? "walkover"
-            : "draft",
-        winnerTeamKey:
-          winner === teamA || winner === teamB ? teamKey(winner) : null,
-        deadlockMatchId: rawId && rawId !== "FF" ? rawId : null,
-        streamUrl: null,
-        vodUrl: null,
-      },
-      warnings,
-      errors:
-        winner && winner !== teamA && winner !== teamB
-          ? ["winner_not_participant"]
-          : [],
-      proposedAction:
-        winner && winner !== teamA && winner !== teamB ? "invalid" : "create",
-      existingEntityId: null,
-      resolution: null,
-    });
+    const candidate: MatchCandidate = {
+      sheet: sheet.name,
+      row,
+      stageKey,
+      teamA,
+      teamB,
+      label,
+      rawId: rawId && rawId.toUpperCase() !== "FF" ? rawId : null,
+      winner,
+      isForfeit,
+      matchNumber: matchNumber ? Number(matchNumber) : null,
+      group,
+      compositeKey: "",
+    };
+    candidate.compositeKey = canonicalMatchKey(candidate);
+    candidates.push(candidate);
   }
 }
 
@@ -407,10 +536,13 @@ export class GuildlockWorkbookAdapter {
       ["QD2 Match Info", "stage:qualifiers-day-2"],
       ["LAN Match Info", "stage:lan"],
     ] as const;
+    const matchCandidates: MatchCandidate[] = [];
     for (const [sheetName, stageKey] of matchSheets) {
       const sheet = workbook.getWorksheet(sheetName);
-      if (sheet) parseMatchSheet(sheet, stageKey, entities, seenTeams);
+      if (sheet)
+        parseMatchSheet(sheet, stageKey, seenTeams, matchCandidates, entities);
     }
+    entities.push(...canonicalizeMatches(matchCandidates));
     const rosters = workbook.getWorksheet("Rosters");
     if (rosters) parseRosters(rosters, entities, seenTeams);
     return tournamentImportBundleSchema.parse({

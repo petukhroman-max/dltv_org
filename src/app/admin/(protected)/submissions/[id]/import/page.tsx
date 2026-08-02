@@ -15,7 +15,10 @@ import { getRequestLocale } from "@/i18n/get-dictionary";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { getTournamentSubmissionById } from "@/lib/repositories/tournament-submissions";
 import { loadTournamentImportSession } from "@/lib/tournament-import/import.service";
-import { getImportCopy } from "@/lib/tournament-import/import-copy";
+import {
+  getImportCopy,
+  getImportIssueMessage,
+} from "@/lib/tournament-import/import-copy";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -50,7 +53,7 @@ export default async function AdminImportPage({
       </p>
       {query.error ? (
         <p className="fieldError importTopError" role="alert">
-          {importCopy.errorPrefix}: <code>{query.error}</code>
+          {importCopy.errorPrefix}: {getImportIssueMessage(locale, query.error)}
         </p>
       ) : null}
       <TournamentImportWorkspace

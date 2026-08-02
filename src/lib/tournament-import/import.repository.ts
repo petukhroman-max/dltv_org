@@ -151,6 +151,9 @@ export async function insertImportSession(input: CreateImportRecord) {
       source_sheet: entity.source.sheet,
       source_row_number: entity.source.row,
       source_key: entity.source.key,
+      source_references: entity.source.references ?? [
+        { sheet: entity.source.sheet, row: entity.source.row },
+      ],
       normalized_payload: entity.data as Json,
       validation_status: rowStatus(entity),
       validation_errors: entity.errors,

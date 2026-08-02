@@ -28,6 +28,10 @@ const copy = fs.readFileSync(
   path.join(process.cwd(), "src/lib/tournament-import/import-copy.ts"),
   "utf8",
 );
+const styles = fs.readFileSync(
+  path.join(process.cwd(), "src/app/globals.css"),
+  "utf8",
+);
 
 describe("import server action contract", () => {
   it("requires organizer/admin access and never accepts an actor or submission from form data", () => {
@@ -73,5 +77,16 @@ describe("import server action contract", () => {
     expect(workspace).toContain("disabled={blocking");
     expect(copy).toContain('timezoneTitle: "Confirm import timezone"');
     expect(copy).toContain('timezoneTitle: "Подтвердите часовой пояс импорта"');
+  });
+
+  it("renders localized severity and source references in a mobile-safe preview", () => {
+    expect(workspace).toContain("getImportIssueMessage(locale, code)");
+    expect(workspace).toContain("sourceReferences(row.source_references)");
+    expect(workspace).not.toContain("jsonList(row.validation_errors).join");
+    expect(copy).toContain('blockingSeverity: "Blocking"');
+    expect(copy).toContain('blockingSeverity: "Блокирует импорт"');
+    expect(styles).toContain(".importJson");
+    expect(styles).toContain("overflow-wrap: anywhere");
+    expect(styles).toContain("@media (max-width: 40rem)");
   });
 });

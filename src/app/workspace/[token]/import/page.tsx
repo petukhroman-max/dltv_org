@@ -13,7 +13,10 @@ import { OrganizerShell } from "@/components/ui/organizer-shell";
 import { getRequestDictionary, getRequestLocale } from "@/i18n/get-dictionary";
 import { validateWorkspaceAccess } from "@/lib/organizer-workspace/workspace-token.service";
 import { loadTournamentImportSession } from "@/lib/tournament-import/import.service";
-import { getImportCopy } from "@/lib/tournament-import/import-copy";
+import {
+  getImportCopy,
+  getImportIssueMessage,
+} from "@/lib/tournament-import/import-copy";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -64,7 +67,8 @@ export default async function WorkspaceImportPage({
       <main className="workspaceMain">
         {query.error ? (
           <p className="fieldError importTopError" role="alert">
-            {importCopy.errorPrefix}: <code>{query.error}</code>
+            {importCopy.errorPrefix}:{" "}
+            {getImportIssueMessage(locale, query.error)}
           </p>
         ) : null}
         <TournamentImportWorkspace

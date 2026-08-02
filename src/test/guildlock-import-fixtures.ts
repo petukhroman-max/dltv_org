@@ -5,7 +5,12 @@ export type GuildlockFixtureVariant =
   | "warnings"
   | "conflicts"
   | "invalid"
-  | "duplicate";
+  | "duplicate"
+  | "series"
+  | "alias"
+  | "winner_b"
+  | "cross_sheet"
+  | "walkover";
 
 export async function buildGuildlockWorkbookFixture(
   variant: GuildlockFixtureVariant = "valid",
@@ -73,13 +78,30 @@ export async function buildGuildlockWorkbookFixture(
     ]);
     if (includeData) {
       sheet.addRow([
-        "Aurora",
+        variant === "alias" ? "The Aurora Club" : "Aurora",
         variant === "invalid" ? "Aurora" : "Beacon",
-        "Qualifiers - Group A - Round 1",
-        90000001,
-        variant === "warnings" ? 12345 : "Aurora",
+        variant === "series" ? "Match 16" : "Qualifiers - Group A - Round 1",
+        variant === "walkover" ? "FF" : 90000001,
+        variant === "warnings"
+          ? 12345
+          : variant === "alias"
+            ? "Aurora Club"
+            : variant === "winner_b"
+              ? "Beacon"
+              : "Aurora",
         0.02,
       ]);
+      if (variant === "series") {
+        sheet.addRow([
+          "Aurora",
+          "Beacon",
+          "Match 16",
+          90000002,
+          "Beacon",
+          0.02,
+        ]);
+        sheet.addRow(["Aurora", "Beacon", "Match 16", null, null, null]);
+      }
       if (variant === "duplicate")
         sheet.addRow([
           "Aurora",
@@ -89,12 +111,21 @@ export async function buildGuildlockWorkbookFixture(
           "Aurora",
           0.02,
         ]);
+      if (variant === "conflicts")
+        sheet.addRow([
+          "Aurora",
+          "Beacon",
+          "Qualifiers - Group A - Round 2",
+          90000001,
+          "Beacon",
+          0.02,
+        ]);
     }
   };
   addMatchInfo("QD1 Match info", true);
   workbook.addWorksheet("Qualifiers Day 2").getCell("A2").value =
     "Guildlock Qualifiers Day 2";
-  addMatchInfo("QD2 Match Info", false);
+  addMatchInfo("QD2 Match Info", variant === "cross_sheet");
   workbook.addWorksheet("LAN").getCell("A2").value = "Guildlock LAN";
   addMatchInfo("LAN Match Info", false);
 

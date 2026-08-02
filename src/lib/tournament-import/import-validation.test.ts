@@ -192,4 +192,96 @@ describe("import validation and matching", () => {
         .every((entity) => entity.proposedAction === "invalid"),
     ).toBe(true);
   });
+
+  it("blocks inconsistent completed, walkover and draft results", () => {
+    const baseMatch = bundle.entities[3] as Extract<
+      TournamentImportBundle["entities"][number],
+      { entityType: "match" }
+    >;
+    const cases = [
+      {
+        data: {
+          ...baseMatch.data,
+          status: "completed" as const,
+          scoreA: 1,
+          scoreB: 2,
+          winnerTeamKey: "team:a",
+        },
+        issue: "completed_result_inconsistent",
+        action: "invalid",
+      },
+      {
+        data: {
+          ...baseMatch.data,
+          status: "walkover" as const,
+          winnerTeamKey: null,
+        },
+        issue: "walkover_winner_required",
+        action: "invalid",
+      },
+      {
+        data: {
+          ...baseMatch.data,
+          status: "draft" as const,
+          winnerTeamKey: "team:a",
+        },
+        issue: "result_status_inconsistent",
+        action: "conflict",
+      },
+    ];
+    for (const testCase of cases) {
+      const result = validateAndMatchImportBundle(
+        {
+          ...bundle,
+          entities: bundle.entities.map((entity) =>
+            entity.entityType === "match"
+              ? { ...entity, data: testCase.data }
+              : entity,
+          ),
+        },
+        empty,
+      );
+      const match = result.entities.find(
+        (entity) => entity.entityType === "match",
+      );
+      expect(match?.proposedAction).toBe(testCase.action);
+      expect(match?.errors).toContain(testCase.issue);
+    }
+  });
+
+  it("treats duplicate match numbers as a resolvable conflict", () => {
+    const duplicate: TournamentImportBundle = {
+      ...bundle,
+      entities: [
+        ...bundle.entities,
+        {
+          ...(bundle.entities[3] as Extract<
+            TournamentImportBundle["entities"][number],
+            { entityType: "match" }
+          >),
+          source: { sheet: "Fixture", row: 5, key: "match:b" },
+          data: {
+            ...(
+              bundle.entities[3] as Extract<
+                TournamentImportBundle["entities"][number],
+                { entityType: "match" }
+              >
+            ).data,
+            deadlockMatchId: "901",
+          },
+        },
+      ],
+    };
+    const matches = validateAndMatchImportBundle(
+      duplicate,
+      empty,
+    ).entities.filter((entity) => entity.entityType === "match");
+    expect(matches).toHaveLength(2);
+    expect(matches.every((match) => match.proposedAction === "conflict")).toBe(
+      true,
+    );
+    expect(
+      matches.every((match) => match.errors.includes("duplicate_match_number")),
+    ).toBe(true);
+  });
 });

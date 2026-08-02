@@ -221,6 +221,9 @@ export async function loadTournamentImportSession(
           sheet: row.source_sheet,
           row: row.source_row_number,
           key: row.source_key,
+          references: Array.isArray(row.source_references)
+            ? row.source_references
+            : undefined,
         },
         data: row.normalized_payload,
         warnings: row.warnings,

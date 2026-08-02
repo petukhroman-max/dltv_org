@@ -297,6 +297,7 @@ type TournamentImportRow = {
   source_sheet: string;
   source_row_number: number;
   source_key: string;
+  source_references: Json;
   normalized_payload: Json;
   validation_status: string;
   validation_errors: Json;
