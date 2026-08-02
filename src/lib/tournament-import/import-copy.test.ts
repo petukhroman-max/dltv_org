@@ -23,4 +23,14 @@ describe("import issue copy", () => {
       "unknown_internal_code",
     );
   });
+
+  it("identifies the exact blocking entity, sheet and source row", () => {
+    const code = "import_blocking_row|match|QD2 Match Info|19";
+    expect(getImportIssueMessage("en", code)).toBe(
+      "A blocking match remains in QD2 Match Info, row 19.",
+    );
+    expect(getImportIssueMessage("ru", code)).toBe(
+      "Остался блокирующий объект match в QD2 Match Info, строка 19.",
+    );
+  });
 });

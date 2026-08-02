@@ -241,9 +241,23 @@ const issueMessages: Record<string, { en: string; ru: string }> = {
     en: "The conflict could not be resolved. Refresh the preview and try again.",
     ru: "Не удалось разрешить конфликт. Обновите предпросмотр и повторите попытку.",
   },
+  import_session_not_ready: {
+    en: "The import preview is not ready. Reload it and review the remaining blocker.",
+    ru: "Предпросмотр импорта не готов. Обновите страницу и проверьте оставшийся блокирующий объект.",
+  },
+  import_apply_failed: {
+    en: "The import could not be applied. Reload the preview and try again.",
+    ru: "Не удалось применить импорт. Обновите предпросмотр и повторите попытку.",
+  },
 };
 
 export function getImportIssueMessage(locale: Locale, code: string): string {
+  const [kind, entity, sheet, row] = code.split("|");
+  if (kind === "import_blocking_row") {
+    return locale === "ru"
+      ? `Остался блокирующий объект ${entity} в ${sheet}, строка ${row}.`
+      : `A blocking ${entity} remains in ${sheet}, row ${row}.`;
+  }
   return (
     issueMessages[code]?.[locale] ??
     (locale === "ru"

@@ -172,9 +172,13 @@ export async function applyWorkspaceImportAction(
       resolved.access.submission.id,
       resolved.context,
     );
-  } catch {
+  } catch (error) {
+    const code =
+      error instanceof TournamentImportError
+        ? error.code
+        : "import_apply_failed";
     redirect(
-      `/workspace/${rawToken}/import?session=${sessionId}&error=import_apply_failed`,
+      `/workspace/${rawToken}/import?session=${sessionId}&error=${encodeURIComponent(code)}`,
     );
   }
   await revalidatePublicTournamentProjection(resolved.access.submission.id);

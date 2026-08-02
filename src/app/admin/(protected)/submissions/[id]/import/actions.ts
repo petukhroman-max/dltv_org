@@ -166,9 +166,13 @@ export async function applyAdminImportAction(
       submissionId,
       resolved.context,
     );
-  } catch {
+  } catch (error) {
+    const code =
+      error instanceof TournamentImportError
+        ? error.code
+        : "import_apply_failed";
     redirect(
-      `/admin/submissions/${submissionId}/import?session=${sessionId}&error=import_apply_failed`,
+      `/admin/submissions/${submissionId}/import?session=${sessionId}&error=${encodeURIComponent(code)}`,
     );
   }
   await revalidatePublicTournamentProjection(submissionId);

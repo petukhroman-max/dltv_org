@@ -721,6 +721,16 @@ export type Database = {
         };
         Returns: Json;
       };
+      recompute_tournament_import_readiness: {
+        Args: {
+          p_session_id: string;
+          p_submission_id: string;
+          p_actor_type: string;
+          p_actor_id: string | null;
+          p_workspace_token_id: string | null;
+        };
+        Returns: Json;
+      };
       apply_tournament_import_session: {
         Args: {
           p_session_id: string;

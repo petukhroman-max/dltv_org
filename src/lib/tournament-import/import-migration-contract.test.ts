@@ -23,6 +23,13 @@ const migration =
       "supabase/migrations/20260802190000_fix_import_conflict_resolution.sql",
     ),
     "utf8",
+  ) +
+  fs.readFileSync(
+    path.join(
+      process.cwd(),
+      "supabase/migrations/20260802203000_fix_import_apply_readiness.sql",
+    ),
+    "utf8",
   );
 
 describe("tournament import migration contract", () => {
@@ -125,5 +132,29 @@ describe("tournament import migration contract", () => {
       "import_completed_result_confirmation_required",
     );
     expect(migration).toContain("import_resolution_existing_rejected");
+  });
+
+  it("resolves every source row in a canonical group and recomputes apply readiness", () => {
+    expect(migration).toContain(
+      "function public.recompute_tournament_import_readiness(",
+    );
+    expect(migration).toContain(
+      "jsonb_array_elements(candidate.source_references)",
+    );
+    expect(migration).toContain(
+      "jsonb_array_elements(v_row.source_references)",
+    );
+    expect(migration).toContain("resolution_status='resolved'");
+    expect(migration).toContain("validation_errors='[]'::jsonb");
+    expect(migration).toContain("else 'skip' end");
+    expect(migration).toContain("'canonical_group_rows',v_group_count");
+    expect(migration).toContain("'blocking_error_count',v_blocking");
+    expect(migration).toContain("'unresolved_conflict_count',v_unresolved");
+    expect(migration).toContain("'ready',v_status='ready'");
+    expect(migration).toContain("'entity_type',v_blocker.entity_type");
+    expect(migration).toContain("'source_sheet',v_blocker.source_sheet");
+    expect(migration).toContain(
+      "'source_row_number',v_blocker.source_row_number",
+    );
   });
 });

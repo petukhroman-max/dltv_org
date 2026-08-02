@@ -119,4 +119,17 @@ describe("import server action contract", () => {
     expect(copy).toContain("Конфликт разрешён. Предпросмотр обновлён.");
     expect(copy).toContain("import_session_stale");
   });
+
+  it("recomputes readiness from the database and preserves actionable apply errors", () => {
+    expect(service).toContain("recomputeImportReadinessRpc");
+    expect(service).toContain("import_blocking_row|");
+    for (const action of [organizer, admin]) {
+      expect(action).toContain("error instanceof TournamentImportError");
+      expect(action).toContain("encodeURIComponent(code)");
+    }
+    expect(copy).toContain('kind === "import_blocking_row"');
+    expect(copy).toContain(
+      "A blocking ${entity} remains in ${sheet}, row ${row}.",
+    );
+  });
 });

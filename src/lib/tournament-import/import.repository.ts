@@ -286,6 +286,23 @@ export async function executeApplyImportRpc(
   throw error;
 }
 
+export async function recomputeImportReadinessRpc(
+  sessionId: string,
+  submissionId: string,
+  access: OperationalRpcAccess,
+) {
+  const { data, error } = await createSupabaseAdminClient().rpc(
+    "recompute_tournament_import_readiness",
+    {
+      p_session_id: sessionId,
+      p_submission_id: submissionId,
+      ...access,
+    },
+  );
+  if (error) throw error;
+  return data;
+}
+
 export async function executeCancelImportRpc(
   sessionId: string,
   submissionId: string,

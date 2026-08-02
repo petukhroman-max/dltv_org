@@ -20,6 +20,7 @@ import {
   executeCancelImportRpc,
   executeConfirmImportTimezoneRpc,
   executeResolveImportConflictRpc,
+  recomputeImportReadinessRpc,
   insertImportSession,
   selectImportSession,
   selectImportSnapshot,
@@ -369,11 +370,33 @@ export async function applyTournamentImportSession(
     context,
   );
   if (!loaded) throw new TournamentImportError("import_session_not_found");
-  return executeApplyImportRpc(
+  const access = toOperationalRpcAccess(context, submissionId);
+  const readiness = await recomputeImportReadinessRpc(
     sessionId,
     submissionId,
-    toOperationalRpcAccess(context, submissionId),
+    access,
   );
+  if (
+    !readiness ||
+    typeof readiness !== "object" ||
+    Array.isArray(readiness) ||
+    readiness.ready !== true
+  ) {
+    const blocker =
+      readiness && typeof readiness === "object" && !Array.isArray(readiness)
+        ? readiness.blocker
+        : null;
+    if (blocker && typeof blocker === "object" && !Array.isArray(blocker)) {
+      const entity = String(blocker.entity_type ?? "row");
+      const sheet = String(blocker.source_sheet ?? "unknown");
+      const row = String(blocker.source_row_number ?? "?");
+      throw new TournamentImportError(
+        `import_blocking_row|${entity}|${sheet}|${row}`,
+      );
+    }
+    throw new TournamentImportError("import_session_not_ready");
+  }
+  return executeApplyImportRpc(sessionId, submissionId, access);
 }
 
 export async function cancelTournamentImportSession(
