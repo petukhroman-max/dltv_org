@@ -1,18 +1,43 @@
 -- Authenticated, read-only DLTV Public API v1.
 -- This migration is intentionally not applied remotely by application code.
 
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 alter table public.tournament_matches
   add column public_id text;
 
-update public.tournament_matches
-set public_id = 'mt_' || encode(gen_random_bytes(16), 'hex')
-where public_id is null;
+do $$
+declare
+  v_match_id uuid;
+  v_public_id text;
+begin
+  for v_match_id in
+    select id
+    from public.tournament_matches
+    where public_id is null
+    order by id
+    for update
+  loop
+    loop
+      v_public_id := 'mt_' || encode(extensions.gen_random_bytes(16), 'hex');
+      exit when not exists (
+        select 1
+        from public.tournament_matches
+        where public_id = v_public_id
+      );
+    end loop;
+
+    update public.tournament_matches
+    set public_id = v_public_id
+    where id = v_match_id
+      and public_id is null;
+  end loop;
+end;
+$$;
 
 alter table public.tournament_matches
   alter column public_id set not null,
-  alter column public_id set default ('mt_' || encode(gen_random_bytes(16), 'hex')),
+  alter column public_id set default ('mt_' || encode(extensions.gen_random_bytes(16), 'hex')),
   add constraint tournament_matches_public_id_format_check
     check (public_id ~ '^mt_[0-9a-f]{32}$'),
   add constraint tournament_matches_public_id_key unique (public_id);
@@ -65,7 +90,7 @@ before update of slug on public.tournament_teams
 for each row execute function public.prevent_published_slug_change();
 
 create table public.api_access_requests (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key default pg_catalog.gen_random_uuid(),
   organization_name text not null check (char_length(organization_name) between 2 and 160),
   contact_name text not null check (char_length(contact_name) between 2 and 120),
   contact_email text not null check (
@@ -97,7 +122,7 @@ create table public.api_access_requests (
 );
 
 create table public.api_clients (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key default pg_catalog.gen_random_uuid(),
   access_request_id uuid null unique references public.api_access_requests(id) on delete set null,
   organization_name text not null check (char_length(organization_name) between 2 and 160),
   client_slug text not null unique check (client_slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$' and char_length(client_slug) <= 80),
@@ -121,7 +146,7 @@ create table public.api_clients (
 );
 
 create table public.api_keys (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key default pg_catalog.gen_random_uuid(),
   client_id uuid not null references public.api_clients(id) on delete cascade,
   key_prefix text not null check (key_prefix ~ '^dltv_(live|test)_[A-Za-z0-9_-]{6,16}$'),
   key_hash text not null unique check (key_hash ~ '^[0-9a-f]{64}$'),

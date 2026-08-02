@@ -52,7 +52,24 @@ describe("Public API v1 migration contract", () => {
     expect(migration).toContain(
       "tournament_teams_slug_immutable_after_publication",
     );
-    expect(migration).toContain("gen_random_bytes(16)");
+    expect(migration).toContain(
+      "create extension if not exists pgcrypto with schema extensions",
+    );
+    expect(migration).toContain("extensions.gen_random_bytes(16)");
+    expect(migration).not.toMatch(/(?<!\.)\bgen_random_bytes\s*\(/);
+    expect(migration).not.toMatch(/(?<!\.)\bgen_random_uuid\s*\(/);
+  });
+
+  it("backfills only missing public IDs and retries theoretical collisions before uniqueness", () => {
+    const backfill = migration.indexOf("do $$");
+    const uniqueConstraint = migration.indexOf(
+      "constraint tournament_matches_public_id_key unique",
+    );
+    expect(backfill).toBeGreaterThan(-1);
+    expect(migration).toContain("where public_id is null");
+    expect(migration).toContain("where public_id = v_public_id");
+    expect(migration).toContain("where id = v_match_id");
+    expect(uniqueConstraint).toBeGreaterThan(backfill);
   });
 
   it("uses atomic rate-limit buckets and safe usage fields", () => {
